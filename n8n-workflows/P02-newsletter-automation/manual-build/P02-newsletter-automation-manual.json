@@ -1,0 +1,1317 @@
+{
+  "name": "Proj2 Newsletter",
+  "nodes": [
+    {
+      "parameters": {
+        "model": "devstral-medium-latest",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatMistralCloud",
+      "typeVersion": 1,
+      "position": [
+        416,
+        -160
+      ],
+      "id": "26cc05dc-f0e8-48fa-ad94-7150ff149443",
+      "name": "Mistral Cloud Chat Model2",
+      "credentials": {
+        "mistralCloudApi": {
+          "id": "REPLACE_MISTRAL_CRED",
+          "name": "Mistral Cloud account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "simplify": false,
+        "options": {},
+        "requestOptions": {}
+      },
+      "type": "n8n-nodes-base.jinaAi",
+      "typeVersion": 1,
+      "position": [
+        -224,
+        16
+      ],
+      "id": "2ecc068d-81f5-4945-8864-440219a3c4c6",
+      "name": "Read URL content1",
+      "credentials": {
+        "jinaAiApi": {
+          "id": "REPLACE_JINA_CRED",
+          "name": "Jina AI account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const aliases = {\n  'Elastic': ['Elastic', 'Elasticsearch', 'ESTC'],\n  'Zapier': ['Zapier'],\n  'Scale AI': ['Scale AI', 'Scale.ai'],\n  'OpenAI': ['OpenAI', 'ChatGPT', 'GPT-4', 'GPT-5', 'o1', 'o3'],\n  'Hugging Face': ['Hugging Face', 'HuggingFace'],\n  'Perplexity': ['Perplexity'],\n  'Anthropic': ['Anthropic', 'Claude'],\n  'Glean': ['Glean', 'Arvind Jain'],\n  'Cursor': ['Cursor', 'Anysphere'],\n  'Cohere': ['Cohere']\n};\n\nconst companyName = $json.companyName;\nconst title = ($json.title ?? '').toLowerCase();\nconst lede = ($json.text ?? '').substring(0, 500).toLowerCase();\n\nconst companyAliases = aliases[companyName] ?? [companyName];\n\nconst inTitle = companyAliases.some(alias => title.includes(alias.toLowerCase()));\nconst inLede = companyAliases.some(alias => lede.includes(alias.toLowerCase()));\n\nconst isRelevant = inTitle || inLede;\n\nreturn {\n  json: {\n    ...$json,\n    isRelevant,\n    relevanceReason: isRelevant\n      ? (inTitle ? 'Title match for ' + companyName : 'Lede match for ' + companyName)\n      : 'Match not found for title or lede for ' + companyName\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        80,
+        -368
+      ],
+      "id": "7a854a2c-bf49-4e42-b019-07c11e3c0c23",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "c8d58a7c-72b9-4179-8545-809ce8985b60",
+              "leftValue": "={{ $json.relevanceReason }}",
+              "rightValue": "match for",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        240,
+        -448
+      ],
+      "id": "4dc78081-160e-4373-8f4a-4d5dfda33395",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "let raw = ($json.text ?? '').trim();\nraw = raw.replace(/```json|```/g, '').trim();\n\nlet parsed;\ntry {\n  parsed = JSON.parse(raw);\n} catch (e) {\n  const signalMatch = raw.match(/\"signal_type\"\\s*:\\s*\"([^\"]+)\"/);\n  const fundingMatch = raw.match(/\"funding_amount\"\\s*:\\s*\"?([^\",}]+)\"?/);\n  const summaryMatch = raw.match(/\"summary\"\\s*:\\s*\"([^\"]+)\"/);\n  parsed = {\n    signal_type: signalMatch ? signalMatch[1].trim() : 'Other',\n    funding_amount: fundingMatch ? fundingMatch[1].trim() : null,\n    summary: summaryMatch ? summaryMatch[1].trim() : null\n  };\n}\n\nconst upstream = $('Code in JavaScript2').item.json;\n\nreturn {\n  json: {\n    companyName: upstream.companyName,\n    title: upstream.title,\n    url: upstream.url,\n    pubDate: upstream.pubDate,\n    signal_type: parsed.signal_type ?? 'Other',\n    funding_amount: parsed.funding_amount ?? null,\n    summary: parsed.summary ?? null\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        704,
+        -240
+      ],
+      "id": "77da55c4-628f-45e3-b384-5aca52a4317a",
+      "name": "Code in JavaScript3"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "2c6fa1f3-9e46-4c41-8904-2497ed51af67",
+              "leftValue": "={{ \n  $json.signal_type !== 'Other' && \n  ($json.signal_type !== 'Funding' || (() => {\n    const raw = ($json.funding_amount ?? '0');\n    const num = parseFloat(raw.replace(/[^0-9.]/g, ''));\n    const isB = raw.toUpperCase().includes('B');\n    const amount = isB ? num * 1000 : num;\n    return amount >= 100;\n  })())\n}}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        864,
+        -144
+      ],
+      "id": "6c66b576-3eba-4174-99c0-2814425b2717",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "336f723c-7871-49cb-a071-54553a686a7f",
+              "name": "companyName",
+              "value": "={{ $('Targets').item.json['Company Name'] }}",
+              "type": "string"
+            },
+            {
+              "id": "5160321b-7772-4619-a4b2-a48cd0a39910",
+              "name": "results",
+              "value": "={{ $json.results }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -864,
+        272
+      ],
+      "id": "0b7159fc-057b-452b-a0e4-87b14714c8f3",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "model": "devstral-medium-latest",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatMistralCloud",
+      "typeVersion": 1,
+      "position": [
+        960,
+        352
+      ],
+      "id": "6f421172-42e8-4928-b3a2-0cec3a2e8da6",
+      "name": "Mistral Cloud Chat Model3",
+      "credentials": {
+        "mistralCloudApi": {
+          "id": "REPLACE_MISTRAL_CRED",
+          "name": "Mistral Cloud account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "companyName"
+            },
+            {
+              "fieldToAggregate": "title"
+            },
+            {
+              "fieldToAggregate": "url"
+            },
+            {
+              "fieldToAggregate": "pubDate"
+            },
+            {
+              "fieldToAggregate": "signal_type"
+            },
+            {
+              "fieldToAggregate": "funding_amount"
+            },
+            {
+              "fieldToAggregate": "summary"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1024,
+        -80
+      ],
+      "id": "5bb23cf0-ea47-49c6-b285-a2c2f3773b30",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "jsCode": "const companies = $json.companyName;\nconst titles = $json.title;\nconst signals = $json.signal_type;\nconst summaries = $json.summary;\nconst urls = $json.url;\n\nconst grouped = {};\nfor (let i = 0; i < companies.length; i++) {\n  const company = companies[i];\n  if (!grouped[company]) grouped[company] = [];\n  grouped[company].push({\n    signal_type: signals[i],\n    summary: summaries[i],\n    url: urls[i]\n  });\n}\n\nlet briefingInput = '';\nfor (const [company, items] of Object.entries(grouped)) {\n  briefingInput += `Company: ${company}\\n`;\n  for (const item of items) {\n    briefingInput += `- [${item.signal_type}] ${item.summary}\\n`;\n  }\n  briefingInput += '\\n';\n}\n\nlet sourcesSection = 'Sources\\n\\n';\nfor (const [company, items] of Object.entries(grouped)) {\n  sourcesSection += `${company}\\n`;\n  for (const item of items) {\n    sourcesSection += `[${item.signal_type}] <a href=\"${item.url}\">Full Article</a>\\n`;\n  }\n  sourcesSection += '\\n';\n}\n\nreturn {\n  json: { briefingInput, grouped, sourcesSection }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        800,
+        176
+      ],
+      "id": "c60773e7-a117-44c5-8f45-69bf4de98462",
+      "name": "Code in JavaScript4"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "8162ecb0-fc35-4af0-8a0b-1a08a2a077ba",
+              "leftValue": "={{ DateTime.fromISO($json['Logged']).toMillis() }}",
+              "rightValue": "= {{ $now.minus({ days: 7 }).toMillis() }}",
+              "operator": {
+                "type": "number",
+                "operation": "lt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -880,
+        -208
+      ],
+      "id": "01e3d9e6-784c-467a-9304-2e45acdb3236",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Proj2",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEET_ID/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 802787579,
+          "mode": "list",
+          "cachedResultName": "Log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEET_ID/edit#gid=802787579"
+        },
+        "startIndex": "={{ $json.row_number }}"
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -544,
+        -416
+      ],
+      "id": "8b4b5833-1cf1-4f38-b1f5-c210c223b95f",
+      "name": "Delete rows or columns from sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_GOOGLE_SHEETS_CRED",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sortFieldsUi": {
+          "sortField": [
+            {
+              "fieldName": "row_number",
+              "order": "descending"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.sort",
+      "typeVersion": 1,
+      "position": [
+        -704,
+        -304
+      ],
+      "id": "17acd8eb-563f-4c8a-92ca-925db66b5e4f",
+      "name": "Sort"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.exa.ai/search",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "562721f0-9815-4e0c-8eb1-be7cbfdfe7f2"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"query\": \"{{ $('Targets').item.json.Anchor }} AI news\",\n  \"type\": \"auto\",\n  \"category\": \"news\",\n  \"numResults\": 6,\n  \"startPublishedDate\": \"{{ $now.minus({ days: 1 }).toISO() }}\",\n    \"contents\": {\n    \"text\": true\n  }\n}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 2000
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -1040,
+        272
+      ],
+      "id": "0719d61d-c4c7-455b-b42e-9c698a914a61",
+      "name": "Exa.Ai Pull"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = [];\n\nfor (const input of $input.all()) {\n  const companyName = input.json.companyName;\n  \n  // Parse Results if it's a string, otherwise use as-is\n  let results = input.json.Results ?? input.json.results ?? [];\n  if (typeof results === 'string') {\n    try { results = JSON.parse(results); } catch(e) { results = []; }\n  }\n\n  for (const article of results) {\n    const title = article.title?.trim() ?? null;\n    const url = article.url?.trim() ?? null;\n    const pubDate = article.publishedDate?.trim() ?? null;\n    const text = article.text?.trim() ?? null;\n    if (!title || !url) continue;\n    items.push({ json: { title, url, pubDate, text, companyName } });\n  }\n}\n\nreturn items;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -656,
+        224
+      ],
+      "id": "c2e862d4-fb81-4892-ac5c-016d067c8861",
+      "name": "Parse Exa.Ai Output"
+    },
+    {
+      "parameters": {
+        "sendTo": "YOUR_EMAIL",
+        "subject": "Daily AI Briefing",
+        "message": "={{ $json.text.replace(/\\n/g, '<br>') + '<br><br><hr><br><strong>Sources</strong><br><br>' + $('Code in JavaScript4').item.json.sourcesSection.replace(/\\n/g, '<br>') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        240,
+        480
+      ],
+      "id": "6bee40e4-0e7e-4a1b-9c02-bf82570ead45",
+      "name": "Executive Brief Email",
+      "webhookId": "REPLACE_WEBHOOK_ID",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "REPLACE_CREDENTIAL_ID",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Here are today's competitive intelligence signals:\n\n{{ $json.briefingInput }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=You are a competitive intelligence analyst writing a daily executive briefing for a senior leader tracking the AI industry.\n\nYou will receive a list of signals from multiple AI companies, grouped by company. Each signal has a type and a one-sentence summary.\n\nWrite a concise 5-paragraph executive briefing. Each paragraph should cover one signal category that appears in the data. Only include categories that have actual signals -- do not write paragraphs for empty categories.\n\nRules:\n- Plain text only. No markdown, no bullet points, no headers, no bold, no asterisks.\n- Do not use asterisks, hashes, bullet points, numbered lists, bold text, or any formatting characters whatsoever.  Plain sentences only.\n- Each paragraph should be 3-5 sentences.\n- Lead each paragraph with the signal category and the companies involved.\n- Write in a professional, direct tone suitable for a senior executive.\n- Do not editorialize or add opinions. Stick to what the signals say.\n- Output only the briefing text. No preamble, no closing remarks."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        960,
+        176
+      ],
+      "id": "d7c316f4-3a9d-410d-a4d1-67e026e41a33",
+      "name": "Synthesize"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Proj2",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEET_ID/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 802787579,
+          "mode": "list",
+          "cachedResultName": "Log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEET_ID/edit#gid=802787579"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Company Name": "={{ $json.companyName }}",
+            "Signal Title": "={{ $json.title }}",
+            "Signal URL": "={{ $json.url }}",
+            "Signal Type": "={{ $json.signal_type }}",
+            "Logged": "={{ $now }}",
+            "Briefing Included": "Included",
+            "Summary": "={{ $json.summary }}",
+            "PubDate": "={{ $json.pubDate }}",
+            "Funding": "={{ $json.funding_amount }}",
+            "row_number": 0
+          },
+          "matchingColumns": [
+            "Signal URL"
+          ],
+          "schema": [
+            {
+              "id": "Company Name",
+              "displayName": "Company Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Signal Title",
+              "displayName": "Signal Title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Signal URL",
+              "displayName": "Signal URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Signal Type",
+              "displayName": "Signal Type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Summary",
+              "displayName": "Summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "PubDate",
+              "displayName": "PubDate",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Logged",
+              "displayName": "Logged",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Briefing Included",
+              "displayName": "Briefing Included",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Funding",
+              "displayName": "Funding",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1184,
+        -480
+      ],
+      "id": "e9e1d5b0-3ee8-440b-8e65-28b6dcb9836b",
+      "name": "Append Included",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_GOOGLE_SHEETS_CRED",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Proj2",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEET_ID/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 802787579,
+          "mode": "list",
+          "cachedResultName": "Log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEET_ID/edit#gid=802787579"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Company Name": "={{ $json.companyName }}",
+            "Signal Title": "={{ $json.title }}",
+            "Signal URL": "={{ $json.url }}",
+            "Signal Type": "={{ $json.signal_type }}",
+            "Logged": "={{ $now }}",
+            "Briefing Included": "Excluded",
+            "Summary": "={{ $json.summary }}",
+            "PubDate": "={{ $json.pubDate }}",
+            "Funding": "={{ $json.funding_amount }}",
+            "row_number": 0
+          },
+          "matchingColumns": [
+            "Signal URL"
+          ],
+          "schema": [
+            {
+              "id": "Company Name",
+              "displayName": "Company Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Signal Title",
+              "displayName": "Signal Title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Signal URL",
+              "displayName": "Signal URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Signal Type",
+              "displayName": "Signal Type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Summary",
+              "displayName": "Summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "PubDate",
+              "displayName": "PubDate",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Logged",
+              "displayName": "Logged",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Briefing Included",
+              "displayName": "Briefing Included",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Funding",
+              "displayName": "Funding",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1184,
+        -288
+      ],
+      "id": "1bf7c470-32c6-4717-9967-0762335d5846",
+      "name": "Append Exlcuded",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_GOOGLE_SHEETS_CRED",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Target company: {{ $json.companyName }}\n\nArticle title: {{ $json.title }}\n\nArticle text: {{ $json.text }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=You are a competitive intelligence classifier. You will be given a news article and a target company name.\n\nReturn ONLY a JSON object with no preamble, no markdown, no explanation. Raw JSON only.\n\nClassify the article using these signal types only:\n- Product Launch\n- Partnership\n- Funding\n- Leadership Change\n- Research Publication\n- Hiring Signal\n- Regulatory/Legal\n- Other\n\nRules:\n- If signal_type is Funding, extract the funding amount as a string (e.g. \"$500M\"). Otherwise set funding_amount to null.\n- The summary must be one sentence, plain text, no markdown.\n- If the article is not meaningfully about the target company, set signal_type to Other.\n\nOutput format example:\n{\"signal_type\": \"Product Launch\", \"funding_amount\": null, \"summary\": \"Elastic launched a new vector search feature targeting enterprise AI workloads.\"}"
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        416,
+        -336
+      ],
+      "id": "8694d051-73a3-42bd-925d-5ccc645d5fec",
+      "name": "Classifier"
+    },
+    {
+      "parameters": {
+        "jsCode": "const logUrls = new Set(\n  $('Get row(s) in sheet1').all().map(item => item.json['Signal URL'])\n);\n\nconst items = [];\nfor (const input of $input.all()) {\n  if (!logUrls.has(input.json.url)) {\n    items.push({ json: input.json });\n  }\n}\n\nreturn items;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -528,
+        32
+      ],
+      "id": "18b5ab26-9de6-4a92-80b9-a20c9efe6893",
+      "name": "Dedup Code"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const MAX_CHARS = 3000;\n\nconst item = $json.data;\n\nconst title = item.title?.trim() ?? null;\nconst url = item.url?.trim() ?? null;\nconst pubDate = item.publishedTime?.trim() ?? null;\n\nlet cleanText = (item.content ?? '').trim();\n\n// Strip markdown image syntax\ncleanText = cleanText.replace(/!\\[.*?\\]\\(.*?\\)/g, '');\n\n// Strip markdown links but keep link text\ncleanText = cleanText.replace(/\\[([^\\]]+)\\]\\([^)]+\\)/g, '$1');\n\n// Strip stock ticker noise: e.g. \"QQQ 717.54 (+0.42%)\"\ncleanText = cleanText.replace(/[A-Z]{1,5}\\s+\\d+\\.\\d+\\s+\\([+-]\\d+\\.\\d+%\\)\\s*/g, '');\n\n// Strip \"Skip to main content\" and similar nav phrases\ncleanText = cleanText.replace(/Skip to main content\\s*/gi, '');\n\n// Strip navigation list noise (lines that are just short nav labels)\ncleanText = cleanText.replace(/^\\s*[\\*\\-]\\s+.{1,40}\\n/gm, '');\n\n// Collapse excessive whitespace\ncleanText = cleanText.replace(/\\n{3,}/g, '\\n\\n').trim();\n\n// Cap length\ncleanText = cleanText.substring(0, MAX_CHARS);\n\nconst currentUrl = $json.data.url?.trim();\nconst dedupItems = $('Dedup Code').all();\nconst matched = dedupItems.find(item => item.json.url?.trim() === currentUrl);\nconst companyName = matched ? matched.json.companyName : null;\n\nreturn {\n  json: { title, url, pubDate, text: cleanText, companyName }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -96,
+        -224
+      ],
+      "id": "0d849b46-2f7e-4b86-b472-6b7080d87fa9",
+      "name": "Reformat Jina Output"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Proj2",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEET_ID/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 802787579,
+          "mode": "list",
+          "cachedResultName": "Log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEET_ID/edit#gid=802787579"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -1040,
+        -112
+      ],
+      "id": "132649c1-3203-4aea-a7cc-6bf1742d3fea",
+      "name": "Get row(s) in sheet2",
+      "executeOnce": true,
+      "alwaysOutputData": false,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_GOOGLE_SHEETS_CRED",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Proj2",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEET_ID/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 802787579,
+          "mode": "list",
+          "cachedResultName": "Log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEET_ID/edit#gid=802787579"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -1040,
+        64
+      ],
+      "id": "c7ff80e0-23ff-4937-bb8a-3f1941ab9875",
+      "name": "Get row(s) in sheet1",
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_GOOGLE_SHEETS_CRED",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Proj2",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEET_ID/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 802787579,
+          "mode": "list",
+          "cachedResultName": "Log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEET_ID/edit#gid=802787579"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Company Name": "={{ $json.companyName }}",
+            "Signal Title": "={{ $json.title }}",
+            "Signal URL": "={{ $json.url }}",
+            "Signal Type": "Not Relevant",
+            "Logged": "={{ $now }}",
+            "Briefing Included": "Not Relevant",
+            "Summary": "Not Relevant",
+            "PubDate": "={{ $json.pubDate }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Company Name",
+              "displayName": "Company Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Signal Title",
+              "displayName": "Signal Title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Signal URL",
+              "displayName": "Signal URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Signal Type",
+              "displayName": "Signal Type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Summary",
+              "displayName": "Summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "PubDate",
+              "displayName": "PubDate",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Logged",
+              "displayName": "Logged",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Briefing Included",
+              "displayName": "Briefing Included",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Funding",
+              "displayName": "Funding",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -384,
+        -176
+      ],
+      "id": "2c786bab-203a-4b8a-9a3c-2626f7ade814",
+      "name": "Append Included1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_GOOGLE_SHEETS_CRED",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 5,
+              "triggerAtMinute": 30
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -1456,
+        48
+      ],
+      "id": "f4d96849-ed78-43e5-a06a-491591b514af",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Proj2",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEET_ID/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Targets",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEET_ID/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -1248,
+        48
+      ],
+      "id": "66f00aea-8f9b-450b-a6c5-fc36e96b3b06",
+      "name": "Targets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_GOOGLE_SHEETS_CRED",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Mistral Cloud Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Classifier",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read URL content1": {
+      "main": [
+        [
+          {
+            "node": "Reformat Jina Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Classifier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript3": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Append Included",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Append Exlcuded",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Parse Exa.Ai Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mistral Cloud Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Synthesize",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript4": {
+      "main": [
+        [
+          {
+            "node": "Synthesize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Sort",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sort": {
+      "main": [
+        [
+          {
+            "node": "Delete rows or columns from sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Exa.Ai Pull": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Exa.Ai Output": {
+      "main": [
+        [
+          {
+            "node": "Dedup Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Synthesize": {
+      "main": [
+        [
+          {
+            "node": "Executive Brief Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Classifier": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dedup Code": {
+      "main": [
+        [
+          {
+            "node": "Append Included1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Read URL content1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reformat Jina Output": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet2": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append Included1": {
+      "main": [
+        []
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Targets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Targets": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get row(s) in sheet1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Exa.Ai Pull",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "REPLACE_WORKFLOW_ID",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "REPLACE_INSTANCE_ID"
+  },
+  "id": "REPLACE_WORKFLOW_ID",
+  "tags": []
+}

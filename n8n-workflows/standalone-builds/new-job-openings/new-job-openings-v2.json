@@ -1,0 +1,296 @@
+{
+  "name": "New Job Openings - v2",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 6
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [-2400, -240],
+      "id": "33333333-3333-3333-3333-333333333301",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_JOBS_DB_SHEET_ID",
+          "mode": "list"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "YOUR_JOBS_DB_TAB_NAME",
+          "mode": "list"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [-2160, -400],
+      "id": "33333333-3333-3333-3333-333333333302",
+      "name": "Read Jobs DB",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_CREDENTIAL_ID",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_COMPANY_LIST_SHEET_ID",
+          "mode": "list"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "YOUR_COMPANY_LIST_TAB_NAME",
+          "mode": "list"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [-2160, -80],
+      "id": "33333333-3333-3333-3333-333333333303",
+      "name": "Read Company List",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_CREDENTIAL_ID",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const TITLE_EXCLUDE = ['Product', 'Social Media', 'Account', 'Sales', 'Marketing'];\nconst TITLE_KEYWORDS = ['Manager', 'AI'];\nconst TITLE_MODE = 'any';\nconst LOCATION_KEYWORDS = ['Remote'];\nconst LOCATION_MODE = 'any';\n\nconst knownUrls = new Set(\n  $('Read Jobs DB').all().map(function(item) {\n    return (item.json.url || item.json.absolute_url || '').trim();\n  })\n);\n\nconst companies = $input.all().map(function(i) { return i.json; });\nconst matched = [];\n\nfunction matchesAny(text, keywords) {\n  const t = text.toLowerCase();\n  return keywords.some(function(k) { return t.indexOf(k.toLowerCase()) !== -1; });\n}\n\nfunction matchesMode(text, keywords, mode) {\n  if (!keywords.length) return true;\n  const t = text.toLowerCase();\n  const checks = keywords.map(function(k) { return t.indexOf(k.toLowerCase()) !== -1; });\n  return mode === 'all' ? checks.every(Boolean) : checks.some(Boolean);\n}\n\nfor (const c of companies) {\n  const type = (c.Type || '').toLowerCase();\n  const token = c.Token || '';\n  const company = c.Company || '';\n\n  let url = null;\n  if (type.indexOf('greenhouse') !== -1) {\n    url = 'https://boards-api.greenhouse.io/v1/boards/' + token + '/jobs?content=false';\n  } else if (type.indexOf('ashby') !== -1) {\n    url = 'https://api.ashbyhq.com/posting-api/job-board/' + token;\n  }\n  if (!url) continue;\n\n  let jobs = [];\n  try {\n    const data = await this.helpers.httpRequest({\n      method: 'GET',\n      url: url,\n      headers: { 'accept': 'application/json' },\n      json: true\n    });\n    jobs = (data && data.jobs) || [];\n  } catch (e) {\n    continue;\n  }\n\n  for (const job of jobs) {\n    const title = (job.title || '').trim();\n    const jobUrl = (job.absolute_url || job.jobUrl || '').trim();\n    const location = ((job.location && job.location.name) || job.workplaceType || '').trim();\n\n    if (!jobUrl) continue;\n    if (TITLE_EXCLUDE.length && matchesAny(title, TITLE_EXCLUDE)) continue;\n    if (!matchesMode(title, TITLE_KEYWORDS, TITLE_MODE)) continue;\n    if (!matchesMode(location, LOCATION_KEYWORDS, LOCATION_MODE)) continue;\n    if (knownUrls.has(jobUrl)) continue;\n\n    matched.push({\n      title: title,\n      url: jobUrl,\n      location: location,\n      company: company,\n      updated_at: job.updated_at || '',\n      first_published: job.first_published || ''\n    });\n  }\n}\n\nreturn [{ json: { matched: matched, hasNew: matched.length > 0 } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-1680, -80],
+      "id": "33333333-3333-3333-3333-333333333304",
+      "name": "Fetch Filter Dedup"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const result = $input.all()[0].json;\nconst jobs = result.matched || [];\nlet emailBody;\nif (result.hasNew) {\n  const lines = jobs.map(function(j) {\n    return '<li>' + j.title + ' (' + j.company + ')<br>' + j.url + '</li>';\n  });\n  emailBody = '<p>' + jobs.length + ' new job opening(s) matching your criteria:</p><ul>' + lines.join('') + '</ul>';\n} else {\n  emailBody = '<p>No new job openings today matching your criteria.</p>';\n}\nreturn [{ json: { emailBody: emailBody, count: jobs.length, hasNew: result.hasNew, recipientEmail: 'YOUR_EMAIL' } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-1440, -80],
+      "id": "33333333-3333-3333-3333-333333333305",
+      "name": "Build Email Code"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.recipientEmail }}",
+        "subject": "={{ $json.hasNew ? 'New Job Openings: ' + $json.count + ' new listing(s)' : 'Job Alert: No new openings today' }}",
+        "message": "={{ $json.emailBody }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [-1200, -80],
+      "id": "33333333-3333-3333-3333-333333333306",
+      "name": "Send Email",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "REPLACE_CREDENTIAL_ID",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const jobs = $('Fetch Filter Dedup').all()[0].json.matched || [];\nreturn jobs.map(function(job) { return { json: job }; });"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-960, -80],
+      "id": "33333333-3333-3333-3333-333333333307",
+      "name": "Prepare Rows Code"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_JOBS_DB_SHEET_ID",
+          "mode": "list"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "YOUR_JOBS_DB_TAB_NAME",
+          "mode": "list"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "title": "={{ $json.title }}",
+            "url": "={{ $json.url }}",
+            "company": "={{ $json.company }}",
+            "updated_at": "={{ $json.updated_at }}",
+            "first_published": "={{ $json.first_published }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "title",
+              "displayName": "title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "url",
+              "displayName": "url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "company",
+              "displayName": "company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "updated_at",
+              "displayName": "updated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "first_published",
+              "displayName": "first_published",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [-720, -80],
+      "id": "33333333-3333-3333-3333-333333333308",
+      "name": "Append New Jobs",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_CREDENTIAL_ID",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Read Jobs DB",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Read Company List",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Company List": {
+      "main": [
+        [
+          {
+            "node": "Fetch Filter Dedup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Filter Dedup": {
+      "main": [
+        [
+          {
+            "node": "Build Email Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Email Code": {
+      "main": [
+        [
+          {
+            "node": "Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email": {
+      "main": [
+        [
+          {
+            "node": "Prepare Rows Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Rows Code": {
+      "main": [
+        [
+          {
+            "node": "Append New Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "REPLACE_WORKFLOW_ID",
+  "meta": {
+    "instanceId": "REPLACE_INSTANCE_ID"
+  },
+  "id": "REPLACE_WORKFLOW_ID",
+  "tags": []
+}

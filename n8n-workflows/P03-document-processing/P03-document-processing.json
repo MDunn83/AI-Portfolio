@@ -1,0 +1,1979 @@
+{
+  "name": "Doc Processing",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=File ID: {{ $json.file_id }}\nFile Name: {{ $json.name }}\nDocument Content: {{ $json.text }}",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "Act as an administrative document classifier. Analyze the text \ncontent of the incoming document and assign it exactly one \ncategory from the list below.\n\nCategories:\n    Funding - investment agreements, term sheets, \n      funding rounds with a clear investor and capital amount\n   Invoice - bills, payment requests from a vendor to a customer\n    Contract - service agreements, vendor agreements, legal \n      contracts for services only, with no investment component\n    Certificate - credentials, training completions, \n      professional certifications\n    Unknown - use this when the document contains elements of \n      MORE THAN ONE category above, or when you are not \n      confident in a single classification\n\nCRITICAL: If a document contains BOTH investment/funding \nelements AND contract/services elements, you MUST return \nunknown. Do not default to the closest match when the document \nis genuinely hybrid.\n\nAlso return the file_id and name exactly as provided in the \ninput, unchanged.\n\nDo not explain your reasoning. Do not provide a preamble."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        -4640,
+        -208
+      ],
+      "id": "3cbcb18e-5111-4d5c-9d6a-ac0bc068b6e5",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -4632,
+        16
+      ],
+      "id": "bbeb80ba-b042-4028-a43e-0d77897fdf36",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "YOUR_GROQ_CREDENTIAL_ID",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -5312,
+        -208
+      ],
+      "id": "5c90a902-dc99-4f6f-9622-a7fe0f01ac97",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
+          "name": "Google Drive OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        -5088,
+        -208
+      ],
+      "id": "ff31ed0a-7e5d-4a55-88c8-006f239d644c",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.output.category }}",
+                    "rightValue": "Certificate",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    },
+                    "id": "7b9476a0-8921-4071-bf3f-ce1796380c3b"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Certificate"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "86d7b1f3-8123-4e0e-a30a-71f303567b0e",
+                    "leftValue": "={{ $json.output.category }}",
+                    "rightValue": "Contract",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Contract"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "f1831631-53fc-4350-80e0-9315c15f776c",
+                    "leftValue": "={{ $json.output.category }}",
+                    "rightValue": "Funding",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Funding"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "0d1dc8ef-89d2-437a-9308-fdaed364248d",
+                    "leftValue": "={{ $json.output.category }}",
+                    "rightValue": "Invoice",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Invoice"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "576aa9d8-4b65-424d-9823-97ffe8860fd5",
+                    "leftValue": "={{ $json.output.category }}",
+                    "rightValue": "Unknown",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Unknown"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -4288,
+        -256
+      ],
+      "id": "d09bb0ae-d2b2-4fd5-a33a-2e79089e6ab5",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -3824,
+        -768
+      ],
+      "id": "82dfa99d-f5dd-43c4-9756-b3bd8ea392ff",
+      "name": "Groq Chat Model1",
+      "credentials": {
+        "groqApi": {
+          "id": "YOUR_GROQ_CREDENTIAL_ID",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -3824,
+        -368
+      ],
+      "id": "9f8c468d-df8e-4fcc-8ed2-467d23054a1f",
+      "name": "Groq Chat Model2",
+      "credentials": {
+        "groqApi": {
+          "id": "YOUR_GROQ_CREDENTIAL_ID",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -3832,
+        16
+      ],
+      "id": "ced3d4ba-9488-424c-842c-97595b17e320",
+      "name": "Groq Chat Model3",
+      "credentials": {
+        "groqApi": {
+          "id": "YOUR_GROQ_CREDENTIAL_ID",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -3808,
+        400
+      ],
+      "id": "1964e1c3-ae8c-4054-ba7c-0616f9d68d45",
+      "name": "Groq Chat Model4",
+      "credentials": {
+        "groqApi": {
+          "id": "YOUR_GROQ_CREDENTIAL_ID",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEETS_ID",
+          "mode": "list",
+          "cachedResultName": "Doc Classification",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEETS_ID/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 322035996,
+          "mode": "list",
+          "cachedResultName": "Certs",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEETS_ID/edit#gid=322035996"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Timestamp": "={{ $now }}",
+            "Filename": "={{ $json.output.name }}",
+            "File_ID": "={{ $json.output.file_id }}",
+            "Cert_Holder": "={{ $json.output.cert_holder }}",
+            "Issuer": "={{ $json.output.issuer }}",
+            "Cert_Type": "={{ $json.output.cert_type }}",
+            "Issue_Date": "={{ $json.output.issue_date }}",
+            "Expiration_Date": "={{ $json.output.expiration_date }}",
+            "Cert_Number": "={{ $json.output.cert_number }}",
+            "Routing_Dest": "={{ $('Basic LLM Chain').item.json.output.category }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Filename",
+              "displayName": "Filename",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "File_ID",
+              "displayName": "File_ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Cert_Holder",
+              "displayName": "Cert_Holder",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Issuer",
+              "displayName": "Issuer",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Cert_Type",
+              "displayName": "Cert_Type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Issue_Date",
+              "displayName": "Issue_Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Expiration_Date",
+              "displayName": "Expiration_Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Cert_Number",
+              "displayName": "Cert_Number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Routing_Dest",
+              "displayName": "Routing_Dest",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -3488,
+        -1360
+      ],
+      "id": "c47b5a51-bf58-4200-abd6-0dafe89b8b0c",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEETS_ID",
+          "mode": "list",
+          "cachedResultName": "Doc Classification",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEETS_ID/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Contracts",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEETS_ID/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Timestamp": "={{ $now }}",
+            "Filename": "={{ $json.output.file_id }}",
+            "Vendor": "={{ $('Contract').item.json.output.vendor_name }}",
+            "Customer": "={{ $('Contract').item.json.output.customer_name }}",
+            "Effective_Date": "={{ $('Contract').item.json.output.effective_date }}",
+            "Expiration_Date": "={{ $('Contract').item.json.output.expiration_date }}",
+            "Contract_Value": "={{ $('Contract').item.json.output.contract_value }}",
+            "Key_Services": "={{ $('Contract').item.json.output.key_services }}",
+            "Governing_Law": "={{ $('Contract').item.json.output.governing_law }}",
+            "Routing_Dest": "={{ $json.output.category }}",
+            "File_ID": "={{ $json.output.file_id }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Filename",
+              "displayName": "Filename",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "File_ID",
+              "displayName": "File_ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Vendor",
+              "displayName": "Vendor",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Customer",
+              "displayName": "Customer",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Effective_Date",
+              "displayName": "Effective_Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Expiration_Date",
+              "displayName": "Expiration_Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Contract_Value",
+              "displayName": "Contract_Value",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Key_Services",
+              "displayName": "Key_Services",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Governing_Law",
+              "displayName": "Governing_Law",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Routing_Dest",
+              "displayName": "Routing_Dest",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -3488,
+        -976
+      ],
+      "id": "3b491d27-d925-4888-ac2a-a84ce71a9e91",
+      "name": "Append row in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEETS_ID",
+          "mode": "list",
+          "cachedResultName": "Doc Classification",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEETS_ID/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 245106515,
+          "mode": "list",
+          "cachedResultName": "Funding Doc",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEETS_ID/edit#gid=245106515"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "File_ID": "={{ $json.output.file_id }}",
+            "Filename": "={{ $json.output.name }}",
+            "Funder_Name": "={{ $json.output.funder_name }}",
+            "Recipient_Name": "={{ $json.output.recipient_name }}",
+            "Award_Amount": "={{ $json.output.award_amount }}",
+            "Period_Start": "={{ $json.output.period_start }}",
+            "Period_End": "={{ $json.output.period_end }}",
+            "Program_Name": "={{ $json.output.program_name }}",
+            "Award_Number": "={{ $json.output.award_name }}",
+            "Key_Terms": "={{ $json.output.key_terms }}",
+            "Routing_Dest": "={{ $('Switch').item.json.output.category }}",
+            "Timestamp": "={{ $now }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Filename",
+              "displayName": "Filename",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "File_ID",
+              "displayName": "File_ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Funder_Name",
+              "displayName": "Funder_Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Recipient_Name",
+              "displayName": "Recipient_Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Award_Amount",
+              "displayName": "Award_Amount",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Period_Start",
+              "displayName": "Period_Start",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Period_End",
+              "displayName": "Period_End",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Program_Name",
+              "displayName": "Program_Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Award_Number",
+              "displayName": "Award_Number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Key_Terms",
+              "displayName": "Key_Terms",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Routing_Dest",
+              "displayName": "Routing_Dest",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -3488,
+        -400
+      ],
+      "id": "6697a4fc-b60e-49b5-a7f6-796907606fd2",
+      "name": "Append row in sheet2",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "YOUR_EMAIL_ADDRESS",
+        "subject": "=Document Processed: {{ $('Basic LLM Chain').item.json.output.category }}-{{ $json.output.vendor_name ?? $json.output.cert_holder ?? 'Unknown' }}",
+        "message": "==<b>📄 Document Classified & Routed</b><br><br>\n\n<b>Document Type:</b> {{ $('Wait2').item.json.output.category }} <br>\n<b>Filename:</b> {{ $json.output.name }}<br>\n<b>File ID:</b> {{ $json.output.file_id }}<br>\n<b>Routed To:</b> {{ $json.output.routing_dest || $json.output.category + ' folder' }}<br>\n<b>Timestamp:</b> {{ $now }}<br>\n\n<hr>\n\n<b>Extracted Details</b><br><br>\n\n{{ $json.output.vendor_name ? '<b>Vendor:</b> ' + $json.output.vendor_name + '<br>' : '' }}\n{{ $json.output.customer_name ? '<b>Customer:</b> ' + $json.output.customer_name + '<br>' : '' }}\n{{ $json.output.funder_name ? '<b>Funder:</b> ' + $json.output.funder_name + '<br>' : '' }}\n{{ $json.output.recipient_name ? '<b>Recipient:</b> ' + $json.output.recipient_name + '<br>' : '' }}\n{{ $json.output.award_amount ? '<b>Amount:</b> ' + $json.output.award_amount + '<br>' : '' }}\n{{ $json.output.program_name ? '<b>Program:</b> ' + $json.output.program_name + '<br>' : '' }}\n{{ $json.output.invoice_number ? '<b>Invoice #:</b> ' + $json.output.invoice_number + '<br>' : '' }}\n{{ $json.output.invoice_date ? '<b>Invoice Date:</b> ' + $json.output.invoice_date + '<br>' : '' }}\n{{ $json.output.due_date ? '<b>Due Date:</b> ' + $json.output.due_date + '<br>' : '' }}\n{{ $json.output.amount ? '<b>Amount:</b> ' + $json.output.amount + '<br>' : '' }}\n{{ $json.output.effective_date ? '<b>Effective Date:</b> ' + $json.output.effective_date + '<br>' : '' }}\n{{ $json.output.expiration_date ? '<b>Expiration Date:</b> ' + $json.output.expiration_date + '<br>' : '' }}\n{{ $json.output.contract_value ? '<b>Contract Value:</b> ' + $json.output.contract_value + '<br>' : '' }}\n{{ $json.output.cert_holder ? '<b>Certificate Holder:</b> ' + $json.output.cert_holder + '<br>' : '' }}\n{{ $json.output.issuer ? '<b>Issuer:</b> ' + $json.output.issuer + '<br>' : '' }}\n{{ $json.output.cert_type ? '<b>Certification:</b> ' + $json.output.cert_type + '<br>' : '' }}\n{{ $json.output.cert_number ? '<b>Credential ID:</b> ' + $json.output.cert_number + '<br>' : '' }}\n{{ $json.output.key_services ? '<b>Key Services:</b> ' + $json.output.key_services + '<br>' : '' }}\n{{ $json.output.key_terms ? '<b>Key Terms:</b> ' + $json.output.key_terms + '<br>' : '' }}\n{{ $json.output.line_items ? '<b>Line Items:</b> ' + $json.output.line_items + '<br>' : '' }}\n{{ $json.output.payment_status ? '<b>Payment Status:</b> ' + $json.output.payment_status + '<br>' : '' }}\n{{ $json.output.governing_law ? '<b>Governing Law:</b> ' + $json.output.governing_law + '<br>' : '' }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -3488,
+        -208
+      ],
+      "id": "acaf3d7b-5eb7-49d1-8351-41dfc3c783ea",
+      "name": "Send a message2",
+      "webhookId": "YOUR_WEBHOOK_ID",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_GMAIL_CREDENTIAL_ID",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "YOUR_EMAIL_ADDRESS",
+        "subject": "=Document Processed: {{ $('Basic LLM Chain').item.json.output.category }}-{{ $json.output.vendor_name ?? $json.output.cert_holder ?? 'Unknown' }}",
+        "message": "==<b>📄 Document Classified & Routed</b><br><br>\n\n<b>Document Type:</b> {{ $('Wait1').item.json.output.category }} <br>\n<b>Filename:</b> {{ $json.output.name }}<br>\n<b>File ID:</b> {{ $json.output.file_id }}<br>\n<b>Routed To:</b> {{ $json.output.routing_dest || $json.output.category + ' folder' }}<br>\n<b>Timestamp:</b> {{ $now }}<br>\n\n<hr>\n\n<b>Extracted Details</b><br><br>\n\n{{ $json.output.vendor_name ? '<b>Vendor:</b> ' + $json.output.vendor_name + '<br>' : '' }}\n{{ $json.output.customer_name ? '<b>Customer:</b> ' + $json.output.customer_name + '<br>' : '' }}\n{{ $json.output.funder_name ? '<b>Funder:</b> ' + $json.output.funder_name + '<br>' : '' }}\n{{ $json.output.recipient_name ? '<b>Recipient:</b> ' + $json.output.recipient_name + '<br>' : '' }}\n{{ $json.output.award_amount ? '<b>Amount:</b> ' + $json.output.award_amount + '<br>' : '' }}\n{{ $json.output.program_name ? '<b>Program:</b> ' + $json.output.program_name + '<br>' : '' }}\n{{ $json.output.invoice_number ? '<b>Invoice #:</b> ' + $json.output.invoice_number + '<br>' : '' }}\n{{ $json.output.invoice_date ? '<b>Invoice Date:</b> ' + $json.output.invoice_date + '<br>' : '' }}\n{{ $json.output.due_date ? '<b>Due Date:</b> ' + $json.output.due_date + '<br>' : '' }}\n{{ $json.output.amount ? '<b>Amount:</b> ' + $json.output.amount + '<br>' : '' }}\n{{ $json.output.effective_date ? '<b>Effective Date:</b> ' + $json.output.effective_date + '<br>' : '' }}\n{{ $json.output.expiration_date ? '<b>Expiration Date:</b> ' + $json.output.expiration_date + '<br>' : '' }}\n{{ $json.output.contract_value ? '<b>Contract Value:</b> ' + $json.output.contract_value + '<br>' : '' }}\n{{ $json.output.cert_holder ? '<b>Certificate Holder:</b> ' + $json.output.cert_holder + '<br>' : '' }}\n{{ $json.output.issuer ? '<b>Issuer:</b> ' + $json.output.issuer + '<br>' : '' }}\n{{ $json.output.cert_type ? '<b>Certification:</b> ' + $json.output.cert_type + '<br>' : '' }}\n{{ $json.output.cert_number ? '<b>Credential ID:</b> ' + $json.output.cert_number + '<br>' : '' }}\n{{ $json.output.key_services ? '<b>Key Services:</b> ' + $json.output.key_services + '<br>' : '' }}\n{{ $json.output.key_terms ? '<b>Key Terms:</b> ' + $json.output.key_terms + '<br>' : '' }}\n{{ $json.output.line_items ? '<b>Line Items:</b> ' + $json.output.line_items + '<br>' : '' }}\n{{ $json.output.payment_status ? '<b>Payment Status:</b> ' + $json.output.payment_status + '<br>' : '' }}\n{{ $json.output.governing_law ? '<b>Governing Law:</b> ' + $json.output.governing_law + '<br>' : '' }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -3488,
+        -592
+      ],
+      "id": "0319f16d-00d1-4605-b0d6-029c3837b1d2",
+      "name": "Send a message3",
+      "webhookId": "YOUR_WEBHOOK_ID",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_GMAIL_CREDENTIAL_ID",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"category\": {\n      \"type\": \"string\",\n      \"enum\": [\"Funding\", \"Invoice\", \"Contract\", \"Certificate\", \"Unknown\"],\n      \"description\": \"The administrative category of the document\"\n    },\n    \"file_id\": {\n      \"type\": \"string\",\n      \"description\": \"The file_id exactly as provided in the input\"\n    },\n    \"name\": {\n      \"type\": \"string\",\n      \"description\": \"The filename exactly as provided in the input\"\n    }\n  },\n  \"required\": [\"category\", \"file_id\", \"name\"]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -4504,
+        16
+      ],
+      "id": "87dbdfb3-fcea-4805-a04f-fcaf9799fe5e",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "f1831631-53fc-4350-80e0-9315c15f776c",
+                    "leftValue": "={{ $json.name }}",
+                    "rightValue": ".docx",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": ".docx"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "0d1dc8ef-89d2-437a-9308-fdaed364248d",
+                    "leftValue": "={{ $json.name }}",
+                    "rightValue": ".pdf",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": ".pdf"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "576aa9d8-4b65-424d-9823-97ffe8860fd5",
+                    "leftValue": "={{ $json.name }}",
+                    "rightValue": ".md",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": ".md"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -5536,
+        -224
+      ],
+      "id": "8cd467a5-441e-4bb4-b5aa-b9a302eabaaf",
+      "name": "Switch2"
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"vendor_name\": { \"type\": [\"string\", \"null\"] },\n    \"customer_name\": { \"type\": [\"string\", \"null\"] },\n    \"effective_date\": { \"type\": [\"string\", \"null\"] },\n    \"expiration_date\": { \"type\": [\"string\", \"null\"] },\n    \"contract_value\": { \"type\": [\"string\", \"null\"] },\n    \"key_services\": { \"type\": [\"string\", \"null\"] },\n    \"governing_law\": { \"type\": [\"string\", \"null\"] },\n    \"file_id\": { \"type\": \"string\" },\n    \"name\": { \"type\": \"string\" }\n  },\n  \"required\": [\"vendor_name\", \"customer_name\", \"file_id\", \"name\"]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -3696,
+        -368
+      ],
+      "id": "7c5f3931-d453-48ba-a0d8-6e2880ece5ad",
+      "name": "Structured Output Parser1"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEETS_ID",
+          "mode": "list",
+          "cachedResultName": "Doc Classification",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEETS_ID/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1036253344,
+          "mode": "list",
+          "cachedResultName": "Invoices",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEETS_ID/edit#gid=1036253344"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Timestamp": "={{ $now }}",
+            "Filename": "={{ $json.name }}",
+            "Routing_Dest": "={{ $json.output.category }}",
+            "File_ID": "={{ $json.file_id }}",
+            "Vender_Name": "={{ $('Invoice').item.json.output.customer_name }}",
+            "Customer_Name": "={{ $('Invoice').item.json.output.customer_name }}",
+            "Invoice_Number": "={{ $('Invoice').item.json.output.invoice_number }}",
+            "Invoice_Date": "={{ $('Invoice').item.json.output.invoice_date }}",
+            "Due_Date": "={{ $('Invoice').item.json.output.due_date }}",
+            "Amount": "={{ $('Invoice').item.json.output.amount }}",
+            "Payment_Status": "={{ $('Invoice').item.json.output.payment_status }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Filename",
+              "displayName": "Filename",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "File_ID",
+              "displayName": "File_ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Vender_Name",
+              "displayName": "Vender_Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Customer_Name",
+              "displayName": "Customer_Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Invoice_Number",
+              "displayName": "Invoice_Number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Invoice_Date",
+              "displayName": "Invoice_Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Due_Date",
+              "displayName": "Due_Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Amount",
+              "displayName": "Amount",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Line_Items",
+              "displayName": "Line_Items",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Payment_Status",
+              "displayName": "Payment_Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Routing_Dest",
+              "displayName": "Routing_Dest",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -3488,
+        176
+      ],
+      "id": "574eb54c-3a1c-42ec-8618-5d84e68b9414",
+      "name": "Append row in sheet3",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 1
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -5984,
+        -208
+      ],
+      "id": "6409ff6f-9ba0-4c64-bc32-11117610af79",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "searchMethod": "query",
+        "queryString": "'YOUR_INBOX_FOLDER_ID' in parents and trashed=false",
+        "returnAll": true,
+        "filter": {},
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -5760,
+        -208
+      ],
+      "id": "cde14c58-136c-4ee9-90d8-9d0523ee255a",
+      "name": "Search files and folders",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
+          "name": "Google Drive OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"vendor_name\": { \"type\": [\"string\", \"null\"] },\n    \"customer_name\": { \"type\": [\"string\", \"null\"] },\n    \"invoice_number\": { \"type\": [\"string\", \"null\"] },\n    \"invoice_date\": { \"type\": [\"string\", \"null\"] },\n    \"due_date\": { \"type\": [\"string\", \"null\"] },\n    \"amount\": { \"type\": [\"string\", \"null\"] },\n    \"line_items\": { \"type\": [\"string\", \"null\"] },\n    \"payment_status\": { \"type\": \"string\" },\n    \"file_id\": { \"type\": \"string\" },\n    \"name\": { \"type\": \"string\" }\n  },\n  \"required\": [\"vendor_name\", \"invoice_number\", \"file_id\", \"name\"]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -3680,
+        400
+      ],
+      "id": "199d9250-4dee-4f99-8b11-fe553d70c83d",
+      "name": "Structured Output Parser2"
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"cert_holder\": { \"type\": [\"string\", \"null\"] },\n    \"issuer\": { \"type\": [\"string\", \"null\"] },\n    \"cert_type\": { \"type\": [\"string\", \"null\"] },\n    \"issue_date\": { \"type\": [\"string\", \"null\"] },\n    \"expiration_date\": { \"type\": [\"string\", \"null\"] },\n    \"cert_number\": { \"type\": [\"string\", \"null\"] },\n    \"routing_dest\": { \"type\": \"string\" },\n    \"file_id\": { \"type\": \"string\" },\n    \"name\": { \"type\": \"string\" }\n  },\n  \"required\": [\"cert_holder\", \"issuer\", \"cert_type\", \"file_id\", \"name\"]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -3696,
+        -768
+      ],
+      "id": "09278bd0-08f5-408a-b55d-5442395a3e02",
+      "name": "Structured Output Parser3"
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"funder_name\": { \"type\": [\"string\", \"null\"] },\n    \"recipient_name\": { \"type\": [\"string\", \"null\"] },\n    \"award_amount\": { \"type\": [\"string\", \"null\"] },\n    \"period_start\": { \"type\": [\"string\", \"null\"] },\n    \"period_end\": { \"type\": [\"string\", \"null\"] },\n    \"program_name\": { \"type\": [\"string\", \"null\"] },\n    \"award_name\": { \"type\": [\"string\", \"null\"] },\n    \"key_terms\": { \"type\": [\"string\", \"null\"] },\n    \"file_id\": { \"type\": \"string\" },\n    \"name\": { \"type\": \"string\" }\n  },\n  \"required\": [\"funder_name\", \"recipient_name\", \"file_id\", \"name\"]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -3704,
+        16
+      ],
+      "id": "2174c9e3-f3b6-4295-b24f-30590e6805cf",
+      "name": "Structured Output Parser4"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=File ID: {{ $json.output.file_id }}\nFile Name: {{ $json.output.name }}\nDocument Content: {{ $('Edit Fields1').item.json.text }}",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "Act as a data extraction specialist. Extract the following \nfields from the funding document provided:\n\n- funder_name: the name of the investing fund or organization\n- recipient_name: the company receiving the funding\n- award_amount: the total investment amount\n- period_start: the start date of the investment period if mentioned\n- period_end: the end date of the investment period if mentioned\n- program_name: the name of the funding program or round (e.g. Series A)\n- award_name: the specific award or agreement name if mentioned\n- key_terms: key investment terms summarized in 20 words or less\n- file_id: return exactly as provided in the input, unchanged\n- name: return exactly as provided in the input, unchanged\n\nIf a field cannot be found, return null. Do not guess or infer \nvalues not explicitly stated."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        -3840,
+        -208
+      ],
+      "id": "e5d29c36-1a2a-46bd-97e2-a101b38d5848",
+      "name": "Funding"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=File ID: {{ $json.output.file_id }}\nFile Name: {{ $json.output.name }}\nDocument Content: {{ $('Edit Fields1').item.json.text }}",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "Act as a data extraction specialist. Extract the following  fields from the invoice document provided:  - vendor_name: the name of the company sending the invoice - customer_name: the name of the company being billed - invoice_number: the invoice number or reference number - invoice_date: the date the invoice was issued - due_date: the date payment is due - amount: the total amount due including tax - line_items: brief summary of services or products billed,    20 words or less - payment_status: return \"Unpaid\" unless the document    explicitly states otherwise - file_id: return exactly as provided in the input, unchanged - name: return exactly as provided in the input, unchanged  If a field cannot be found, return null. Do not guess or infer  values not explicitly stated."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        -3824,
+        176
+      ],
+      "id": "21099664-7a56-42d1-b22e-2c5aae4be657",
+      "name": "Invoice"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=File ID: {{ $json.output.file_id }}\nFile Name: {{ $json.output.name }}\nDocument Content: {{ $('Edit Fields1').item.json.text }}",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=Act as a data extraction specialist. Extract the following \nfields from the contract document provided:\n\n- vendor_name: the name of the service provider or vendor\n- customer_name: the name of the client or customer\n- effective_date: the date the contract becomes effective\n- expiration_date: the date the contract expires or ends\n- contract_value: the total value or monthly retainer amount\n- key_services: brief summary of services being provided, \n  20 words or less\n- governing_law: the jurisdiction or state governing the contract\n- file_id: return exactly as provided in the input, unchanged\n- name: return exactly as provided in the input, unchanged\n\nIf a field cannot be found, return null. Do not guess or infer \nvalues not explicitly stated."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        -3840,
+        -592
+      ],
+      "id": "7f3876b3-2102-494f-8e47-9a683779c63d",
+      "name": "Contract"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=File ID: {{ $json.output.file_id }}\nFile Name: {{ $json.output.name }}\nDocument Content: {{ $('Edit Fields1').item.json.text }}",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "Act as a data extraction specialist. Extract the following  fields from the training certificate or credential provided:  - cert_holder: the full name of the person who earned the certificate - issuer: the organization that issued the certificate - cert_type: the name of the certification or credential earned - issue_date: the date the certificate was issued - expiration_date: the date the certificate expires if mentioned - cert_number: the credential ID, certificate number, or verification code - routing_dest: return \"Training_Certificates\" exactly, unchanged - file_id: return exactly as provided in the input, unchanged - name: return exactly as provided in the input, unchanged  If a field cannot be found, return null. Do not guess or infer  values not explicitly stated."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        -3840,
+        -992
+      ],
+      "id": "e026811a-f054-4b58-9edf-8ae8b84a12a8",
+      "name": "Certificate"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "24f0c7e4-e291-42c0-ace6-c093293092b5",
+              "name": "file_id",
+              "value": "={{ $('Search files and folders').item.json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "c0a45526-0a7d-46c1-a10a-52f4d7bc0358",
+              "name": "name",
+              "value": "={{ $('Search files and folders').item.json.name }}",
+              "type": "string"
+            },
+            {
+              "id": "b40a998b-f2e2-4b98-b306-f41dfded9bd5",
+              "name": "text",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -4864,
+        -208
+      ],
+      "id": "5a1b1a43-cb25-4913-a68d-19e16f1aee58",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "sendTo": "YOUR_EMAIL_ADDRESS",
+        "subject": "=Document Processed: {{ $('Basic LLM Chain').item.json.output.category }}-{{ $json.output.vendor_name ?? $json.output.cert_holder ?? 'Unknown' }}",
+        "message": "==<b>📄 Document Classified & Routed</b><br><br>\n\n<b>Document Type:</b> {{ $('Wait3').item.json.output.category }} <br>\n<b>Filename:</b> {{ $json.output.name }}<br>\n<b>File ID:</b> {{ $json.output.file_id }}<br>\n<b>Routed To:</b> {{ $json.output.routing_dest || $json.output.category + ' folder' }}<br>\n<b>Timestamp:</b> {{ $now }}<br>\n\n<hr>\n\n<b>Extracted Details</b><br><br>\n\n{{ $json.output.vendor_name ? '<b>Vendor:</b> ' + $json.output.vendor_name + '<br>' : '' }}\n{{ $json.output.customer_name ? '<b>Customer:</b> ' + $json.output.customer_name + '<br>' : '' }}\n{{ $json.output.funder_name ? '<b>Funder:</b> ' + $json.output.funder_name + '<br>' : '' }}\n{{ $json.output.recipient_name ? '<b>Recipient:</b> ' + $json.output.recipient_name + '<br>' : '' }}\n{{ $json.output.award_amount ? '<b>Amount:</b> ' + $json.output.award_amount + '<br>' : '' }}\n{{ $json.output.program_name ? '<b>Program:</b> ' + $json.output.program_name + '<br>' : '' }}\n{{ $json.output.invoice_number ? '<b>Invoice #:</b> ' + $json.output.invoice_number + '<br>' : '' }}\n{{ $json.output.invoice_date ? '<b>Invoice Date:</b> ' + $json.output.invoice_date + '<br>' : '' }}\n{{ $json.output.due_date ? '<b>Due Date:</b> ' + $json.output.due_date + '<br>' : '' }}\n{{ $json.output.amount ? '<b>Amount:</b> ' + $json.output.amount + '<br>' : '' }}\n{{ $json.output.effective_date ? '<b>Effective Date:</b> ' + $json.output.effective_date + '<br>' : '' }}\n{{ $json.output.expiration_date ? '<b>Expiration Date:</b> ' + $json.output.expiration_date + '<br>' : '' }}\n{{ $json.output.contract_value ? '<b>Contract Value:</b> ' + $json.output.contract_value + '<br>' : '' }}\n{{ $json.output.cert_holder ? '<b>Certificate Holder:</b> ' + $json.output.cert_holder + '<br>' : '' }}\n{{ $json.output.issuer ? '<b>Issuer:</b> ' + $json.output.issuer + '<br>' : '' }}\n{{ $json.output.cert_type ? '<b>Certification:</b> ' + $json.output.cert_type + '<br>' : '' }}\n{{ $json.output.cert_number ? '<b>Credential ID:</b> ' + $json.output.cert_number + '<br>' : '' }}\n{{ $json.output.key_services ? '<b>Key Services:</b> ' + $json.output.key_services + '<br>' : '' }}\n{{ $json.output.key_terms ? '<b>Key Terms:</b> ' + $json.output.key_terms + '<br>' : '' }}\n{{ $json.output.line_items ? '<b>Line Items:</b> ' + $json.output.line_items + '<br>' : '' }}\n{{ $json.output.payment_status ? '<b>Payment Status:</b> ' + $json.output.payment_status + '<br>' : '' }}\n{{ $json.output.governing_law ? '<b>Governing Law:</b> ' + $json.output.governing_law + '<br>' : '' }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -3488,
+        368
+      ],
+      "id": "5b9d6205-e731-44d5-a836-ff10bd2e3c9f",
+      "name": "Send a message4",
+      "webhookId": "YOUR_WEBHOOK_ID",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_GMAIL_CREDENTIAL_ID",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "YOUR_EMAIL_ADDRESS",
+        "subject": "=Document Processed: {{ $('Basic LLM Chain').item.json.output.category }}-{{ $json.output.vendor_name ?? $json.output.cert_holder ?? 'Unknown' }}",
+        "message": "==<b>📄 Document Classified & Routed</b><br><br>\n\n<b>Document Type:</b> {{ $('Wait').item.json.output.category }} <br>\n<b>Filename:</b> {{ $json.output.name }}<br>\n<b>File ID:</b> {{ $json.output.file_id }}<br>\n<b>Routed To:</b> {{ $json.output.routing_dest || $json.output.category + ' folder' }}<br>\n<b>Timestamp:</b> {{ $now }}<br>\n\n<hr>\n\n<b>Extracted Details</b><br><br>\n\n{{ $json.output.vendor_name ? '<b>Vendor:</b> ' + $json.output.vendor_name + '<br>' : '' }}\n{{ $json.output.customer_name ? '<b>Customer:</b> ' + $json.output.customer_name + '<br>' : '' }}\n{{ $json.output.funder_name ? '<b>Funder:</b> ' + $json.output.funder_name + '<br>' : '' }}\n{{ $json.output.recipient_name ? '<b>Recipient:</b> ' + $json.output.recipient_name + '<br>' : '' }}\n{{ $json.output.award_amount ? '<b>Amount:</b> ' + $json.output.award_amount + '<br>' : '' }}\n{{ $json.output.program_name ? '<b>Program:</b> ' + $json.output.program_name + '<br>' : '' }}\n{{ $json.output.invoice_number ? '<b>Invoice #:</b> ' + $json.output.invoice_number + '<br>' : '' }}\n{{ $json.output.invoice_date ? '<b>Invoice Date:</b> ' + $json.output.invoice_date + '<br>' : '' }}\n{{ $json.output.due_date ? '<b>Due Date:</b> ' + $json.output.due_date + '<br>' : '' }}\n{{ $json.output.amount ? '<b>Amount:</b> ' + $json.output.amount + '<br>' : '' }}\n{{ $json.output.effective_date ? '<b>Effective Date:</b> ' + $json.output.effective_date + '<br>' : '' }}\n{{ $json.output.expiration_date ? '<b>Expiration Date:</b> ' + $json.output.expiration_date + '<br>' : '' }}\n{{ $json.output.contract_value ? '<b>Contract Value:</b> ' + $json.output.contract_value + '<br>' : '' }}\n{{ $json.output.cert_holder ? '<b>Certificate Holder:</b> ' + $json.output.cert_holder + '<br>' : '' }}\n{{ $json.output.issuer ? '<b>Issuer:</b> ' + $json.output.issuer + '<br>' : '' }}\n{{ $json.output.cert_type ? '<b>Certification:</b> ' + $json.output.cert_type + '<br>' : '' }}\n{{ $json.output.cert_number ? '<b>Credential ID:</b> ' + $json.output.cert_number + '<br>' : '' }}\n{{ $json.output.key_services ? '<b>Key Services:</b> ' + $json.output.key_services + '<br>' : '' }}\n{{ $json.output.key_terms ? '<b>Key Terms:</b> ' + $json.output.key_terms + '<br>' : '' }}\n{{ $json.output.line_items ? '<b>Line Items:</b> ' + $json.output.line_items + '<br>' : '' }}\n{{ $json.output.payment_status ? '<b>Payment Status:</b> ' + $json.output.payment_status + '<br>' : '' }}\n{{ $json.output.governing_law ? '<b>Governing Law:</b> ' + $json.output.governing_law + '<br>' : '' }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -3488,
+        -1168
+      ],
+      "id": "2bce74d1-4826-49d6-ad2e-608f412a07b4",
+      "name": "Send a message5",
+      "webhookId": "YOUR_WEBHOOK_ID",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_GMAIL_CREDENTIAL_ID",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "move",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.output.file_id }}",
+          "mode": "id"
+        },
+        "driveId": {
+          "__rl": true,
+          "value": "My Drive",
+          "mode": "list",
+          "cachedResultName": "My Drive",
+          "cachedResultUrl": "https://drive.google.com/drive/my-drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "YOUR_REVIEW_FOLDER_ID",
+          "mode": "list",
+          "cachedResultName": "Review",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/YOUR_REVIEW_FOLDER_ID"
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -4160,
+        368
+      ],
+      "id": "3c00a186-c18b-49ea-abac-6518afae6a93",
+      "name": "Move file5",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
+          "name": "Google Drive OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -4064,
+        -992
+      ],
+      "id": "a00b0392-1113-4e94-9016-ebe4658fa5e8",
+      "name": "Wait",
+      "webhookId": "REPLACE_WEBHOOK_ID"
+    },
+    {
+      "parameters": {
+        "amount": 10
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -4064,
+        -592
+      ],
+      "id": "99cf6d0c-3afc-4887-a8e2-89723044aeea",
+      "name": "Wait1",
+      "webhookId": "REPLACE_WEBHOOK_ID"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -4064,
+        -208
+      ],
+      "id": "3d9b8c34-9a48-49cf-9a3e-bce846f915e6",
+      "name": "Wait2",
+      "webhookId": "REPLACE_WEBHOOK_ID"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -4048,
+        176
+      ],
+      "id": "ae1376a9-dd42-48e3-ab47-e74ee7f18958",
+      "name": "Wait3",
+      "webhookId": "REPLACE_WEBHOOK_ID"
+    },
+    {
+      "parameters": {
+        "operation": "move",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.output.file_id }}",
+          "mode": "id"
+        },
+        "driveId": {
+          "__rl": true,
+          "value": "My Drive",
+          "mode": "list",
+          "cachedResultName": "My Drive",
+          "cachedResultUrl": "https://drive.google.com/drive/my-drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "YOUR_CERTS_FOLDER_ID",
+          "mode": "list",
+          "cachedResultName": "Certificates",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/YOUR_CERTS_FOLDER_ID"
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -3488,
+        -1552
+      ],
+      "id": "bbbd6de5-0a98-490e-ae37-b1bcff762cc9",
+      "name": "Move file1",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
+          "name": "Google Drive OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "move",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.output.file_id }}",
+          "mode": "id"
+        },
+        "driveId": {
+          "__rl": true,
+          "value": "My Drive",
+          "mode": "list",
+          "cachedResultName": "My Drive",
+          "cachedResultUrl": "https://drive.google.com/drive/my-drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "YOUR_CONTRACTS_FOLDER_ID",
+          "mode": "list",
+          "cachedResultName": "Contracts",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/YOUR_CONTRACTS_FOLDER_ID"
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -3488,
+        -784
+      ],
+      "id": "dabac4af-342c-40ff-af93-13f6b143e17d",
+      "name": "Move file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
+          "name": "Google Drive OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "move",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.output.file_id }}",
+          "mode": "id"
+        },
+        "driveId": {
+          "__rl": true,
+          "value": "My Drive",
+          "mode": "list",
+          "cachedResultName": "My Drive",
+          "cachedResultUrl": "https://drive.google.com/drive/my-drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "YOUR_FUNDING_FOLDER_ID",
+          "mode": "list",
+          "cachedResultName": "Funding",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/YOUR_FUNDING_FOLDER_ID"
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -3488,
+        -16
+      ],
+      "id": "2da7fee9-1f3b-4a60-a920-04e87dbdb286",
+      "name": "Move file2",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
+          "name": "Google Drive OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "move",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.output.file_id }}",
+          "mode": "id"
+        },
+        "driveId": {
+          "__rl": true,
+          "value": "My Drive",
+          "mode": "list",
+          "cachedResultName": "My Drive",
+          "cachedResultUrl": "https://drive.google.com/drive/my-drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "YOUR_INVOICES_FOLDER_ID",
+          "mode": "list",
+          "cachedResultName": "Invoices",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/YOUR_INVOICES_FOLDER_ID"
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -3488,
+        560
+      ],
+      "id": "109ccfbd-f3c2-4878-b231-9edb7b590ad1",
+      "name": "Move file3",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
+          "name": "Google Drive OAuth2 API"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Certificate",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Contract",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Funding",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model4": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Invoice",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Move file5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        []
+      ]
+    },
+    "Append row in sheet1": {
+      "main": [
+        []
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch2": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Contract",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Search files and folders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search files and folders": {
+      "main": [
+        [
+          {
+            "node": "Switch2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser2": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Invoice",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser3": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Certificate",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser4": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Funding",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Funding": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send a message2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Move file2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Invoice": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet3",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send a message4",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Move file3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Contract": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send a message3",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Move file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Certificate": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send a message5",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Move file1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Certificate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "Contract",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait2": {
+      "main": [
+        [
+          {
+            "node": "Funding",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait3": {
+      "main": [
+        [
+          {
+            "node": "Invoice",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "REPLACE_WORKFLOW_ID",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "YOUR_INSTANCE_ID"
+  },
+  "id": "REPLACE_WORKFLOW_ID",
+  "tags": []
+}

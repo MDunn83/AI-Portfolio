@@ -1,0 +1,404 @@
+{
+  "name": "Meeting Minutes Processor",
+  "nodes": [
+
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [{ "mode": "everyHour" }]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "REPLACE_WITH_INPUT_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Sheet1",
+          "mode": "name"
+        },
+        "event": "rowAdded",
+        "options": {}
+      },
+      "id": "node-trigger-001",
+      "name": "New Meeting Minutes",
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 4,
+      "position": [260, 540],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a professional meeting minutes processor.\n\nAnalyze the raw meeting notes below and extract:\n1. The meeting date (look for explicit date mentions; if none found, derive it from this timestamp: {{ $json.Timestamp }}).\n2. A comma-separated list of all meeting participants.\n3. An executive summary of exactly 3–5 concise bullet points.\n\nReturn ONLY a valid JSON object — no markdown fences, no explanation:\n{\n  \"date\": \"YYYY-MM-DD\",\n  \"participants\": \"Name1, Name2, Name3\",\n  \"summary_bullets\": [\"Bullet 1\", \"Bullet 2\", \"Bullet 3\"]\n}\n\nRaw meeting notes:\n{{ $json['Meeting Minutes'] }}"
+      },
+      "id": "node-chain-summary-002",
+      "name": "Chain: Summary, Date & Participants",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.4,
+      "position": [560, 100]
+    },
+    {
+      "parameters": {
+        "model": "llama-3.1-8b-instant",
+        "options": {}
+      },
+      "id": "node-groq-summary-003",
+      "name": "Groq (Summary)",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [560, 260],
+      "credentials": {
+        "groqApi": {
+          "id": "",
+          "name": "Groq account"
+        }
+      }
+    },
+
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a professional meeting minutes processor.\n\nAnalyze the raw meeting notes below and extract every action item — specific tasks assigned to or committed to by any participant.\n\nReturn ONLY a valid JSON object — no markdown fences, no explanation:\n{\n  \"action_items\": [\n    {\n      \"action\": \"Clear description of the task\",\n      \"owner\": \"Person responsible, or Unknown if not stated\",\n      \"due_date\": \"YYYY-MM-DD or null if not stated\"\n    }\n  ]\n}\n\nRaw meeting notes:\n{{ $json['Meeting Minutes'] }}"
+      },
+      "id": "node-chain-actions-004",
+      "name": "Chain: Action Items",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.4,
+      "position": [560, 420]
+    },
+    {
+      "parameters": {
+        "model": "llama-3.1-8b-instant",
+        "options": {}
+      },
+      "id": "node-groq-actions-005",
+      "name": "Groq (Actions)",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [560, 580],
+      "credentials": {
+        "groqApi": {
+          "id": "",
+          "name": "Groq account"
+        }
+      }
+    },
+
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a professional meeting minutes processor.\n\nAnalyze the raw meeting notes below and extract every formal decision that was made or agreed upon during the meeting.\n\nReturn ONLY a valid JSON object — no markdown fences, no explanation:\n{\n  \"decisions\": [\n    \"Concise statement of decision 1\",\n    \"Concise statement of decision 2\"\n  ]\n}\n\nRaw meeting notes:\n{{ $json['Meeting Minutes'] }}"
+      },
+      "id": "node-chain-decisions-006",
+      "name": "Chain: Decisions",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.4,
+      "position": [560, 740]
+    },
+    {
+      "parameters": {
+        "model": "llama-3.1-8b-instant",
+        "options": {}
+      },
+      "id": "node-groq-decisions-007",
+      "name": "Groq (Decisions)",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [560, 900],
+      "credentials": {
+        "groqApi": {
+          "id": "",
+          "name": "Groq account"
+        }
+      }
+    },
+
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a professional meeting minutes processor.\n\nAnalyze the raw meeting notes below and extract all open questions, blockers, and dependencies (QBD) raised during the meeting.\n\n- question: something asked but not yet resolved\n- blocker: something actively preventing progress\n- dependency: something the team is waiting on or relies on externally\n\nReturn ONLY a valid JSON object — no markdown fences, no explanation:\n{\n  \"qbd_items\": [\n    {\"type\": \"question\", \"description\": \"...\"},\n    {\"type\": \"blocker\", \"description\": \"...\"},\n    {\"type\": \"dependency\", \"description\": \"...\"}\n  ]\n}\n\nRaw meeting notes:\n{{ $json['Meeting Minutes'] }}"
+      },
+      "id": "node-chain-qbd-008",
+      "name": "Chain: QBD",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.4,
+      "position": [560, 1060]
+    },
+    {
+      "parameters": {
+        "model": "llama-3.1-8b-instant",
+        "options": {}
+      },
+      "id": "node-groq-qbd-009",
+      "name": "Groq (QBD)",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [560, 1220],
+      "credentials": {
+        "groqApi": {
+          "id": "",
+          "name": "Groq account"
+        }
+      }
+    },
+
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "lbl-sum-01",
+              "name": "summary",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOthers": false,
+        "options": {}
+      },
+      "id": "node-label-summary-010",
+      "name": "Label: Summary",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [880, 100]
+    },
+
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "lbl-act-01",
+              "name": "actions",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOthers": false,
+        "options": {}
+      },
+      "id": "node-label-actions-011",
+      "name": "Label: Actions",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [880, 420]
+    },
+
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "lbl-dec-01",
+              "name": "decisions",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOthers": false,
+        "options": {}
+      },
+      "id": "node-label-decisions-012",
+      "name": "Label: Decisions",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [880, 740]
+    },
+
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "lbl-qbd-01",
+              "name": "qbd",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOthers": false,
+        "options": {}
+      },
+      "id": "node-label-qbd-013",
+      "name": "Label: QBD",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [880, 1060]
+    },
+
+    {
+      "parameters": {
+        "mode": "append"
+      },
+      "id": "node-merge-014",
+      "name": "Merge All Outputs",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [1140, 540]
+    },
+
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "data",
+        "includeEmpty": false,
+        "options": {}
+      },
+      "id": "node-aggregate-015",
+      "name": "Aggregate Outputs",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [1360, 540]
+    },
+
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "str-sum-01",
+              "name": "summary",
+              "value": "={{ $json.data.find(d => d.summary !== undefined)?.summary }}",
+              "type": "string"
+            },
+            {
+              "id": "str-act-01",
+              "name": "actions",
+              "value": "={{ $json.data.find(d => d.actions !== undefined)?.actions }}",
+              "type": "string"
+            },
+            {
+              "id": "str-dec-01",
+              "name": "decisions",
+              "value": "={{ $json.data.find(d => d.decisions !== undefined)?.decisions }}",
+              "type": "string"
+            },
+            {
+              "id": "str-qbd-01",
+              "name": "qbd",
+              "value": "={{ $json.data.find(d => d.qbd !== undefined)?.qbd }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOthers": false,
+        "options": {}
+      },
+      "id": "node-structure-016",
+      "name": "Structure Output",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1580, 540]
+    }
+
+  ],
+  "connections": {
+
+    "New Meeting Minutes": {
+      "main": [
+        [
+          { "node": "Chain: Summary, Date & Participants", "type": "main", "index": 0 },
+          { "node": "Chain: Action Items", "type": "main", "index": 0 },
+          { "node": "Chain: Decisions", "type": "main", "index": 0 },
+          { "node": "Chain: QBD", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+
+    "Groq (Summary)": {
+      "ai_languageModel": [
+        [{ "node": "Chain: Summary, Date & Participants", "type": "ai_languageModel", "index": 0 }]
+      ]
+    },
+    "Groq (Actions)": {
+      "ai_languageModel": [
+        [{ "node": "Chain: Action Items", "type": "ai_languageModel", "index": 0 }]
+      ]
+    },
+    "Groq (Decisions)": {
+      "ai_languageModel": [
+        [{ "node": "Chain: Decisions", "type": "ai_languageModel", "index": 0 }]
+      ]
+    },
+    "Groq (QBD)": {
+      "ai_languageModel": [
+        [{ "node": "Chain: QBD", "type": "ai_languageModel", "index": 0 }]
+      ]
+    },
+
+    "Chain: Summary, Date & Participants": {
+      "main": [
+        [{ "node": "Label: Summary", "type": "main", "index": 0 }]
+      ]
+    },
+    "Chain: Action Items": {
+      "main": [
+        [{ "node": "Label: Actions", "type": "main", "index": 0 }]
+      ]
+    },
+    "Chain: Decisions": {
+      "main": [
+        [{ "node": "Label: Decisions", "type": "main", "index": 0 }]
+      ]
+    },
+    "Chain: QBD": {
+      "main": [
+        [{ "node": "Label: QBD", "type": "main", "index": 0 }]
+      ]
+    },
+
+    "Label: Summary": {
+      "main": [
+        [{ "node": "Merge All Outputs", "type": "main", "index": 0 }]
+      ]
+    },
+    "Label: Actions": {
+      "main": [
+        [{ "node": "Merge All Outputs", "type": "main", "index": 1 }]
+      ]
+    },
+    "Label: Decisions": {
+      "main": [
+        [{ "node": "Merge All Outputs", "type": "main", "index": 2 }]
+      ]
+    },
+    "Label: QBD": {
+      "main": [
+        [{ "node": "Merge All Outputs", "type": "main", "index": 3 }]
+      ]
+    },
+
+    "Merge All Outputs": {
+      "main": [
+        [{ "node": "Aggregate Outputs", "type": "main", "index": 0 }]
+      ]
+    },
+    "Aggregate Outputs": {
+      "main": [
+        [{ "node": "Structure Output", "type": "main", "index": 0 }]
+      ]
+    }
+
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}

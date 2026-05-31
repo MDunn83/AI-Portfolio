@@ -1,0 +1,909 @@
+{
+  "name": "Proj5",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {}
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Proj5 New Hires",
+          "cachedResultUrl": "YOUR_GOOGLE_SHEET_URL"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Proj5 New Hires",
+          "cachedResultUrl": "YOUR_GOOGLE_SHEET_URL"
+        },
+        "event": "rowAdded",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1168,
+        120
+      ],
+      "id": "113e255a-7433-408d-98e6-399b2a708372",
+      "name": "Google Sheets Trigger",
+      "credentials": {
+        "googleSheetsTriggerOAuth2Api": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Google Sheets Trigger OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=First Name: {{ $json['First Name'] }}\nLast Name: {{ $json['Last Name'] }}\nRole: {{ $json.Role }}\nDepartment: {{ $json.Department }}\nStart Date: {{ $json['Start Date'] }}\nManager: {{ $json.Manager }}\nContact Email: {{ $json['Contact Email'] }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are an onboarding HR lead at a prestigious company that builds the most exquisite widgets in North America.  Based on the incoming New hire data (name, role, department, start date and manager), personalize a 3 to 5 sentence \"welcome\" email to the new hire. \n\nDo note include any thoughts, pleasantries, etc prior to generating your message."
+            }
+          ]
+        },
+        "batching": {
+          "batchSize": 1,
+          "delayBetweenBatches": 40
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        -944,
+        -152
+      ],
+      "id": "9be8f7a9-6054-4461-927f-9a7a8cc90453",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Sanitize LLM Output\n// Patterns sourced from n8n_and_ClaudeCode_Lessons_Learned_v2.md\n// Sections 1.3, 1.4 -- treat all LLM output as dirty by default\n\nlet text = $json.text || \"\";\n\n// Strip reasoning traces from thinking models (Section 1.4)\ntext = text.replace(/<think>[\\s\\S]*?<\\/think>/gi, \"\");\n\n// Strip markdown headers\ntext = text.replace(/#{1,6}\\s+/g, \"\");\n\n// Strip bold and italic markers\ntext = text.replace(/\\*{1,3}([^*]+)\\*{1,3}/g, \"$1\");\ntext = text.replace(/_{1,3}([^_]+)_{1,3}/g, \"$1\");\n\n// Strip markdown bullet points and numbered lists\ntext = text.replace(/^\\s*[-*+]\\s+/gm, \"\");\ntext = text.replace(/^\\s*\\d+\\.\\s+/gm, \"\");\n\n// Strip markdown fences (Section 1.5 -- llama-4-scout wraps output in fences)\ntext = text.replace(/```[\\s\\S]*?```/g, \"\");\ntext = text.replace(/`([^`]+)`/g, \"$1\");\n\n// Strip literal backslash-n strings (Section 1.3)\ntext = text.replace(/\\n/g, \" \");\n\n// Convert actual newlines to spaces for single-field outputs\n// Comment this line out if downstream node needs newlines preserved (e.g. Gmail with <br> conversion)\n// text = text.replace(/\\n+/g, \" \");\n\n// Strip horizontal rules\ntext = text.replace(/^[-*_]{3,}\\s*$/gm, \"\");\n\n// Strip blockquotes\ntext = text.replace(/^>\\s+/gm, \"\");\n\n// Trim leading/trailing whitespace (Section 1.3 -- always trim before parsing)\ntext = text.trim();\n\nreturn {\n  json: {\n    ...$json,\n    text_clean: text\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -592,
+        -152
+      ],
+      "id": "99290614-db09-4acc-b89f-c6ec913b5ba3",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -872,
+        72
+      ],
+      "id": "e810365c-ebec-4b93-9963-eded5874a4dc",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.text_clean }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are an onboarding HR lead at a prestigious company that builds the most exquisite widgets in North America.  Based on the role and welcome letter, generate a 30-60-90 day onboarding plan tailored to the role.  There should be no more than 2 sentences for each of the 30-60-90 milestones\n\nDo note include any thoughts, pleasantries, etc prior to generating your message."
+            }
+          ]
+        },
+        "batching": {
+          "batchSize": 1,
+          "delayBetweenBatches": 40
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        -368,
+        -152
+      ],
+      "id": "c7b21626-38c9-4ddf-afb6-4874370ff4f6",
+      "name": "Basic LLM Chain1"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -296,
+        72
+      ],
+      "id": "bc7adbdb-1e6b-45d8-ba0b-3e5af7ea30e1",
+      "name": "Groq Chat Model1",
+      "credentials": {
+        "groqApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "let text = $json.text || \"\";\n\n// Strip reasoning traces\ntext = text.replace(/<think>[\\s\\S]*?<\\/think>/gi, \"\");\n\n// Strip markdown headers\ntext = text.replace(/#{1,6}\\s+/g, \"\");\n\n// Strip bold and italic markers\ntext = text.replace(/\\*{1,3}([^*]+)\\*{1,3}/g, \"$1\");\ntext = text.replace(/_{1,3}([^_]+)_{1,3}/g, \"$1\");\n\n// Strip markdown bullet points and numbered lists\ntext = text.replace(/^\\s*[-*+]\\s+/gm, \"\");\ntext = text.replace(/^\\s*\\d+\\.\\s+/gm, \"\");\n\n// Strip markdown fences\ntext = text.replace(/```[\\s\\S]*?```/g, \"\");\ntext = text.replace(/`([^`]+)`/g, \"$1\");\n\n// Strip literal backslash-n strings (Section 1.3)\n// NOTE: do NOT replace real \\n here -- we need them to split on below\ntext = text.replace(/\\n/g, \"\\n\");\n\n// Strip horizontal rules\ntext = text.replace(/^[-*_]{3,}\\s*$/gm, \"\");\n\n// Strip blockquotes\ntext = text.replace(/^>\\s+/gm, \"\");\n\n// Trim\ntext = text.trim();\n\n// Split into 30/60/90 sections\n// Anchors on the day labels -- adjust these strings to match what your LLM actually outputs\nconst day30Match = text.match(/30.day[\\s\\S]*?(?=60.day|$)/i);\nconst day60Match = text.match(/60.day[\\s\\S]*?(?=90.day|$)/i);\nconst day90Match = text.match(/90.day[\\s\\S]*/i);\n\nconst day30 = day30Match ? day30Match[0].trim() : \"\";\nconst day60 = day60Match ? day60Match[0].trim() : \"\";\nconst day90 = day90Match ? day90Match[0].trim() : \"\";\n\nreturn {\n  json: {\n    ...$json,\n    text_clean: text,\n    day_30: day30,\n    day_60: day60,\n    day_90: day90\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -16,
+        -152
+      ],
+      "id": "0d56d2b0-4a33-418a-955c-c5148597fffe",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Google Sheets Trigger').item.json['Contact Email'] }}",
+        "subject": "=Welcome  {{ $('Google Sheets Trigger').item.json['First Name'] }} {{ $('Google Sheets Trigger').item.json['Last Name'] }}!",
+        "message": "={{ $('Code in JavaScript').item.json.text_clean.replace(/\\n/g, '<br>') }}\n<br><br>\nBelow you'll find your 30-60-90 plan. Please reach out with any questions.\n<br><br>\n{{ $json.day_30 }}\n<br><br>\n{{ $json.day_60 }}\n<br><br>\n{{ $json.day_90 }}\n<br><br>\nRegards,<br>\nWidget Co. HR Team",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1808,
+        -400
+      ],
+      "id": "59721b6d-1e4e-4ac2-80ec-c327cf6e34fd",
+      "name": "Send a message",
+      "webhookId": "YOUR_WEBHOOK_ID",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        280,
+        -32
+      ],
+      "id": "34c74399-4ad4-4023-9dea-98d417cc1303",
+      "name": "Groq Chat Model2",
+      "credentials": {
+        "groqApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Google Sheets Trigger').item.json['Manager Email'] }}",
+        "subject": "=Action Items For New Hire {{ $('Google Sheets Trigger').item.json['First Name'] }} {{ $('Google Sheets Trigger').item.json['Last Name'] }}",
+        "message": "=Hi {{ $('Google Sheets Trigger').item.json.Manager }},\n<br><br>\nThe first week's agenda is as follows:\n{{ $json.agenda }}\n<br><br>\nPlease complete the actions below to support onboarding. \n<br><br>\n{{ $json.action_items[0] }}\n<br><br>\n{{ $json.action_items[1] }}\n<br><br>\n{{ $json.action_items[2] }}\n<br><br>\n{{ $json.action_items[3] }}\n<br><br>\n{{ $json.action_items[4] }}\n<br><br>\n{{ $json.action_items[5] }}\n<br><br>\nRegards,<br>\nWidget Co. HR Team",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1808,
+        -180
+      ],
+      "id": "90aed41e-e3fd-49c9-abe2-805b13f2261a",
+      "name": "Send a message1",
+      "webhookId": "YOUR_WEBHOOK_ID",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "let text_clean = $json.text_clean || \"\";\n\n// Split on --- delimiter into individual action items\nconst actions = text_clean\n  .split(\"---\")\n  .map(item => item.trim())\n  .filter(item => item.length > 0);\n\nreturn {\n  json: {\n    ...$json,\n    action_items: actions,\n    action_count: actions.length\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        912,
+        -152
+      ],
+      "id": "f3a06b90-7242-45e5-bc0d-c9095509ae81",
+      "name": "Code in JavaScript3"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        632,
+        368
+      ],
+      "id": "fa5f1b58-ae67-4fe3-bfa2-bc1dac5dad97",
+      "name": "Groq Chat Model3",
+      "credentials": {
+        "groqApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=30 Day: {{ $json.day_30 }}\n60 Day: {{ $json.day_60 }}\n90 Day: {{ $json.day_90 }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "Create an agenda from the {{ $json.day_30 }} for the manager to track.  This should be no more than 2 to 4 lines"
+            }
+          ]
+        },
+        "batching": {
+          "batchSize": 1,
+          "delayBetweenBatches": 100
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        560,
+        144
+      ],
+      "id": "36fed964-0503-4950-af95-12dfdcb83745",
+      "name": "Agenda Gen"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=30 Day: {{ $json.day_30 }}\n60 Day: {{ $json.day_60 }}\n90 Day: {{ $json.day_90 }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "Based on this 30-60-90 day onboarding plan, extract 3-5 specific action items \nthe manager should complete before and during the new hire's first week. \nWrite each as a plain one-sentence task starting with a verb. No bullets, \nno markdown, no numbering. Separate each action item with this exact text on its own line: ---"
+            }
+          ]
+        },
+        "batching": {
+          "batchSize": 1,
+          "delayBetweenBatches": 60
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        208,
+        -256
+      ],
+      "id": "2b5a3407-906b-47c6-a90a-55dacf265cc2",
+      "name": "Action Item Gen"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "let text = $json.text || \"\";\n\n// Strip reasoning traces\ntext = text.replace(/<think>[\\s\\S]*?<\\/think>/gi, \"\");\n\n// Strip markdown headers\ntext = text.replace(/#{1,6}\\s+/g, \"\");\n\n// Strip bold and italic markers\ntext = text.replace(/\\*{1,3}([^*]+)\\*{1,3}/g, \"$1\");\ntext = text.replace(/_{1,3}([^_]+)_{1,3}/g, \"$1\");\n\n// Strip markdown bullet points and numbered lists\ntext = text.replace(/^\\s*[-*+]\\s+/gm, \"\");\ntext = text.replace(/^\\s*\\d+\\.\\s+/gm, \"\");\n\n// Strip markdown fences\ntext = text.replace(/```[\\s\\S]*?```/g, \"\");\ntext = text.replace(/`([^`]+)`/g, \"$1\");\n\n// Strip literal backslash-n strings (Section 1.3)\n// NOTE: do NOT replace real \\n here -- we need them to split on below\ntext = text.replace(/\\\\n/g, \" \");\ntext = text.replace(/\\n/g, \" \");\n\n// Strip horizontal rules\ntext = text.replace(/^[-*_]{3,}\\s*$/gm, \"\");\n\n// Strip blockquotes\ntext = text.replace(/^>\\s+/gm, \"\");\n\n// Trim\ntext = text.trim();\n\nreturn {\n  json: {\n    ...$json,\n    text_clean: text\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        624,
+        -152
+      ],
+      "id": "70e6697e-6195-4e3d-9c2a-59a83333a81e",
+      "name": "Clean"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "let text = $json.text || \"\";\n\n// Strip reasoning traces\ntext = text.replace(/<think>[\\s\\S]*?<\\/think>/gi, \"\");\n\n// Strip markdown headers\ntext = text.replace(/#{1,6}\\s+/g, \"\");\n\n// Strip bold and italic markers\ntext = text.replace(/\\*{1,3}([^*]+)\\*{1,3}/g, \"$1\");\ntext = text.replace(/_{1,3}([^_]+)_{1,3}/g, \"$1\");\n\n// Strip markdown bullet points and numbered lists\ntext = text.replace(/^\\s*[-*+]\\s+/gm, \"\");\ntext = text.replace(/^\\s*\\d+\\.\\s+/gm, \"\");\n\n// Strip markdown fences\ntext = text.replace(/```[\\s\\S]*?```/g, \"\");\ntext = text.replace(/`([^`]+)`/g, \"$1\");\n\n// Strip literal backslash-n strings (Section 1.3)\n// NOTE: do NOT replace real \\n here -- we need them to split on below\ntext = text.replace(/\\\\n/g, \" \");\ntext = text.replace(/\\n/g, \" \");\n\n// Strip horizontal rules\ntext = text.replace(/^[-*_]{3,}\\s*$/gm, \"\");\n\n// Strip blockquotes\ntext = text.replace(/^>\\s+/gm, \"\");\n\n// Trim\ntext = text.trim();\n\nreturn {\n  json: {\n    ...$json,\n    agenda: text\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        912,
+        144
+      ],
+      "id": "5feef2aa-9578-4231-bac5-a074599fadd4",
+      "name": "Clean1"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {
+          "includeUnpaired": true
+        }
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1136,
+        -4
+      ],
+      "id": "8c0ce449-eaf7-4067-8461-f90a3ee912f3",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "task": "YOUR_GOOGLE_TASKS_LIST_ID",
+        "title": "={{ $('Google Sheets Trigger').item.json.Manager }}: {{ $json.action_items }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.googleTasks",
+      "typeVersion": 1,
+      "position": [
+        1584,
+        172
+      ],
+      "id": "66d2035f-56e7-40f8-a7ed-1a949cd7d896",
+      "name": "Create a task",
+      "credentials": {
+        "googleTasksOAuth2Api": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Google Tasks OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "action_items",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        1360,
+        172
+      ],
+      "id": "6dc4bfd0-230b-40e9-b793-1f1cffd0aee1",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Proj5 New Hires",
+          "cachedResultUrl": "YOUR_GOOGLE_SHEET_URL"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1532338632,
+          "mode": "list",
+          "cachedResultName": "Proj5 New Hires",
+          "cachedResultUrl": "YOUR_GOOGLE_SHEET_URL"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Timestamp": "={{ $now }}",
+            "First Name": "={{ $json['First Name'] }}",
+            "Last Name": "={{ $json['Last Name'] }}",
+            "Role": "={{ $json.Role }}",
+            "Department": "={{ $json.Department }}",
+            "Start Date": "={{ $json['Start Date'] }}",
+            "Manager": "={{ $json.Manager }}",
+            "Welcome Email Sent": "Yes",
+            "Scheduled Check-In Date": "={{ $json.check_in_date }}",
+            "Manager Email Sent": "Yes",
+            "Tasks Created": "Yes",
+            "Onboarding Status": "Initiated"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "First Name",
+              "displayName": "First Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Last Name",
+              "displayName": "Last Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Role",
+              "displayName": "Role",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Department",
+              "displayName": "Department",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Start Date",
+              "displayName": "Start Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Manager",
+              "displayName": "Manager",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Welcome Email Sent",
+              "displayName": "Welcome Email Sent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Manager Email Sent",
+              "displayName": "Manager Email Sent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Tasks Created",
+              "displayName": "Tasks Created",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Scheduled Check-In Date",
+              "displayName": "Scheduled Check-In Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Onboarding Status",
+              "displayName": "Onboarding Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2256,
+        -4
+      ],
+      "id": "1460876f-7c00-45c9-bf33-0acf80011383",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "numberInputs": 4,
+        "options": {
+          "includeUnpaired": true
+        }
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2032,
+        -36
+      ],
+      "id": "19a4d113-2e5d-43f7-8c52-c42ccd3faec5",
+      "name": "Merge1",
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const startDate = new Date($('Google Sheets Trigger').item.json['Start Date']);\nstartDate.setDate(startDate.getDate() + 30);\n\nconst checkInDate = startDate.toISOString().split('T')[0];\n\nreturn {\n  json: {\n    ...$json,\n    check_in_date: checkInDate\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1808,
+        392
+      ],
+      "id": "74c53710-6d54-4589-a5d6-8858ac489ea0",
+      "name": "Check_In"
+    },
+    {
+      "parameters": {
+        "maxItems": 1
+      },
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        1808,
+        172
+      ],
+      "id": "ea4791b5-4979-4217-a445-225b9a49a772",
+      "name": "Limit"
+    },
+    {
+      "parameters": {
+        "amount": 30
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        272,
+        144
+      ],
+      "id": "695bc8a4-20d5-49cd-bd81-5c4584103979",
+      "name": "Wait",
+      "webhookId": "YOUR_WEBHOOK_ID"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Sheets Trigger": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Check_In",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Action Item Gen",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Action Item Gen",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript3": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Agenda Gen",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agenda Gen": {
+      "main": [
+        [
+          {
+            "node": "Clean1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Action Item Gen": {
+      "main": [
+        [
+          {
+            "node": "Clean",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clean": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clean1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Send a message1": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Send a message1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Create a task",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a task": {
+      "main": [
+        [
+          {
+            "node": "Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        []
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check_In": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Limit": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Agenda Gen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "YOUR_VERSION_ID",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "YOUR_INSTANCE_ID"
+  },
+  "id": "YOUR_WORKFLOW_ID",
+  "tags": []
+}

@@ -1,0 +1,697 @@
+{
+  "name": "Proj2 Newsletter",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "nodes": [
+    {
+      "id": "manual_trigger",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [-440, 320],
+      "parameters": {}
+    },
+    {
+      "id": "schedule_trigger",
+      "name": "Schedule Trigger 24h",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [-440, 540],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "days",
+              "daysInterval": 1,
+              "triggerAtHour": 8
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "config",
+      "name": "Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [-220, 320],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a_recipient",
+              "name": "recipientEmail",
+              "type": "string",
+              "value": "YOUR_RECIPIENT_EMAIL"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "get_log",
+      "name": "Get Log",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [0, 320],
+      "alwaysOutputData": true,
+      "parameters": {
+        "operation": "read",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "cachedResultName": "Proj2_Claude"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "802787579",
+          "cachedResultName": "Log"
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_GOOGLE_SHEETS_CRED",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "id": "get_targets",
+      "name": "Get Targets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [220, 320],
+      "parameters": {
+        "operation": "read",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "cachedResultName": "Proj2_Claude"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "0",
+          "cachedResultName": "Targets"
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_GOOGLE_SHEETS_CRED",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "id": "build_rss_url",
+      "name": "Build RSS URL",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [440, 320],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const companyName = $json['Company Name'] || '';\nconst anchor = ($json['Anchor'] || companyName).toString();\nconst sector = $json['Sector'] || '';\nconst website = $json['Website URL'] || '';\nconst query = encodeURIComponent(anchor + ' when:2d');\nconst rssUrl = 'https://news.google.com/rss/search?q=' + query + '&hl=en-US&gl=US&ceid=US:en';\nreturn { json: { companyName, anchor, sector, website, rssUrl } };"
+      }
+    },
+    {
+      "id": "fetch_news",
+      "name": "Fetch News",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [660, 320],
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "parameters": {
+        "url": "={{ $json.rssUrl }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 (compatible; n8n-newsletter/1.0)"
+            }
+          ]
+        },
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 1500
+            }
+          },
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          },
+          "timeout": 20000
+        }
+      }
+    },
+    {
+      "id": "parse_articles",
+      "name": "Parse Articles",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [880, 320],
+      "alwaysOutputData": true,
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const targets = $('Get Targets').all();\nconst responses = $input.all();\nconst cutoff = Date.now() - (48 * 60 * 60 * 1000);\nconst out = [];\nfor (let i = 0; i < responses.length; i++) {\n  const t = (targets[i] && targets[i].json) ? targets[i].json : {};\n  const companyName = t['Company Name'] || '';\n  const anchor = t['Anchor'] || '';\n  const sector = t['Sector'] || '';\n  const xml = (responses[i].json.data || '').toString();\n  const blocks = xml.match(new RegExp('<item>[^]*?</item>', 'g')) || [];\n  const getTag = (block, tag) => {\n    const m = block.match(new RegExp('<' + tag + '>([^]*?)</' + tag + '>'));\n    if (!m) return '';\n    let v = m[1];\n    v = v.split('<![CDATA[').join('').split(']]>').join('');\n    return v.trim();\n  };\n  let count = 0;\n  for (const block of blocks) {\n    if (count >= 6) break;\n    const title = getTag(block, 'title');\n    const link = getTag(block, 'link');\n    const pubDate = getTag(block, 'pubDate');\n    let description = getTag(block, 'description');\n    description = description.replace(new RegExp('<[^>]+>', 'g'), ' ').replace(new RegExp('  +', 'g'), ' ').trim().substring(0, 800);\n    const pubMs = pubDate ? new Date(pubDate).getTime() : 0;\n    if (pubMs && pubMs < cutoff) continue;\n    if (!title || !link) continue;\n    out.push({ json: { companyName, anchor, sector, title, url: link, pubDate, description } });\n    count++;\n  }\n}\nreturn out;"
+      }
+    },
+    {
+      "id": "relevance_filter",
+      "name": "Relevance Pre-filter",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1100, 320],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const companyName = ($json.companyName || '').toString();\nconst anchor = ($json.anchor || '').toString();\nconst sector = ($json.sector || '').toString();\nconst title = ($json.title || '').toString();\nconst url = ($json.url || '').toString();\nconst pubDate = ($json.pubDate || '').toString();\nconst description = ($json.description || '').toString();\nconst haystack = (title + ' ' + description.substring(0, 500)).toLowerCase();\nconst aliases = [];\nif (companyName) aliases.push(companyName.toLowerCase());\nif (anchor) aliases.push(anchor.toLowerCase());\ncompanyName.split(' ').forEach(tok => { if (tok.length >= 4) aliases.push(tok.toLowerCase()); });\nlet isRelevant = false;\nfor (const a of aliases) { if (a && haystack.indexOf(a) !== -1) { isRelevant = true; break; } }\nreturn { json: { companyName, anchor, sector, title, url, pubDate, description, isRelevant } };"
+      }
+    },
+    {
+      "id": "filter_dedup",
+      "name": "Filter & Dedup",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1320, 320],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const logUrls = new Set($('Get Log').all().map(item => (item.json['Signal URL'] || '').toString().trim()).filter(u => u.length > 0));\nconst survivors = [];\nfor (const input of $input.all()) {\n  const j = input.json || {};\n  const url = (j.url || '').toString().trim();\n  if (!url) continue;\n  if (!j.isRelevant) continue;\n  if (logUrls.has(url)) continue;\n  survivors.push({ json: j });\n}\nif (survivors.length === 0) {\n  return [{ json: { sentinel: true, url: '' } }];\n}\nreturn survivors;"
+      }
+    },
+    {
+      "id": "wait_3s",
+      "name": "Wait 3s",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [1540, 320],
+      "parameters": {
+        "resume": "timeInterval",
+        "amount": 3,
+        "unit": "seconds"
+      }
+    },
+    {
+      "id": "classify",
+      "name": "Classify",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.4,
+      "position": [1760, 320],
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 45000,
+      "parameters": {
+        "promptType": "define",
+        "text": "=Company: {{ $json.companyName }}\nSector: {{ $json.sector }}\nTitle: {{ $json.title }}\nDescription: {{ $json.description }}\n\nClassify this article into EXACTLY ONE category from this list (use the exact label): Product Launch, Partnership, Funding, Leadership Change, Research Publication, Hiring Signal, Regulatory/Legal, Other.\n\nExtract any monetary amount central to the story (funding raised, acquisition or deal value). Use suffix notation like $30B, $500M, $2.5M. If there is no monetary amount, use N/A.\n\nWrite a factual 1-2 sentence summary of the development.\n\nReturn ONLY raw JSON with no markdown fences, in exactly this shape:\n{\"category\": \"<one of the categories above>\", \"funding\": \"<amount or N/A>\", \"summary\": \"<1-2 sentence summary>\"}\n\nOutput ONLY the requested content. Begin directly with the first line of output. Do not include any introductory text, preamble, or closing remarks."
+      }
+    },
+    {
+      "id": "groq_classify_model",
+      "name": "Groq Classify Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [1760, 540],
+      "parameters": {
+        "model": "llama-3.1-8b-instant",
+        "options": {}
+      },
+      "credentials": {
+        "groqApi": {
+          "id": "REPLACE_GROQ_CRED",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "id": "groq_synth_model",
+      "name": "Groq Synth Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [2860, 640],
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "credentials": {
+        "groqApi": {
+          "id": "REPLACE_GROQ_CRED",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "id": "parse_classification",
+      "name": "Parse Classification",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1980, 320],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const raw = ($json.text || '').toString().trim();\nconst src = $('Filter & Dedup').item.json || {};\nconst isSentinel = src.sentinel === true || !src.url;\nif (isSentinel) {\n  return { json: { isReal: false, isSentinel: true, include: false, companyName: '', anchor: '', sector: '', title: '', url: '', pubDate: '', description: '', category: '', funding: 'N/A', fundingMillions: null, summary: '', reason: 'No new articles' } };\n}\nconst companyName = (src.companyName || '').toString();\nconst anchor = (src.anchor || '').toString();\nconst sector = (src.sector || '').toString();\nconst title = (src.title || '').toString();\nconst url = (src.url || '').toString();\nconst pubDate = (src.pubDate || '').toString();\nconst description = (src.description || '').toString();\nconst allowed = ['Product Launch','Partnership','Funding','Leadership Change','Research Publication','Hiring Signal','Regulatory/Legal','Other'];\nfunction parseFundingToMillions(str) {\n  if (!str) return null;\n  let s = str.toString().toUpperCase().split(',').join('').split('$').join('').trim();\n  let mult = 1;\n  if (s.indexOf('B') !== -1) mult = 1000;\n  else if (s.indexOf('M') !== -1) mult = 1;\n  else if (s.indexOf('K') !== -1) mult = 0.001;\n  const num = parseFloat(s);\n  if (isNaN(num)) return null;\n  return num * mult;\n}\nfunction grab(text, key) {\n  const marker = '\"' + key + '\"';\n  let i = text.indexOf(marker);\n  if (i === -1) return '';\n  i = text.indexOf(':', i);\n  if (i === -1) return '';\n  const q1 = text.indexOf('\"', i);\n  if (q1 === -1) return '';\n  const q2 = text.indexOf('\"', q1 + 1);\n  if (q2 === -1) return '';\n  return text.substring(q1 + 1, q2);\n}\nlet category = 'Other';\nlet funding = 'N/A';\nlet summary = '';\ntry {\n  const cleaned = raw.split('```json').join('').split('```').join('').trim();\n  const parsed = JSON.parse(cleaned);\n  category = (parsed.category || 'Other').toString().trim();\n  funding = (parsed.funding || 'N/A').toString().trim();\n  summary = (parsed.summary || '').toString().trim();\n} catch (e) {\n  const c = grab(raw, 'category');\n  const f = grab(raw, 'funding');\n  const s = grab(raw, 'summary');\n  if (c) category = c.trim();\n  if (f) funding = f.trim();\n  if (s) summary = s.trim();\n}\nwhile (category.length && category.charAt(category.length - 1) === '.') category = category.slice(0, -1);\ncategory = category.trim();\nlet canon = 'Other';\nfor (const a of allowed) { if (a.toLowerCase() === category.toLowerCase()) { canon = a; break; } }\ncategory = canon;\nconst fundingMillions = parseFundingToMillions(funding);\nconst isMonetary = (category === 'Funding');\nlet include = false;\nif (category !== 'Other') {\n  if (isMonetary) { include = (fundingMillions !== null && fundingMillions >= 100); }\n  else { include = true; }\n}\nlet reason = 'Included';\nif (category === 'Other') reason = 'Excluded: category Other';\nelse if (isMonetary && !(fundingMillions !== null && fundingMillions >= 100)) reason = 'Excluded: below $100M threshold';\nreturn { json: { isReal: true, isSentinel: false, companyName, anchor, sector, title, url, pubDate, description, category, funding, fundingMillions, summary, include, reason } };"
+      }
+    },
+    {
+      "id": "if_real",
+      "name": "IF Real",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [2200, 200],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond_real",
+              "leftValue": "={{ $json.isReal }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "if_include",
+      "name": "IF Include",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [2420, 200],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond_include",
+              "leftValue": "={{ $json.include }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "log_included",
+      "name": "Log Included",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [2640, 100],
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "cachedResultName": "Proj2_Claude"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "802787579",
+          "cachedResultName": "Log"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Company Name": "={{ $json.companyName }}",
+            "Signal Title": "={{ $json.title }}",
+            "Signal URL": "={{ $json.url }}",
+            "Signal Type": "={{ $json.category }}",
+            "Summary": "={{ $json.summary }}",
+            "PubDate": "={{ $json.pubDate }}",
+            "Logged": "={{ $now.toISO() }}",
+            "Briefing Included": "Yes",
+            "Funding": "={{ $json.funding }}"
+          },
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_GOOGLE_SHEETS_CRED",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "id": "log_excluded",
+      "name": "Log Excluded",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [2640, 300],
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "cachedResultName": "Proj2_Claude"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "802787579",
+          "cachedResultName": "Log"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Company Name": "={{ $json.companyName }}",
+            "Signal Title": "={{ $json.title }}",
+            "Signal URL": "={{ $json.url }}",
+            "Signal Type": "={{ $json.category }}",
+            "Summary": "={{ $json.summary }}",
+            "PubDate": "={{ $json.pubDate }}",
+            "Logged": "={{ $now.toISO() }}",
+            "Briefing Included": "No",
+            "Funding": "={{ $json.funding }}"
+          },
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_GOOGLE_SHEETS_CRED",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "id": "aggregate_included",
+      "name": "Aggregate Included",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2200, 480],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const NL = String.fromCharCode(10);\nconst items = $input.all();\nconst included = [];\nfor (const it of items) {\n  const j = it.json || {};\n  if (j.include === true) included.push(j);\n}\nlet combined = '';\nfor (let i = 0; i < included.length; i++) {\n  const a = included[i];\n  combined += (i + 1) + '. Company: ' + (a.companyName || '') + NL;\n  combined += 'Category: ' + (a.category || '') + NL;\n  if (a.funding && a.funding !== 'N/A') combined += 'Funding/Value: ' + a.funding + NL;\n  combined += 'Headline: ' + (a.title || '') + NL;\n  combined += 'Summary: ' + (a.summary || '') + NL;\n  combined += 'Source: ' + (a.url || '') + NL + NL;\n}\ncombined = combined.substring(0, 6000);\nconst count = included.length;\nconst hasSignals = count > 0;\nreturn [{ json: { count, hasSignals, combined } }];"
+      }
+    },
+    {
+      "id": "if_has_signals",
+      "name": "IF Has Signals",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [2420, 480],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond_has_signals",
+              "leftValue": "={{ $json.hasSignals }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "synthesize",
+      "name": "Synthesize",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.4,
+      "position": [2640, 460],
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 45000,
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are writing a concise daily AI industry newsletter.\n\nSynthesize the following company news signals into a cohesive briefing of NO MORE THAN 5 short paragraphs. Group related developments by theme and lead with the most significant. Do not simply list each item; weave them into flowing prose. Do not invent facts beyond what is provided. Do not use bullet points or headings.\n\nSignals:\n{{ $json.combined }}\n\nOutput ONLY the newsletter body. Begin directly with the first paragraph. Do not include a subject line, greeting, preamble, or closing remarks."
+      }
+    },
+    {
+      "id": "sanitize_text",
+      "name": "Sanitize Text",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2860, 460],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const NL = String.fromCharCode(10);\nconst BS = String.fromCharCode(92);\nconst PARA = String.fromCharCode(1);\nlet text = ($json.text || '').toString();\ntext = text.split(BS + 'n').join(NL);\ntext = text.split(NL + NL).join(PARA);\ntext = text.split(NL).join(' ');\ntext = text.split(PARA).join(NL + NL);\nwhile (text.indexOf('  ') !== -1) { text = text.split('  ').join(' '); }\ntext = text.trim();\nconst html = text.split(NL + NL).join('<br><br>');\nreturn { json: { text, html } };"
+      }
+    },
+    {
+      "id": "gmail_digest",
+      "name": "Gmail Digest",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [3080, 460],
+      "parameters": {
+        "sendTo": "={{ $('Config').first().json.recipientEmail }}",
+        "subject": "=Daily AI Newsletter - {{ $now.format('yyyy-MM-dd') }}",
+        "message": "={{ $json.html }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "REPLACE_GMAIL_CRED",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "id": "gmail_no_news",
+      "name": "Gmail No News",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [2640, 660],
+      "parameters": {
+        "sendTo": "={{ $('Config').first().json.recipientEmail }}",
+        "subject": "=Daily AI Newsletter - {{ $now.format('yyyy-MM-dd') }} (No major signals)",
+        "message": "No major AI signals in the last 24 hours met the inclusion criteria.",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "REPLACE_GMAIL_CRED",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "id": "find_old_log_rows",
+      "name": "Find Old Log Rows",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [0, 560],
+      "alwaysOutputData": true,
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const rows = $('Get Log').all();\nconst cutoff = Date.now() - (7 * 24 * 60 * 60 * 1000);\nlet deleteCount = 0;\nfor (const r of rows) {\n  const logged = ((r.json || {})['Logged'] || '').toString();\n  const t = logged ? new Date(logged).getTime() : NaN;\n  if (!isNaN(t) && t < cutoff) { deleteCount++; } else { break; }\n}\nconst hasOld = deleteCount > 0;\nreturn [{ json: { deleteCount, hasOld, startIndex: 1 } }];"
+      }
+    },
+    {
+      "id": "if_has_old_rows",
+      "name": "IF Has Old Rows",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [220, 560],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond_old",
+              "leftValue": "={{ $json.hasOld }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "delete_old_log_rows",
+      "name": "Delete Old Log Rows",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [440, 560],
+      "parameters": {
+        "operation": "delete",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "cachedResultName": "Proj2_Claude"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "802787579",
+          "cachedResultName": "Log"
+        },
+        "toDelete": "rows",
+        "startIndex": "={{ $json.startIndex }}",
+        "numberToDelete": "={{ $json.deleteCount }}"
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_GOOGLE_SHEETS_CRED",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [[{ "node": "Config", "type": "main", "index": 0 }]]
+    },
+    "Schedule Trigger 24h": {
+      "main": [[{ "node": "Config", "type": "main", "index": 0 }]]
+    },
+    "Config": {
+      "main": [[{ "node": "Get Log", "type": "main", "index": 0 }]]
+    },
+    "Get Log": {
+      "main": [
+        [
+          { "node": "Get Targets", "type": "main", "index": 0 },
+          { "node": "Find Old Log Rows", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Find Old Log Rows": {
+      "main": [[{ "node": "IF Has Old Rows", "type": "main", "index": 0 }]]
+    },
+    "IF Has Old Rows": {
+      "main": [
+        [{ "node": "Delete Old Log Rows", "type": "main", "index": 0 }],
+        []
+      ]
+    },
+    "Get Targets": {
+      "main": [[{ "node": "Build RSS URL", "type": "main", "index": 0 }]]
+    },
+    "Build RSS URL": {
+      "main": [[{ "node": "Fetch News", "type": "main", "index": 0 }]]
+    },
+    "Fetch News": {
+      "main": [[{ "node": "Parse Articles", "type": "main", "index": 0 }]]
+    },
+    "Parse Articles": {
+      "main": [[{ "node": "Relevance Pre-filter", "type": "main", "index": 0 }]]
+    },
+    "Relevance Pre-filter": {
+      "main": [[{ "node": "Filter & Dedup", "type": "main", "index": 0 }]]
+    },
+    "Filter & Dedup": {
+      "main": [[{ "node": "Wait 3s", "type": "main", "index": 0 }]]
+    },
+    "Wait 3s": {
+      "main": [[{ "node": "Classify", "type": "main", "index": 0 }]]
+    },
+    "Classify": {
+      "main": [[{ "node": "Parse Classification", "type": "main", "index": 0 }]]
+    },
+    "Parse Classification": {
+      "main": [
+        [
+          { "node": "IF Real", "type": "main", "index": 0 },
+          { "node": "Aggregate Included", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "IF Real": {
+      "main": [
+        [{ "node": "IF Include", "type": "main", "index": 0 }],
+        []
+      ]
+    },
+    "IF Include": {
+      "main": [
+        [{ "node": "Log Included", "type": "main", "index": 0 }],
+        [{ "node": "Log Excluded", "type": "main", "index": 0 }]
+      ]
+    },
+    "Aggregate Included": {
+      "main": [[{ "node": "IF Has Signals", "type": "main", "index": 0 }]]
+    },
+    "IF Has Signals": {
+      "main": [
+        [{ "node": "Synthesize", "type": "main", "index": 0 }],
+        [{ "node": "Gmail No News", "type": "main", "index": 0 }]
+      ]
+    },
+    "Synthesize": {
+      "main": [[{ "node": "Sanitize Text", "type": "main", "index": 0 }]]
+    },
+    "Sanitize Text": {
+      "main": [[{ "node": "Gmail Digest", "type": "main", "index": 0 }]]
+    },
+    "Groq Classify Model": {
+      "ai_languageModel": [[{ "node": "Classify", "type": "ai_languageModel", "index": 0 }]]
+    },
+    "Groq Synth Model": {
+      "ai_languageModel": [[{ "node": "Synthesize", "type": "ai_languageModel", "index": 0 }]]
+    }
+  }
+}

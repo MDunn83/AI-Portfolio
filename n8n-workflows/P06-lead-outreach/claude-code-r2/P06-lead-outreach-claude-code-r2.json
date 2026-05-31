@@ -1,0 +1,766 @@
+{
+  "name": "P6 Leads V2",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "a0f2b3cc-5cca-40cf-87d3-dfc6c603ccc5",
+      "name": "Run Workflow",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        3840,
+        1360
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "P6: Leads",
+          "cachedResultUrl": "YOUR_GOOGLE_SHEET_URL"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 36794394,
+          "mode": "list",
+          "cachedResultName": "Summary",
+          "cachedResultUrl": "YOUR_GOOGLE_SHEET_URL"
+        },
+        "options": {}
+      },
+      "id": "63c538e1-f1cb-4546-bead-c2fe71c3e818",
+      "name": "Get Summary Log",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        4048,
+        1216
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_CREDENTIAL_ID",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "P6: Leads",
+          "cachedResultUrl": "YOUR_GOOGLE_SHEET_URL"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Companies",
+          "cachedResultUrl": "YOUR_GOOGLE_SHEET_URL"
+        },
+        "options": {}
+      },
+      "id": "db0383a1-f628-4d80-90b6-8c3775ac6e38",
+      "name": "Get All Companies",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        4048,
+        1504
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_CREDENTIAL_ID",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// $json is the current company row from Get All Companies (one item per company).\n// $('Get Summary Log').all() returns [] safely when the sheet is empty.\nconst summaryRows = $('Get Summary Log').all()\n  .map(r => r.json)\n  .filter(r => r && r.Company);\n\nreturn {\n  json: {\n    summaryRows,\n    company: ($json.Company || '').trim(),\n    website: $json.Website || '',\n    contactName: $json['Contact Name'] || '',\n    role: $json.Role || '',\n    email: $json.Email || ''\n  }\n};"
+      },
+      "id": "bb2f78be-5ee0-4a98-b053-82ddde9d5c24",
+      "name": "Collect Summary Rows",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4272,
+        1504
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const { company, website, contactName, role, email, summaryRows } = $json;\nconst cutoff = Date.now() - (30 * 24 * 60 * 60 * 1000);\n\nlet isRecent = false;\nif (summaryRows && summaryRows.length > 0) {\n  isRecent = summaryRows.some(row => {\n    const rowCompany = (row.Company || '').trim();\n    if (rowCompany.toLowerCase() !== company.toLowerCase()) return false;\n    if (!row.Recency) return false;\n    return new Date(row.Recency).getTime() > cutoff;\n  });\n}\n\nreturn { json: { isRecent, company, website, contactName, role, email } };"
+      },
+      "id": "61d75683-a45e-4fd9-bd84-0f294a8e6e9d",
+      "name": "Check 30-Day Dedup",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4496,
+        1504
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "cond-dedup",
+              "leftValue": "={{ $json.isRecent }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "equal"
+              }
+            },
+            {
+              "id": "f6c6abee-7266-4397-8861-2b54849cdcf1",
+              "leftValue": "={{ $json.isRecent }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "02c684f6-6d0c-43b1-b27d-4909009192d9",
+      "name": "Skip If Recent",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        4720,
+        1504
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ 'https://r.jina.ai/' + $json.website }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "text"
+            }
+          },
+          "timeout": 30000
+        }
+      },
+      "id": "1c215c2e-1fc2-434d-9986-08321bd8ce06",
+      "name": "Scrape Website",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4928,
+        1360
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ 'https://news.google.com/rss/search?q=' + encodeURIComponent($('Skip If Recent').item.json.company) + '&hl=en-US&gl=US&ceid=US:en' }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "text"
+            }
+          },
+          "timeout": 15000
+        }
+      },
+      "id": "72bd8c8d-bc09-4c74-a43d-263445e3da7f",
+      "name": "Fetch News",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        5104,
+        1360
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ 'You are a business analyst researching prospective consulting clients.\\n\\nCompany: ' + $json.company + '\\nWebsite: ' + $json.website + '\\n\\nWebsite Content:\\n' + String($json.content || '').slice(0, 3000) + '\\n\\nRecent News Headlines:\\n' + String($json.news || '').slice(0, 1500) + '\\n\\nWrite a 2-3 sentence factual summary covering: what this company does, who their customers are, and their current operational focus. Output only the summary — no labels, headers, or extra commentary.' }}"
+      },
+      "id": "8c48c149-6e32-4d0d-9cf5-8ace1a971aca",
+      "name": "Summarizer Chain",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.4,
+      "position": [
+        5536,
+        1360
+      ]
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash-lite",
+        "options": {
+          "temperature": 0.3
+        }
+      },
+      "id": "4acd6ea2-7c0b-4a90-ad7e-690bd5843e10",
+      "name": "Gemini Flash",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        5536,
+        1584
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "REPLACE_CREDENTIAL_ID",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ 'You are an expert sales analyst evaluating companies as prospects for an AI workflow automation consulting firm.\\n\\nThe consulting service helps small to mid-size SaaS and tech companies deploy internal productivity tools using platforms like n8n, Claude, and Google Workspace. Ideal clients have operational complexity, manual or fragmented workflows, and a non-technical ops or admin function that would benefit from automation. They are NOT large enterprises that build their own automation in-house.\\n\\nCompany: ' + $json.company + '\\nContact Role: ' + $json.role + '\\n\\nCompany Summary:\\n' + $json.text + '\\n\\nScoring criteria (score relative to fit for this consulting service):\\n- 7-10: SaaS or tech company, 10-500 employees, clear operational complexity, Google Workspace likely in use, non-technical ops/admin roles present, no in-house automation team — strong candidate for outreach\\n- 4-6: Relevant industry but ambiguous company size, unclear automation need, or limited public information available\\n- 1-3: Large enterprise with own engineering/automation team, non-tech industry, or minimal digital presence\\n\\nRespond ONLY with a valid JSON object on a single line. No markdown, no code fences, no explanation.\\nFormat: {\"score\": <integer 1-10>, \"rationale\": \"<one sentence explaining the score>\"}'}}"
+      },
+      "id": "33d3cdd5-c51f-481a-b80f-146aa6131b1d",
+      "name": "Scorer Chain",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.4,
+      "position": [
+        5808,
+        1360
+      ]
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash-lite",
+        "options": {
+          "temperature": 0.1
+        }
+      },
+      "id": "5c163f3d-e5c8-4821-9cbd-ad8018d7b705",
+      "name": "Gemini Flash (Scorer)",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        5808,
+        1568
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "REPLACE_CREDENTIAL_ID",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const raw = ($json.text || '').trim();\n\nlet score = 5;\nlet rationale = 'Score could not be parsed from LLM output.';\n\ntry {\n  const cleaned = raw.replace(/```(?:json)?\\s*/gi, '').replace(/```\\s*/g, '').trim();\n  const parsed = JSON.parse(cleaned);\n  score = Math.min(10, Math.max(1, parseInt(parsed.score, 10)));\n  rationale = parsed.rationale || rationale;\n} catch (e) {\n  const scoreMatch = raw.match(/\"score\"\\s*:\\s*(\\d+)/);\n  const rationaleMatch = raw.match(/\"rationale\"\\s*:\\s*\"([^\"]+)\"/);\n  if (scoreMatch) score = Math.min(10, Math.max(1, parseInt(scoreMatch[1], 10)));\n  if (rationaleMatch) rationale = rationaleMatch[1];\n}\n\nreturn {\n  json: {\n    score,\n    rationale,\n    company: $('Skip If Recent').item.json.company || '',\n    website: $('Skip If Recent').item.json.website || '',\n    contactName: $('Skip If Recent').item.json.contactName || '',\n    role: $('Skip If Recent').item.json.role || '',\n    email: $('Skip If Recent').item.json.email || '',\n    summary: $('Summarizer Chain').item.json.text || ''\n  }\n};"
+      },
+      "id": "0376aaad-98e0-41f7-af02-e548fd9717f1",
+      "name": "Parse Score",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        6080,
+        1360
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "cond-score",
+              "leftValue": "={{ $json.score }}",
+              "rightValue": 7,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "828dd24d-de63-4afa-ad41-1b242c65b97f",
+      "name": "Route By Score",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        6240,
+        1360
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ 'You are writing a cold outreach email on behalf of an independent AI workflow automation consultant.\\n\\nThe consultant helps small to mid-size SaaS and tech companies deploy internal productivity tools — things like automating repetitive ops work, connecting the tools a team already uses, and reducing manual handoffs — using n8n, Claude, and Google Workspace. No enterprise contracts, no big implementation teams. Just practical automation that actually gets used.\\n\\nYou are writing to:\\n- Name: ' + $json.contactName + '\\n- Role: ' + $json.role + '\\n- Company: ' + $json.company + '\\n\\nWhat you know about their company:\\n' + $json.summary + '\\n\\nWrite a cold outreach email body with exactly this structure:\\n\\nParagraph 1 (3-4 sentences): Open with one specific, genuine observation about the company — something from what you know about them. Briefly introduce who you are and what you do. Keep it personal, like you actually looked them up.\\n\\nParagraph 2 (3-4 sentences): Describe a realistic workflow pain point that a company like theirs likely has. Connect it to what you offer — concretely, not vaguely. Give them a reason to see this as relevant to their work.\\n\\nParagraph 3 (2-3 sentences): Soft, low-pressure ask — suggest a brief call to see if there is a fit. Make it easy to say yes or no.\\n\\nTone rules:\\n- Friendly and professional. Write like a real person, not a marketing team.\\n- No buzzwords: do not use synergy, leverage, streamline, world-class, cutting-edge, game-changing, or innovative.\\n- No hype. No hollow compliments.\\n- Do NOT include a subject line, greeting, or sign-off — output the three body paragraphs only, separated by blank lines.' }}"
+      },
+      "id": "c591dd57-9eac-4aaf-adb5-ff03fd28892f",
+      "name": "Email Writer Chain",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.4,
+      "position": [
+        6384,
+        1184
+      ]
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash-lite",
+        "options": {
+          "temperature": 0.7
+        }
+      },
+      "id": "cae469d3-f2bf-440f-87d4-a66ea8fee43e",
+      "name": "Gemini Flash (Email)",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        6384,
+        1536
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "REPLACE_CREDENTIAL_ID",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const body = ($json.text || '').trim();\nif (!body) {\n  throw new Error(\n    'Email Writer Chain returned an empty body for ' +\n    $('Parse Score').item.json.company +\n    ' — execution stopped before sending.'\n  );\n}\nreturn { json: $json };"
+      },
+      "id": "fdb4232f-707f-40ef-b672-d3d7691ca009",
+      "name": "Guard Email Body",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        6688,
+        1184
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Parse Score').item.json.email }}",
+        "subject": "={{ 'Quick question, ' + $('Parse Score').item.json.contactName }}",
+        "message": "={{ $json.text.replace(/\\n/g, '<br>') }}",
+        "options": {}
+      },
+      "id": "d67f83d3-8e91-4222-a6e1-4e6933985e19",
+      "name": "Send Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [
+        6864,
+        1184
+      ],
+      "webhookId": "REPLACE_WEBHOOK_ID",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "REPLACE_CREDENTIAL_ID",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "P6: Leads",
+          "cachedResultUrl": "YOUR_GOOGLE_SHEET_URL"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 36794394,
+          "mode": "list",
+          "cachedResultName": "Summary",
+          "cachedResultUrl": "YOUR_GOOGLE_SHEET_URL"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Company": "={{ $json.company }}",
+            "Summary": "={{ $json.rationale }}",
+            "Rating": "={{ $json.score }}",
+            "Orig Text": "={{ $json.summary }}",
+            "Recency": "={{ $now.toISO() }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "Company",
+              "displayName": "Company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Orig Text",
+              "displayName": "Orig Text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Summary",
+              "displayName": "Summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Rating",
+              "displayName": "Rating",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Recency",
+              "displayName": "Recency",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "threadId",
+              "displayName": "threadId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "labelIds",
+              "displayName": "labelIds",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "d138febb-512e-4150-a5a2-b0d06bc58568",
+      "name": "Log to Summary",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        7088,
+        1456
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_CREDENTIAL_ID",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "let cleaned = ($('Scrape Website').item.json.data || '').toString();\ncleaned = cleaned.replace(/\\[.*?\\]\\(https?:\\/\\/[^\\)]+\\)/g, '');\ncleaned = cleaned.replace(/https?:\\/\\/\\S+/g, '');\ncleaned = cleaned.replace(/[\\*#]+/g, '');\ncleaned = cleaned.replace(/cookie|opt.out|preferences|privacy|GDPR|consent/gi, '');\ncleaned = cleaned.replace(/\\n+/g, ' ');\ncleaned = cleaned.trim();\nif (!cleaned || cleaned.length < 50) {\n  cleaned = 'No meaningful content available for this company.';\n}\ncleaned = cleaned.substring(0, 3000);\n\nreturn { json: {\n  content: cleaned,\n  news: $json.data || '',\n  company: $('Skip If Recent').item.json.company || '',\n  website: $('Skip If Recent').item.json.website || '',\n  contactName: $('Skip If Recent').item.json.contactName || '',\n  role: $('Skip If Recent').item.json.role || '',\n  email: $('Skip If Recent').item.json.email || ''\n}};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5344,
+        1360
+      ],
+      "id": "164a1094-1734-4610-90b5-282563bd2534",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Run Workflow": {
+      "main": [
+        [
+          {
+            "node": "Get Summary Log",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get All Companies",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get All Companies": {
+      "main": [
+        [
+          {
+            "node": "Collect Summary Rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Collect Summary Rows": {
+      "main": [
+        [
+          {
+            "node": "Check 30-Day Dedup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check 30-Day Dedup": {
+      "main": [
+        [
+          {
+            "node": "Skip If Recent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Skip If Recent": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Scrape Website",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scrape Website": {
+      "main": [
+        [
+          {
+            "node": "Fetch News",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch News": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini Flash": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Summarizer Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Summarizer Chain": {
+      "main": [
+        [
+          {
+            "node": "Scorer Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini Flash (Scorer)": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Scorer Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scorer Chain": {
+      "main": [
+        [
+          {
+            "node": "Parse Score",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Score": {
+      "main": [
+        [
+          {
+            "node": "Route By Score",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route By Score": {
+      "main": [
+        [
+          {
+            "node": "Email Writer Chain",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Log to Summary",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log to Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini Flash (Email)": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Email Writer Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email Writer Chain": {
+      "main": [
+        [
+          {
+            "node": "Guard Email Body",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guard Email Body": {
+      "main": [
+        [
+          {
+            "node": "Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email": {
+      "main": [
+        [
+          {
+            "node": "Log to Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Summarizer Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "REPLACE_WORKFLOW_ID",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "REPLACE_INSTANCE_ID"
+  },
+  "id": "REPLACE_WORKFLOW_ID",
+  "tags": []
+}

@@ -1,0 +1,870 @@
+{
+  "name": "Meeting Minutes",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json[\"Meeting Minutes\"] }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are an administrative professional. Create 3 to 5 bullets that capture the \"essence\" of the meeting, effectively summarizing it.  Also, explicitly list the Date and Participants at the top in this format: Date: [Date], Participants: [Names].\n\nProvide the output as a clean, plain-text bulleted list. Do not use JSON formatting. Do not include any introductory text like 'Here is the summary.' Start immediately with the bullet points"
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        -720,
+        -944
+      ],
+      "id": "e8e69612-3e83-4e43-9a5e-afcebb7013ff",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.1-8b-instant",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -720,
+        -768
+      ],
+      "id": "0f1474a6-10c6-4abc-9437-cf0cc00a5cc9",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "YOUR_GROQ_CREDENTIAL_ID",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json[\"Meeting Minutes\"] }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are an administrative professional. Identify all action items mentioned in the transcript. For each task, identify the owner and a due date (if mentioned, otherwise use \"TBD\").  Note the owner and due date FIRST, then note the action\n\nProvide the output as a clean, plain-text bulleted list. Do not use JSON formatting. Do not include any introductory text like 'Here is the summary.' Start immediately with the bullet points"
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        -720,
+        -624
+      ],
+      "id": "3853b36f-f9d2-4c65-86f3-4bd25d6898e7",
+      "name": "Basic LLM Chain1"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.1-8b-instant",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -720,
+        -464
+      ],
+      "id": "29df327f-badb-4a4f-896e-7e29cd50ff83",
+      "name": "Groq Chat Model1",
+      "credentials": {
+        "groqApi": {
+          "id": "YOUR_GROQ_CREDENTIAL_ID",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json[\"Meeting Minutes\"] }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are an administrative professional. Extract every final decision, policy change, or agreed-upon outcome from the transcript. Ignore general discussion; only capture the \"final word.\"\n\nProvide the output as a clean, plain-text bulleted list. Do not use JSON formatting. Do not include any introductory text like 'Here is the summary.' Start immediately with the bullet points"
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        -720,
+        -320
+      ],
+      "id": "ec4bb2b9-d2e9-49e3-ad0e-11e72dbc414d",
+      "name": "Basic LLM Chain2"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.1-8b-instant",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -720,
+        -160
+      ],
+      "id": "90e478fe-7407-41c2-ba3b-143d41847bac",
+      "name": "Groq Chat Model2",
+      "credentials": {
+        "groqApi": {
+          "id": "YOUR_GROQ_CREDENTIAL_ID",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.data[1].actions }}",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "Identify every task in this list: {{ $node[\"Aggregate\"].json[\"actions\"] }}\n\nYou must respond with a JSON object containing a key named \"action_items\", which is an array of objects. Each object must have a key named \"task\".\n\nIMPORTANT: Output ONLY raw JSON. No markdown, no backticks, and no conversational preamble like \"Certainly\". Start your response with {.\n\nJSON:"
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        -32,
+        -304
+      ],
+      "id": "0c9ceb32-5c4b-4d0b-ae7a-742fff332014",
+      "name": "Basic LLM Chain4"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.1-8b-instant",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -16,
+        -112
+      ],
+      "id": "541867db-8362-4af1-88cb-bde774d6f66d",
+      "name": "Groq Chat Model4",
+      "credentials": {
+        "groqApi": {
+          "id": "YOUR_GROQ_CREDENTIAL_ID",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyX"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_FORM_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Synthetic Meeting Minutes",
+          "cachedResultUrl": "YOUR_SHEET_URL"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 399558677,
+          "mode": "list",
+          "cachedResultName": "Form Responses 1",
+          "cachedResultUrl": "YOUR_SHEET_URL"
+        },
+        "event": "rowAdded",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1264,
+        -544
+      ],
+      "id": "01c5bb0e-85e8-4e46-9bb1-2fd0d3531660",
+      "name": "Google Sheets Trigger",
+      "credentials": {
+        "googleSheetsTriggerOAuth2Api": {
+          "id": "YOUR_SHEETS_TRIGGER_CREDENTIAL_ID",
+          "name": "Google Sheets Trigger OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json[\"Meeting Minutes\"] }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are an administrative professional. Identify any \"open questions,\" \"blockers,\" or \"dependencies\" that were mentioned but not resolved during the meeting.\n\nProvide the output as a clean, plain-text bulleted list. Do not use JSON formatting. Do not include any introductory text like 'Here is the summary.' Start immediately with the bullet points"
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        -736,
+        0
+      ],
+      "id": "aecdbe1a-21e7-4980-ae9f-fd4117afcfa4",
+      "name": "Basic LLM Chain3"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.1-8b-instant",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -736,
+        176
+      ],
+      "id": "f0b1b465-0f6a-46db-a69f-48f9bb56bbbd",
+      "name": "Groq Chat Model3",
+      "credentials": {
+        "groqApi": {
+          "id": "YOUR_GROQ_CREDENTIAL_ID",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "numberInputs": 4
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -176,
+        -640
+      ],
+      "id": "37cc15a7-3307-4b77-939f-8b398aaa7041",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        64,
+        -608
+      ],
+      "id": "f7f91d08-b51b-4dc0-ac06-e59808e415fd",
+      "name": "Aggregate1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "db5d1091-3480-446e-bfce-d87f273d6645",
+              "name": "summary",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -368,
+        -944
+      ],
+      "id": "968d0eee-59d8-46cd-905a-8c7687c43bca",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "task": "YOUR_TASK_LIST_ID",
+        "title": "={{ $json.task }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.googleTasks",
+      "typeVersion": 1,
+      "position": [
+        592,
+        -96
+      ],
+      "id": "105d6c55-b643-49a5-a3da-32d46fff1d0c",
+      "name": "Create a task",
+      "credentials": {
+        "googleTasksOAuth2Api": {
+          "id": "YOUR_GOOGLE_TASKS_CREDENTIAL_ID",
+          "name": "Google Tasks OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "04ef00f2-87ac-4363-aead-7a2d67b181e7",
+              "name": "actions",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -368,
+        -624
+      ],
+      "id": "31591bdd-0dcf-4762-9b54-e12af90c4e92",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "376157ba-70de-49f7-8dfb-52bfdaa57969",
+              "name": "decisions",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -368,
+        -320
+      ],
+      "id": "011c0ec1-76e5-4380-b67c-08d06c2c9850",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "923fe166-9022-4e28-b47d-2a030f0a357c",
+              "name": "qdb",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -384,
+        0
+      ],
+      "id": "77a61dc8-81e6-4c3c-9389-8facce2ca2a2",
+      "name": "Edit Fields3"
+    },
+    {
+      "parameters": {
+        "sendTo": "YOUR_EMAIL",
+        "subject": "Meeting Minutes",
+        "message": "=Hi Team,</b><br></b><br>\n\n\n<b>Date:</b><br>\n{{ $json.date.replace(/\\n/g, '<br>') }}<br><br>\n\n<b>Participants:</b><br>\n{{ $json.participants.replace(/\\n/g, '<br>') }}<br><br>\n\n<b>Executive Summary:</b><br>\n{{ $json.summary.split('\\n').slice(2).join('\\n').replace(/\\n/g, '<br>') }}<br><br>\n\n<b>Action Items:</b><br>\n{{ $json.actions.replace(/\\n/g, '<br>') }}<br><br>\n\n<b>Decisions:</b><br>\n{{ $json.decisions.replace(/\\n/g, '<br>') }}<br><br>\n\n<b>QBD:</b><br>\n{{ $json.qdb.replace(/\\n/g, '<br>') }}<br><br>\n\nRegards,\nM",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        560,
+        -608
+      ],
+      "id": "acd07e89-cc47-4637-981d-2b5d66fa92ff",
+      "name": "Send a message",
+      "webhookId": "YOUR_WEBHOOK_ID",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_GMAIL_CREDENTIAL_ID",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_LOG_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Meeting Minutes Log",
+          "cachedResultUrl": "YOUR_SHEET_URL"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "YOUR_SHEET_URL"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Summary": "={{ $json.summary }}",
+            "Action Items": "={{ $json.actions }}",
+            "Decisions": "={{ $json.decisions }}",
+            "QBD": "={{ $json.qdb }}",
+            "Date": "={{ $json.date }}",
+            "Participants": "={{ $json.participants }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Date",
+              "displayName": "Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Participants",
+              "displayName": "Participants",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Summary",
+              "displayName": "Summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Action Items",
+              "displayName": "Action Items",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Decisions",
+              "displayName": "Decisions",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "QBD",
+              "displayName": "QBD",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        512,
+        -368
+      ],
+      "id": "b221b0b0-5e30-4cc8-8beb-0e55e0c8bf45",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "output.action_items",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        384,
+        -208
+      ],
+      "id": "8bdebc11-b75f-4ee9-8de6-aa826706205b",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "={\n  \"type\": \"object\",\n  \"properties\": {\n    \"action_items\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"task\": {\n            \"type\": \"string\",\n            \"description\": \"The specific action item description.\"\n          }\n        },\n        \"required\": [\"task\"]\n      }\n    }\n  },\n  \"required\": [\"action_items\"]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        112,
+        -112
+      ],
+      "id": "4d340d58-9999-411e-bce5-e18a072b393b",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "09d6d0eb-d8a3-44a9-ad20-14d6eaf067e0",
+              "name": "date",
+              "value": "={{ $json.data[0].summary.split('Participants:')[0].replace('Date:', '').trim() }}",
+              "type": "string"
+            },
+            {
+              "id": "8b7172d4-0333-4101-ab52-121faf5c436e",
+              "name": "participants",
+              "value": "={{ $json.data[0].summary.split('Participants:')[1].split('\\n')[0].trim() }}",
+              "type": "string"
+            },
+            {
+              "id": "299806dc-1cc8-4940-867f-b2ed9d451391",
+              "name": "summary",
+              "value": "={{ $json.data[0].summary.split('\\n').slice(1).join('\\n').trim() }}",
+              "type": "string"
+            },
+            {
+              "id": "e1d6915f-10c7-49bd-8e32-b34b0d62a60a",
+              "name": "actions",
+              "value": "={{ $json.data[1].actions }}",
+              "type": "string"
+            },
+            {
+              "id": "babe7806-13b4-4d2b-a511-907e88dc47ce",
+              "name": "decisions",
+              "value": "={{ $json.data[2].decisions }}",
+              "type": "string"
+            },
+            {
+              "id": "81739215-2108-42c6-8fb5-b8339bcbbeea",
+              "name": "qdb",
+              "value": "={{ $json.data[3].qdb }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        272,
+        -608
+      ],
+      "id": "84ef53a2-9ef1-43ee-a935-d26b9df52691",
+      "name": "Edit Fields4"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain2",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain2": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model4": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain4",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain4": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets Trigger": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Basic LLM Chain1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Basic LLM Chain2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Basic LLM Chain3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain3",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain3": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Aggregate1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Edit Fields3": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Aggregate1": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain4",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Edit Fields4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        []
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Create a task",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Basic LLM Chain4",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields4": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "REPLACE_WORKFLOW_ID",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "YOUR_INSTANCE_ID"
+  },
+  "id": "REPLACE_WORKFLOW_ID",
+  "tags": []
+}

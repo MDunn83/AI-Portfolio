@@ -1,0 +1,182 @@
+# n8n Meeting Intelligence Pipeline
+
+An AI-powered meeting workflow that automatically transforms a raw meeting transcript into a structured intelligence package — extracting a summary, action items, decisions, and open questions simultaneously, creating tasks automatically, emailing a formatted report to attendees, and logging everything to a persistent record.
+
+Paste a transcript in. Get a complete meeting debrief out. Zero manual note-taking.
+
+---
+
+## What It Does
+
+When a new meeting transcript is submitted via Google Form, the workflow triggers automatically and runs four parallel AI analysis passes on the transcript simultaneously:
+
+- **Summary** — 3 to 5 bullets capturing the essence of the meeting, with date and participants extracted at the top
+- **Action Items** — every task identified with owner and due date, formatted owner/due date first for immediate scanning
+- **Decisions** — every final decision, policy change, or agreed-upon outcome (general discussion filtered out)
+- **Open Questions / Blockers / Dependencies (QBD)** — unresolved items that need follow-up
+
+All four outputs are merged, assembled into a structured record, and routed to three simultaneous outputs: a formatted email, a persistent log sheet, and Google Tasks for automatic task creation.
+
+---
+
+## Architecture
+
+```
+Google Form submission (transcript pasted)
+  → Google Sheets Trigger (new row added)
+      → [4 parallel LLM chains run simultaneously]
+          → LLM Chain 1: Summary + Date + Participants extraction
+          → LLM Chain 2: Action items with owners and due dates
+          → LLM Chain 3: Decisions and agreed outcomes
+          → LLM Chain 4: Open questions, blockers, dependencies
+      → Edit Fields (rename outputs: summary, actions, decisions, qdb)
+      → Merge (4 inputs, wait for all parallel chains to complete)
+      → Aggregate (collect all 4 outputs into single object)
+      → Edit Fields4 (parse and structure: extract date, participants, summary, actions, decisions, qdb)
+          → Send a message (Gmail: formatted HTML email with all sections)
+          → Append row in sheet (Google Sheets log: persistent record of every meeting)
+      → LLM Chain 5: Re-parse action items into structured JSON array
+          → Structured Output Parser (enforce JSON schema)
+          → Split Out (unpack action_items array)
+          → Create a task (Google Tasks: one task per action item)
+```
+
+---
+
+## Parallel Processing Design
+
+The four LLM chains fire simultaneously from the same trigger input — all four receive the full transcript at the same time and process independently. This keeps total runtime low: four analysis passes complete in roughly the same time as one. The Merge node waits for all four to complete before passing the combined output downstream, ensuring no section is missing when the email and log are generated.
+
+The action item task creation runs as a separate branch. After aggregation, the action items text is sent through a fifth LLM chain that re-parses the bulleted list into a structured JSON array using a Structured Output Parser. This enables the Split Out node to unpack individual tasks and create one Google Task per action item rather than one task for the entire list.
+
+---
+
+## AI Model
+
+All five LLM chains use **Groq** with the `llama-3.1-8b-instant` model. Groq's inference speed makes the parallel processing particularly effective — four simultaneous calls complete quickly without noticeable latency.
+
+Each chain uses a purpose-built system prompt that instructs the model to act as an administrative professional, output clean plain-text bullet lists only, and start immediately without preamble. The structured output chain uses a stricter JSON-only prompt with schema enforcement via the Structured Output Parser node.
+
+---
+
+## Email Output Format
+
+The Gmail node sends a formatted HTML email with clearly labeled sections:
+
+```
+Hi Team,
+
+Date: [extracted date]
+
+Participants: [extracted participant list]
+
+Executive Summary:
+• [bullet]
+• [bullet]
+• [bullet]
+
+Action Items:
+• [Owner] | [Due Date] | [Task description]
+• ...
+
+Decisions:
+• [Decision]
+• ...
+
+QBD (Questions, Blockers, Dependencies):
+• [Open item]
+• ...
+
+Regards,
+M
+```
+
+---
+
+## Log Sheet Structure
+
+Every meeting is appended to a persistent Google Sheet with the following columns:
+
+| Column | Content |
+|---|---|
+| Date | Meeting date extracted from transcript |
+| Participants | Attendee list extracted from transcript |
+| Summary | 3-5 bullet executive summary |
+| Action Items | Full action item list with owners and due dates |
+| Decisions | All decisions and agreed outcomes |
+| QBD | Open questions, blockers, and dependencies |
+
+---
+
+## Data Source
+
+The trigger is a **Google Form** with a single large text field labeled "Meeting Minutes." The form submission appends a row to a connected Google Sheet, which fires the Google Sheets Trigger node. The transcript field maps to the column `Meeting Minutes` in the sheet.
+
+For testing, synthetic transcripts generated by an AI model work well. The workflow does not require actual meeting recordings or integrations with Zoom, Google Meet, or Teams — paste or type any text that reads like a meeting transcript and the pipeline will process it.
+
+---
+
+## Setup
+
+### Prerequisites
+- n8n Cloud account (or self-hosted n8n instance)
+- Google account with Google Sheets, Gmail, and Google Tasks access
+- Groq API key (free tier available at console.groq.com)
+
+### Step 1: Create your Google Form
+Create a Google Form with one long-answer text question labeled "Meeting Minutes." Connect it to a Google Sheet so form responses populate automatically.
+
+### Step 2: Create your log sheet
+Create a second Google Sheet for the persistent meeting log with these column headers: `Date | Participants | Summary | Action Items | Decisions | QBD`
+
+### Step 3: Create a Google Tasks list
+In Google Tasks, create a task list to receive action items. Note the task list ID — you'll need it for the Create a task node.
+
+### Step 4: Set up credentials in n8n
+Create the following credentials in n8n's credential manager:
+- **Groq API** — API key from console.groq.com
+- **Google Sheets Trigger OAuth2 API** — OAuth2 for the trigger node
+- **Google Sheets OAuth2 API** — OAuth2 for the append node
+- **Gmail OAuth2 API** — OAuth2 for the send email node
+- **Google Tasks OAuth2 API** — OAuth2 for the task creation node
+
+### Step 5: Import and configure
+1. Import `Meeting_Minutes_clean.json` into n8n via the workflow menu
+2. Update the Google Sheets Trigger node to point to your form responses sheet (`YOUR_FORM_SHEET_ID`)
+3. Update the Append row in sheet node to point to your log sheet (`YOUR_LOG_SHEET_ID`)
+4. Update the Send a message node with your email address (`YOUR_EMAIL_HERE`)
+5. Update the Create a task node with your Google Tasks list ID (`YOUR_TASK_LIST_ID`)
+6. Connect all credentials to their respective nodes
+7. Activate the workflow
+
+### Step 6: Test
+Submit a transcript through your Google Form. Within 30-60 seconds you should receive an email, see a new row in your log sheet, and find new tasks in Google Tasks.
+
+---
+
+## A Note on Meeting Minutes as a Snapshot
+
+This pipeline captures the state of the meeting at the time it occurred — not a definitive record of final truth. Decisions documented here reflect positions held at that moment. If new information changes the direction after a meeting, that context lives in subsequent meetings, not in this record.
+
+The QBD section is specifically designed to preserve uncertainty. Open questions and unresolved items are flagged explicitly so the record reflects what was still open, not just what was concluded.
+
+---
+
+## File Structure
+
+```
+n8n-meeting-intelligence/
+├── Meeting_Minutes_clean.json    # n8n workflow (credentials scrubbed)
+└── README.md
+```
+
+---
+
+## Built With
+
+- [n8n](https://n8n.io) — workflow automation
+- [Groq](https://console.groq.com) — LLM inference (llama-3.1-8b-instant)
+- Google Forms — transcript ingestion
+- Google Sheets — trigger and persistent log
+- Gmail — formatted email delivery
+- Google Tasks — automatic task creation

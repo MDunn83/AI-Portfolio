@@ -1,0 +1,845 @@
+{
+  "name": "P6: Leads V2",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "P6: Leads",
+          "cachedResultUrl": "YOUR_GOOGLE_SHEET_URL"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "YOUR_GOOGLE_SHEET_URL"
+        },
+        "event": "rowAdded",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1952,
+        -32
+      ],
+      "id": "be891977-e7e7-4c62-adf8-f1c44855d35d",
+      "name": "Google Sheets Trigger",
+      "credentials": {
+        "googleSheetsTriggerOAuth2Api": {
+          "id": "REPLACE_CREDENTIAL_ID",
+          "name": "Google Sheets Trigger OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Google Sheets Trigger').item.json.Website }}",
+        "options": {},
+        "requestOptions": {}
+      },
+      "type": "n8n-nodes-base.jinaAi",
+      "typeVersion": 1,
+      "position": [
+        -1216,
+        -48
+      ],
+      "id": "412853b3-d7df-48e5-be0a-3a7d3ef4b032",
+      "name": "Read URL content",
+      "credentials": {
+        "jinaAiApi": {
+          "id": "REPLACE_CREDENTIAL_ID",
+          "name": "Jina AI account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.content }}\n\nRecent News:\n{{ $json.news }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are a business analyst. Summarize this company in 2-3 sentences, focusing specifically on: what they do, their scale and operational complexity, and any signals that suggest they invest in internal productivity tools, automation, or AI adoption. Be concise and factual.\n\nDo not include any introductory text, notes, or commentary. Do not use markdown formatting. Output only the summary."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        -624,
+        -32
+      ],
+      "id": "238e06d5-92b9-4013-8d3d-156be7480633",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "let cleaned = $input.item.json.content;\n\n// Strip markdown image and hyperlinks\ncleaned = cleaned.replace(/\\[.*?\\]\\(https?:\\/\\/[^\\)]+\\)/g, '');\n\n// Strip leftover bare URLs\ncleaned = cleaned.replace(/https?:\\/\\/\\S+/g, '');\n\n// Strip asterisks and hash symbols\ncleaned = cleaned.replace(/[\\*#]+/g, '');\n\n// Collapse multiple newlines into a single space\ncleaned = cleaned.replace(/\\n+/g, ' ');\n\n// Clean up extra whitespace\ncleaned = cleaned.trim();\n\n// Strip out Coookies and other non-relevent content\ncleaned = cleaned.replace(/cookie|opt.out|preferences|privacy|GDPR|consent/gi, '');\n\n// Fallback for empty or near-empty content\nif (!cleaned || cleaned.trim().length < 50) {\n  cleaned = 'No meaningful content available for this company.';\n}\n\n// Strip quoted single-word fragments\ncleaned = cleaned.replace(/\"[^\"]{1,30}\"\\s*\\)/g, '');\ncleaned = cleaned.replace(/\"\\w+\"\\s*\\)/g, '');\n\n// Cap content to first 3000 characters\ncleaned = cleaned.substring(0, 3000);\n\nreturn { json: { \n  content: cleaned,\n  company: $('Google Sheets Trigger').item.json.Company\n}};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1040,
+        -48
+      ],
+      "id": "a6df4a9b-d65d-481c-9a65-12e53eab4856",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "17c8460d-fad8-425f-a8ea-727c1f0cbdac",
+              "name": "text",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            },
+            {
+              "id": "8f68e374-4d46-4190-83ea-55245459b291",
+              "name": "Company",
+              "value": "={{ $('Google Sheets Trigger').item.json.Company }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -304,
+        -32
+      ],
+      "id": "a9a3ed53-c2d5-45d0-b615-410f4460847a",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.text }}",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are evaluating companies as potential targets for AI workflow automation consulting. The service helps companies deploy internal productivity tools using AI and automation platforms like n8n, Claude, and Google Workspace. Score this company 1-10 for fit using these criteria:  9-10: Company is mid-size to large, operates complex internal workflows, has shown public interest in AI adoption or productivity tooling, and the contact role has direct influence over operations or technology decisions 7-8: Company likely has internal workflow complexity worth automating, contact role is adjacent to operations or technology 5-6: Company could benefit but no clear signal of AI interest or the contact role is far from decision-making 1-4: Poor fit -- too small, wrong industry, or contact has no plausible influence over tooling decisions  Return a JSON object with two fields: score (integer) and reasoning (one sentence)."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        -96,
+        -32
+      ],
+      "id": "9c6430bf-212f-4ec2-a259-f3fd0f1f8c61",
+      "name": "Basic LLM Chain1"
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"score\": {\"type\": \"integer\"},\n    \"reasoning\": {\"type\": \"string\"}\n  },\n  \"required\": [\"score\", \"reasoning\"]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        48,
+        128
+      ],
+      "id": "2d2745ae-28ed-4c2f-99ab-2f36e766eaea",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "090fe554-a6c3-4738-8abc-6b2f808ee3ff",
+              "leftValue": "={{ $json.output.score }}",
+              "rightValue": 7,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        240,
+        -32
+      ],
+      "id": "9a66825b-3c8e-4875-884e-b2c1d3936a20",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Company: {{ $('Google Sheets Trigger').item.json.Company }}\nContact Name: {{ $('Google Sheets Trigger').item.json['Contact Name'] }}\nContact Role: {{ $('Google Sheets Trigger').item.json.Role }}\nCompany Summary: {{ $('Edit Fields').item.json.text }}\n",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are an experienced marketing strategist specializing in B2B outreach. Generate a concise, personalized cold outreach email for AI workflow automation consulting services that help companies deploy internal productivity tools using platforms like n8n, Claude, and Google Workspace. The email should be 3-4 short paragraphs with each paragraph on its own line, reference something specific about the company, connect their apparent needs to the service being offered, and end with a low-friction call to action. Do not use generic filler phrases. Sound like a human wrote it.\nReturn a JSON object with two fields: subject (the email subject line) and body (the full email body text).\n\nDo not include a signature block. End with the call to action only.\n\nAfter the salutation, always start a new paragraph with a blank line before the first sentence."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        464,
+        -48
+      ],
+      "id": "2274654d-4662-48b9-b4c7-68e1060a1873",
+      "name": "Basic LLM Chain2"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "P6: Leads",
+          "cachedResultUrl": "YOUR_GOOGLE_SHEET_URL"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 36794394,
+          "mode": "list",
+          "cachedResultName": "Summary",
+          "cachedResultUrl": "YOUR_GOOGLE_SHEET_URL"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Company": "={{ $('Edit Fields').item.json.Company }}",
+            "Orig Text": "={{ $('Edit Fields').item.json.text }}",
+            "Summary": "={{ $json.output.reasoning }}",
+            "Rating": "={{ $json.output.score }}",
+            "Recency": "={{ $now }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Company",
+              "displayName": "Company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Orig Text",
+              "displayName": "Orig Text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Summary",
+              "displayName": "Summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Rating",
+              "displayName": "Rating",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Recency",
+              "displayName": "Recency",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        480,
+        336
+      ],
+      "id": "133fe6e2-4972-4a11-981d-d8ffb5a9874b",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_CREDENTIAL_ID",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"subject\": {\n      \"type\": \"string\"\n    },\n    \"body\": {\n      \"type\": \"string\"\n    }\n  },\n  \"required\": [\"subject\", \"body\"]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        608,
+        128
+      ],
+      "id": "42e12ff3-c6e2-461a-9861-74e926b7555d",
+      "name": "Structured Output Parser1"
+    },
+    {
+      "parameters": {
+        "sendTo": "YOUR_EMAIL",
+        "subject": "={{ $json.output.subject }}",
+        "message": "=\n{{ $json.output.body.replace(/\\n/g, '<br>') }} <br><br>\n\nRegards,<br>\nMark",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        800,
+        -48
+      ],
+      "id": "bf97cc5f-c955-4f4e-9154-5f385f534aad",
+      "name": "Send a message",
+      "webhookId": "REPLACE_WEBHOOK_ID",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "REPLACE_CREDENTIAL_ID",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "devstral-medium-2507",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatMistralCloud",
+      "typeVersion": 1,
+      "position": [
+        -96,
+        160
+      ],
+      "id": "db370a3d-e936-46cb-b0ad-2e67e3f89f75",
+      "name": "Mistral Cloud Chat Model",
+      "credentials": {
+        "mistralCloudApi": {
+          "id": "REPLACE_CREDENTIAL_ID",
+          "name": "Mistral Cloud account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "devstral-medium-2507",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatMistralCloud",
+      "typeVersion": 1,
+      "position": [
+        464,
+        128
+      ],
+      "id": "112f1e78-d5e4-4d44-868d-b8de3d187d71",
+      "name": "Mistral Cloud Chat Model1",
+      "credentials": {
+        "mistralCloudApi": {
+          "id": "REPLACE_CREDENTIAL_ID",
+          "name": "Mistral Cloud account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "P6: Leads",
+          "cachedResultUrl": "YOUR_GOOGLE_SHEET_URL"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 36794394,
+          "mode": "list",
+          "cachedResultName": "Summary",
+          "cachedResultUrl": "YOUR_GOOGLE_SHEET_URL"
+        },
+        "filtersUI": {
+          "values": []
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -1696,
+        96
+      ],
+      "id": "74e1495f-589a-4259-accb-e13974d24b62",
+      "name": "Get row(s) in sheet",
+      "alwaysOutputData": true,
+      "executeOnce": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_CREDENTIAL_ID",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mergeByFields": {
+          "values": [
+            {
+              "field1": "Company",
+              "field2": "Company"
+            }
+          ]
+        },
+        "resolve": "preferInput2",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.compareDatasets",
+      "typeVersion": 2.3,
+      "position": [
+        -1488,
+        -32
+      ],
+      "id": "fb58c6f8-2405-4a51-a880-3cfdb985b7ba",
+      "name": "Compare Datasets"
+    },
+    {
+      "parameters": {
+        "model": "devstral-medium-latest",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatMistralCloud",
+      "typeVersion": 1,
+      "position": [
+        -624,
+        144
+      ],
+      "id": "1b048588-6a6f-4419-9ccc-4247f124d5f5",
+      "name": "Mistral Cloud Chat Model2",
+      "credentials": {
+        "mistralCloudApi": {
+          "id": "REPLACE_CREDENTIAL_ID",
+          "name": "Mistral Cloud account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://gnews.io/api/v4/search",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "={{ $json.Company }}"
+            },
+            {
+              "name": "lang",
+              "value": "en"
+            },
+            {
+              "name": "max",
+              "value": "3"
+            },
+            {
+              "name": "apikey",
+              "value": "cc492d83beff8817b996981ccd9c4cc2"
+            }
+          ]
+        },
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 2000
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -1216,
+        176
+      ],
+      "id": "9852be33-7d44-4c69-8b1e-6260ab055a16",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const articles = $input.item.json.articles;\nreturn {\n  json: {\n    news: articles.map(a => a.title + ': ' + a.description).join('\\n')\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1024,
+        176
+      ],
+      "id": "d1d17563-2864-4c22-bb85-0e6606eff0aa",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {
+          "includeUnpaired": true
+        }
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -816,
+        -32
+      ],
+      "id": "73e9de8c-f8fc-4549-9373-1a16a36000a9",
+      "name": "Merge",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "532bd0e1-ea66-416e-b903-435c3a675002",
+              "leftValue": "={{ $json.Recency }}",
+              "rightValue": "= {{ $now.minus(30, 'seconds') }}",
+              "operator": {
+                "type": "dateTime",
+                "operation": "after"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1360,
+        432
+      ],
+      "id": "d94abbf2-7c65-4958-a6c5-37a5f85eec0e",
+      "name": "If1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Sheets Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Compare Datasets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read URL content": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Basic LLM Chain1",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain1": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain2": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Basic LLM Chain2",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        []
+      ]
+    },
+    "Mistral Cloud Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mistral Cloud Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain2",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Compare Datasets",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Compare Datasets": {
+      "main": [
+        [
+          {
+            "node": "Read URL content",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [],
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mistral Cloud Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Read URL content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "REPLACE_WORKFLOW_ID",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "REPLACE_INSTANCE_ID"
+  },
+  "id": "REPLACE_WORKFLOW_ID",
+  "tags": []
+}

@@ -1,0 +1,1755 @@
+{
+  "name": "Proj7 Outreach",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {}
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Proj 7 Customer Message Automation",
+          "cachedResultUrl": "YOUR_GOOGLE_SHEET_URL"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Customers",
+          "cachedResultUrl": "YOUR_GOOGLE_SHEET_URL"
+        },
+        "event": "rowUpdate",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1472,
+        768
+      ],
+      "id": "c0e9593f-e8e9-436f-b96c-28431c749552",
+      "name": "Google Sheets Trigger",
+      "credentials": {
+        "googleSheetsTriggerOAuth2Api": {
+          "id": "REPLACE_CREDENTIAL_ID",
+          "name": "Google Sheets Trigger OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "fa36193f-0581-4231-9762-645879dea9b9",
+                    "leftValue": "={{ $json[\"Support Ticket Closed Date\"] ? $now.diff(DateTime.fromISO($json[\"Support Ticket Closed Date\"]), 'hours').hours : 9999 }}",
+                    "rightValue": 24,
+                    "operator": {
+                      "type": "number",
+                      "operation": "lte"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Ticket"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json[\"Last Activity Date\"] ? $now.diff(DateTime.fromISO($json[\"Last Activity Date\"]), 'days').days : 0 }}",
+                    "rightValue": 14,
+                    "operator": {
+                      "type": "number",
+                      "operation": "gte"
+                    },
+                    "id": "f12258ff-74db-4b4c-ad8a-a1e3b5da4c67"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Inactivity"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "ad99ee7f-bc05-4375-84f2-0c47fc12f2a2",
+                    "leftValue": "={{ $json[\"Renewal Date\"] ? DateTime.fromISO($json[\"Renewal Date\"]).diff($now, 'days').days : 9999 }}",
+                    "rightValue": 30,
+                    "operator": {
+                      "type": "number",
+                      "operation": "lte"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Renewal"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "f0d0f5a8-3ddc-4c12-86d9-885afb9fd814",
+                    "leftValue": "={{ $json[\"Milestone Reached?\"] }}",
+                    "rightValue": "Yes",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Milestone"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -992,
+        736
+      ],
+      "id": "93cb6149-bdce-4041-b337-a5600c264045",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -704,
+        336
+      ],
+      "id": "2a356a64-2e7b-4bc1-9862-fcc727198e72",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "REPLACE_CREDENTIAL_ID",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -704,
+        672
+      ],
+      "id": "1ce9b791-19cd-4396-adce-a4d9395b120e",
+      "name": "Groq Chat Model1",
+      "credentials": {
+        "groqApi": {
+          "id": "REPLACE_CREDENTIAL_ID",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -704,
+        1024
+      ],
+      "id": "ddf8b981-0421-42e1-8dbf-a5cbd9d4456e",
+      "name": "Groq Chat Model2",
+      "credentials": {
+        "groqApi": {
+          "id": "REPLACE_CREDENTIAL_ID",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -704,
+        1376
+      ],
+      "id": "df1dc4d1-f7fe-4dce-aa63-b7b3505c7794",
+      "name": "Groq Chat Model3",
+      "credentials": {
+        "groqApi": {
+          "id": "REPLACE_CREDENTIAL_ID",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Customer Name: {{ $json[\"Customer Name\"] }}\nCompany: {{ $json[\"Company\"] }}\nPlan Tier: {{ $json[\"Plan Tier\"] }}\nSupport Ticket Closed Date: {{ $json[\"Support Ticket Closed Date\"] }}\nRenewal Date: {{ $json[\"Renewal Date\"] }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are writing a brief, warm follow-up email to a customer whose support ticket was just resolved.   Use the customer's name and company. Acknowledge that their issue was resolved. Express genuine interest in how things are going. If their renewal date is within 30 days, subtly acknowledge the relationship without making it a sales pitch.  Write only the email body. No subject line. No sign-off. 2-3 short paragraphs. Plain text only, no formatting."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        -704,
+        144
+      ],
+      "id": "8c315142-4fff-42e2-8450-1fdca8df23e8",
+      "name": "Ticket"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Customer Name: {{ $json[\"Customer Name\"] }}\nCompany: {{ $json[\"Company\"] }}\nPlan Tier: {{ $json[\"Plan Tier\"] }}\nDays Inactive: {{ $now.diff(DateTime.fromISO($json[\"Last Activity Date\"]), 'days').days }}\nRenewal Date: {{ $json[\"Renewal Date\"] }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are writing a brief, warm follow-up email to a customer who has been inactive for over 14 days.   Use the customer's name, company and note how many days inactive.  Note their lack of activity and express interest in wanting them to return and asking if there's anything you can do.   Express genuine interest in how things are going. If their renewal date is within 30 days, subtly acknowledge the relationship without making it a sales pitch.  Write only the email body. No subject line. No sign-off. 2-3 short paragraphs. Plain text only, no formatting."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        -704,
+        480
+      ],
+      "id": "c0356b41-4ae5-42d5-a098-e4bed1b36a18",
+      "name": "Inactivity"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Customer Name: {{ $json[\"Customer Name\"] }}\nCompany: {{ $json[\"Company\"] }}\nPlan Tier: {{ $json[\"Plan Tier\"] }}\nMilestone:  {{ $json[\"Milestone Reached?\"] }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are writing a brief, warm email to a customer has recently reached a milestone. Congratulate them (using their name and company) on the milestone and express your pleasure in having them as a customer.  If they have any questions or feedback, encourage them to reach out. Write only the email body. No subject line. No sign-off. 2-3 short paragraphs. Plain text only, no formatting."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        -704,
+        1184
+      ],
+      "id": "aa506b41-b42e-4e13-9c01-036c020ac410",
+      "name": "Milestones"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "ff24f827-4a23-4963-8fa4-ac3e43d3179a",
+              "leftValue": "={{ $json[\"Last Contacted Date\"] ? $now.diff(DateTime.fromISO($json[\"Last Contacted Date\"]), 'days').days : 9999 }}",
+              "rightValue": 7,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": "={{ false }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1264,
+        768
+      ],
+      "id": "314fb48d-c4c0-4a53-8912-01eb0d3e0955",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Customer Name: {{ $json[\"Customer Name\"] }}\nCompany: {{ $json[\"Company\"] }}\nPlan Tier: {{ $json[\"Plan Tier\"] }}\nRenewal Date: {{ DateTime.fromISO($json[\"Renewal Date\"]).diff($now, 'days').days }}\nRenewal Date: {{ $json[\"Renewal Date\"] }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are writing a brief, warm email to a customer whose renewal date is approaching. Use the customer's name and company, and note how many days until renewal. Let them know this is a courtesy notice that their account will auto-renew. If they have any questions or wish to make changes to their plan, encourage them to reach out. Write only the email body. No subject line. No sign-off. 2-3 short paragraphs. Plain text only, no formatting."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        -704,
+        832
+      ],
+      "id": "2b603fd5-825a-4a29-8446-0ec103c08b7a",
+      "name": "Renewal"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Google Sheets Trigger').item.json.Email }}",
+        "subject": "Ticket Resolution",
+        "message": "={{ $json.text.replace(/\\n/g, '<br>') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -384,
+        144
+      ],
+      "id": "329b0e7c-9076-4660-8d20-4d1dbc8a6355",
+      "name": "Ticket Message",
+      "webhookId": "REPLACE_WEBHOOK_ID",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "REPLACE_CREDENTIAL_ID",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Google Sheets Trigger').item.json.Email }}",
+        "subject": "={{ $('Google Sheets Trigger').item.json[\"Customer Name\"] }}, We Want You Back!",
+        "message": "={{ $json.text.replace(/\\n/g, '<br>') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -384,
+        480
+      ],
+      "id": "6b897af3-cc6a-433f-8584-9d91a1808201",
+      "name": "Inactivity Message",
+      "webhookId": "REPLACE_WEBHOOK_ID",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "REPLACE_CREDENTIAL_ID",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Google Sheets Trigger').item.json.Email }}",
+        "subject": "Auto-Renewal Reminder",
+        "message": "={{ $json.text.replace(/\\n/g, '<br>') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -384,
+        832
+      ],
+      "id": "3885ea9d-3bac-416c-be47-644e33e6fb64",
+      "name": "Renewal Message",
+      "webhookId": "REPLACE_WEBHOOK_ID",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "REPLACE_CREDENTIAL_ID",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Google Sheets Trigger').item.json.Email }}",
+        "subject": "=Congratulations Are In Order, {{ $('Google Sheets Trigger').item.json[\"Customer Name\"] }}",
+        "message": "={{ $json.text.replace(/\\n/g, '<br>') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -384,
+        1184
+      ],
+      "id": "6d97e62e-7302-450c-824a-942f0ee7be58",
+      "name": "Milestones Message",
+      "webhookId": "REPLACE_WEBHOOK_ID",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "REPLACE_CREDENTIAL_ID",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Proj 7 Customer Message Automation",
+          "cachedResultUrl": "YOUR_GOOGLE_SHEET_URL"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 485336481,
+          "mode": "list",
+          "cachedResultName": "Activity Log",
+          "cachedResultUrl": "YOUR_GOOGLE_SHEET_URL"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Timestamp": "={{ $now }}",
+            "Customer Name": "={{ $json[\"Customer Name\"] }}",
+            "Company": "={{ $json.Company }}",
+            "Trigger Type": "Surpressed",
+            "Email Sent": "No",
+            "Message Preview": "Contacted less than 7 days ago"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Customer Name",
+              "displayName": "Customer Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Company",
+              "displayName": "Company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Trigger Type",
+              "displayName": "Trigger Type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email Sent",
+              "displayName": "Email Sent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Message Preview",
+              "displayName": "Message Preview",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -1056,
+        1104
+      ],
+      "id": "e1d63afc-d31f-41aa-80b5-c4f438011fcc",
+      "name": "Surpressed Emails",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_CREDENTIAL_ID",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Proj 7 Customer Message Automation",
+          "cachedResultUrl": "YOUR_GOOGLE_SHEET_URL"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 485336481,
+          "mode": "list",
+          "cachedResultName": "Activity Log",
+          "cachedResultUrl": "YOUR_GOOGLE_SHEET_URL"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Timestamp": "={{ $now }}",
+            "Customer Name": "={{ $('Google Sheets Trigger').item.json[\"Customer Name\"] }}",
+            "Company": "={{ $('Google Sheets Trigger').item.json.Company }}",
+            "Trigger Type": "Ticket",
+            "Email Sent": "Yes",
+            "Message Preview": "={{ $('Ticket').item.json.text.slice(0, 100) }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Customer Name",
+              "displayName": "Customer Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Company",
+              "displayName": "Company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Trigger Type",
+              "displayName": "Trigger Type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email Sent",
+              "displayName": "Email Sent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Message Preview",
+              "displayName": "Message Preview",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -96,
+        144
+      ],
+      "id": "3861418b-db26-4f0f-bd0a-cf948d2a19e6",
+      "name": "Append Ticket Entries",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_CREDENTIAL_ID",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Proj 7 Customer Message Automation",
+          "cachedResultUrl": "YOUR_GOOGLE_SHEET_URL"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Customers",
+          "cachedResultUrl": "YOUR_GOOGLE_SHEET_URL"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Last Contacted Date": "={{ $now.toISODate() }}",
+            "Customer Name": "={{ $('Google Sheets Trigger').item.json[\"Customer Name\"] }}"
+          },
+          "matchingColumns": [
+            "Customer Name"
+          ],
+          "schema": [
+            {
+              "id": "Customer Name",
+              "displayName": "Customer Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Company",
+              "displayName": "Company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Plan Tier",
+              "displayName": "Plan Tier",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Last Activity Date",
+              "displayName": "Last Activity Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Renewal Date",
+              "displayName": "Renewal Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Last Contacted Date",
+              "displayName": "Last Contacted Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Milestone Reached?",
+              "displayName": "Milestone Reached?",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Support Ticket Closed Date",
+              "displayName": "Support Ticket Closed Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        128,
+        144
+      ],
+      "id": "f6589ba3-8ced-448c-be17-a358fdb5bc0b",
+      "name": "Update Last Contact Date_Ticket",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_CREDENTIAL_ID",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Proj 7 Customer Message Automation",
+          "cachedResultUrl": "YOUR_GOOGLE_SHEET_URL"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Customers",
+          "cachedResultUrl": "YOUR_GOOGLE_SHEET_URL"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Last Contacted Date": "={{ $now.toISODate() }}",
+            "Customer Name": "={{ $('Google Sheets Trigger').item.json[\"Customer Name\"] }}"
+          },
+          "matchingColumns": [
+            "Customer Name"
+          ],
+          "schema": [
+            {
+              "id": "Customer Name",
+              "displayName": "Customer Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Company",
+              "displayName": "Company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Plan Tier",
+              "displayName": "Plan Tier",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Last Activity Date",
+              "displayName": "Last Activity Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Renewal Date",
+              "displayName": "Renewal Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Last Contacted Date",
+              "displayName": "Last Contacted Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Milestone Reached?",
+              "displayName": "Milestone Reached?",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Support Ticket Closed Date",
+              "displayName": "Support Ticket Closed Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        128,
+        480
+      ],
+      "id": "92aa815c-d050-4fc1-b5c5-3e35a1567462",
+      "name": "Update Last Contact Date_Inactivity",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_CREDENTIAL_ID",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Proj 7 Customer Message Automation",
+          "cachedResultUrl": "YOUR_GOOGLE_SHEET_URL"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Customers",
+          "cachedResultUrl": "YOUR_GOOGLE_SHEET_URL"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Last Contacted Date": "={{ $now.toISODate() }}",
+            "row_number": 0,
+            "Customer Name": "={{ $('Google Sheets Trigger').item.json[\"Customer Name\"] }}"
+          },
+          "matchingColumns": [
+            "Customer Name"
+          ],
+          "schema": [
+            {
+              "id": "Customer Name",
+              "displayName": "Customer Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Company",
+              "displayName": "Company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Plan Tier",
+              "displayName": "Plan Tier",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Last Activity Date",
+              "displayName": "Last Activity Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Renewal Date",
+              "displayName": "Renewal Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Last Contacted Date",
+              "displayName": "Last Contacted Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Milestone Reached?",
+              "displayName": "Milestone Reached?",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Support Ticket Closed Date",
+              "displayName": "Support Ticket Closed Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        128,
+        832
+      ],
+      "id": "1f0078d1-d06c-42d1-8411-93ed107dd859",
+      "name": "Update Last Contact Date_Renewal",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_CREDENTIAL_ID",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Proj 7 Customer Message Automation",
+          "cachedResultUrl": "YOUR_GOOGLE_SHEET_URL"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Customers",
+          "cachedResultUrl": "YOUR_GOOGLE_SHEET_URL"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Last Contacted Date": "={{ $now.toISODate() }}",
+            "Customer Name": "={{ $('Google Sheets Trigger').item.json[\"Customer Name\"] }}"
+          },
+          "matchingColumns": [
+            "Customer Name"
+          ],
+          "schema": [
+            {
+              "id": "Customer Name",
+              "displayName": "Customer Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Company",
+              "displayName": "Company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Plan Tier",
+              "displayName": "Plan Tier",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Last Activity Date",
+              "displayName": "Last Activity Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Renewal Date",
+              "displayName": "Renewal Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Last Contacted Date",
+              "displayName": "Last Contacted Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Milestone Reached?",
+              "displayName": "Milestone Reached?",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Support Ticket Closed Date",
+              "displayName": "Support Ticket Closed Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        112,
+        1184
+      ],
+      "id": "a5d8f80b-5b19-4f80-8a42-bb98c5a9828d",
+      "name": "Update Last Contact Date_Milestones",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_CREDENTIAL_ID",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Proj 7 Customer Message Automation",
+          "cachedResultUrl": "YOUR_GOOGLE_SHEET_URL"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 485336481,
+          "mode": "list",
+          "cachedResultName": "Activity Log",
+          "cachedResultUrl": "YOUR_GOOGLE_SHEET_URL"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Timestamp": "={{ $now }}",
+            "Customer Name": "={{ $('Google Sheets Trigger').item.json[\"Customer Name\"] }}",
+            "Company": "={{ $('Google Sheets Trigger').item.json.Company }}",
+            "Trigger Type": "Inactivity",
+            "Email Sent": "Yes",
+            "Message Preview": "={{ $('Inactivity').item.json.text.slice(0, 100) }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Customer Name",
+              "displayName": "Customer Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Company",
+              "displayName": "Company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Trigger Type",
+              "displayName": "Trigger Type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email Sent",
+              "displayName": "Email Sent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Message Preview",
+              "displayName": "Message Preview",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -112,
+        480
+      ],
+      "id": "493e94ff-182c-4e0d-868c-41a17505b865",
+      "name": "Append Inactivity Entries",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_CREDENTIAL_ID",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Proj 7 Customer Message Automation",
+          "cachedResultUrl": "YOUR_GOOGLE_SHEET_URL"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 485336481,
+          "mode": "list",
+          "cachedResultName": "Activity Log",
+          "cachedResultUrl": "YOUR_GOOGLE_SHEET_URL"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Timestamp": "={{ $now }}",
+            "Customer Name": "={{ $('Google Sheets Trigger').item.json[\"Customer Name\"] }}",
+            "Company": "={{ $('Google Sheets Trigger').item.json.Company }}",
+            "Trigger Type": "Renewal",
+            "Email Sent": "Yes",
+            "Message Preview": "={{ $('Renewal').item.json.text.slice(0, 100) }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Customer Name",
+              "displayName": "Customer Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Company",
+              "displayName": "Company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Trigger Type",
+              "displayName": "Trigger Type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email Sent",
+              "displayName": "Email Sent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Message Preview",
+              "displayName": "Message Preview",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -96,
+        832
+      ],
+      "id": "f8a8fe41-c523-48c7-af4e-87ec8dc9dba1",
+      "name": "Append Renewal Entires",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_CREDENTIAL_ID",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Proj 7 Customer Message Automation",
+          "cachedResultUrl": "YOUR_GOOGLE_SHEET_URL"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 485336481,
+          "mode": "list",
+          "cachedResultName": "Activity Log",
+          "cachedResultUrl": "YOUR_GOOGLE_SHEET_URL"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Timestamp": "={{ $now }}",
+            "Customer Name": "={{ $('Google Sheets Trigger').item.json[\"Customer Name\"] }}",
+            "Company": "={{ $('Google Sheets Trigger').item.json.Company }}",
+            "Trigger Type": "Milestone",
+            "Email Sent": "Yes",
+            "Message Preview": "={{ $('Milestones').item.json.text.slice(0, 100) }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Customer Name",
+              "displayName": "Customer Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Company",
+              "displayName": "Company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Trigger Type",
+              "displayName": "Trigger Type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email Sent",
+              "displayName": "Email Sent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Message Preview",
+              "displayName": "Message Preview",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -96,
+        1184
+      ],
+      "id": "8ebd080f-899d-45e5-a4bb-5c0f7e535999",
+      "name": "Append Milestones Entries",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_CREDENTIAL_ID",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Sheets Trigger": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Ticket",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Inactivity",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Renewal",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Milestones",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Ticket",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Inactivity",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Renewal",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Milestones",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Surpressed Emails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ticket": {
+      "main": [
+        [
+          {
+            "node": "Ticket Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Inactivity": {
+      "main": [
+        [
+          {
+            "node": "Inactivity Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Milestones": {
+      "main": [
+        [
+          {
+            "node": "Milestones Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Renewal": {
+      "main": [
+        [
+          {
+            "node": "Renewal Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ticket Message": {
+      "main": [
+        [
+          {
+            "node": "Append Ticket Entries",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Inactivity Message": {
+      "main": [
+        [
+          {
+            "node": "Append Inactivity Entries",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Renewal Message": {
+      "main": [
+        [
+          {
+            "node": "Append Renewal Entires",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Milestones Message": {
+      "main": [
+        [
+          {
+            "node": "Append Milestones Entries",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append Ticket Entries": {
+      "main": [
+        [
+          {
+            "node": "Update Last Contact Date_Ticket",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append Inactivity Entries": {
+      "main": [
+        [
+          {
+            "node": "Update Last Contact Date_Inactivity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append Renewal Entires": {
+      "main": [
+        [
+          {
+            "node": "Update Last Contact Date_Renewal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append Milestones Entries": {
+      "main": [
+        [
+          {
+            "node": "Update Last Contact Date_Milestones",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "REPLACE_WORKFLOW_ID",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "REPLACE_INSTANCE_ID"
+  },
+  "id": "REPLACE_WORKFLOW_ID",
+  "tags": []
+}

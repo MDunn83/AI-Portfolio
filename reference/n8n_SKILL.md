@@ -8,6 +8,18 @@ These rules encode hard-won lessons from production builds. Violating them produ
 
 ---
 
+## n8n Credentials
+
+Canonical credential names as they appear in n8n's credential manager. Every Google Sheets, Gmail, or Groq node must reference these exact strings -- a mismatch is a silent post-import failure.
+
+| Service | Credential Name in n8n |
+|---|---|
+| Gmail | `Gmail OAuth2 API` |
+| Google Sheets | `Google Sheets OAuth2 API` |
+| Groq | `Groq account` |
+
+---
+
 ## Trigger and Batch Processing
 
 - Use a Manual Trigger + Google Sheets `getRows` node to read all rows at once when the workflow needs to process a list of items in a single run
@@ -613,7 +625,7 @@ After importing any Claude Code-generated workflow into n8n, verify in this orde
 4. Log nodes that run after Gmail use cross-node refs (e.g. `$('Sanitize Text Ticket').item.json.text`) -- not `$json.text`
 5. Trigger node typeVersion matches the n8n Cloud instance
 6. All placeholder Sheet IDs, Task List IDs, and email addresses are filled in
-7. Credential names match exactly what is in n8n's credential manager
+7. Credential names match exactly what is in n8n's credential manager (see n8n Credentials section above)
 8. Merge node is set to combineByPosition (not Matching Fields) and includeUnpaired is enabled
 9. Every node has an outgoing connection in the connections object -- Limit, Check_In, and Merge
    gate inputs are the most commonly missing

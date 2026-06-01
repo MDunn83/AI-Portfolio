@@ -8,6 +8,8 @@ This is a living pattern library. Every entry is a transferable lesson -- someth
 
 **v7 update:** Added New Job Openings v2 lessons -- `fetch()` unavailable in Code node sandbox, execution data OOM from raw API responses, fan-out dead-end pattern for execution order, always-fire downstream pattern via single wrapper item return, and stop hook sync after MCP push.
 
+**Update (June 2026):** Generally applicable Claude Code session-management patterns moved to `reference/claude_code_SKILL.md`. The LLM prompt suffix and post-import checklist are now canonical in `reference/n8n_SKILL.md`; this file references them instead of duplicating.
+
 ---
 
 # Section 1: n8n Patterns
@@ -160,12 +162,7 @@ const items = text
 
 **Problem: LLM preamble breaks downstream parsing**
 
-Add to every structured LLM prompt:
-
-```
-Output ONLY the requested content. Begin directly with the first line of output.
-Do not include any introductory text, preamble, or closing remarks.
-```
+Use the canonical prompt suffix from `reference/n8n_SKILL.md` § LLM Prompt Behavior Rules.
 
 **Pattern: Pass calculated values to LLM prompts, not raw date strings**
 
@@ -380,103 +377,9 @@ return amountInMillions >= 100;
 
 ---
 
-# Section 2: Claude Code Patterns
+# Section 2: n8n-Specific Claude Code Patterns
 
----
-
-## 2.1 Setup and Access
-
-**Claude Code web version requires a GitHub connection**
-
-For a fully cloud-based workflow with no local install, connect via GitHub integration.
-
-**GitHub repo permissions are not automatic**
-
-Repos created after the initial GitHub authorization are not automatically visible to Claude Code. Go to GitHub Settings, Applications, find the Claude Code app, and manually add the new repo.
-
-**Global CLAUDE.md requires local CLI install**
-
-The global CLAUDE.md file (at ~/.claude/CLAUDE.md) only works with the local CLI install. When using the web version via GitHub, all context must live inside the repo itself.
-
----
-
-## 2.2 Session Management
-
-**Always specify the branch at session start**
-
-Claude Code defaults to `main` on every resumed session.
-
-**Push after every phase -- not at the end**
-
-Force a push after every major phase and confirm the file exists on GitHub before telling it to continue.
-
-**Break complex builds into small sub-phases**
-
-Even when a build is already split into phases, individual phases can be too large. Break each phase down until each sub-phase has one clear deliverable and one push.
-
-**Watch for silent hangs**
-
-If there is no new output after 2 minutes, interrupt it. When in doubt, interrupt and ask for a status update.
-
-**Resumed sessions carry forward bad state**
-
-When a session goes sideways, close it and start fresh rather than resuming. CLAUDE.md is the persistent context -- the session itself is disposable.
-
----
-
-## 2.3 Local Machine and Git
-
-**Stop hooks are a hidden hazard**
-
-Add the following to every CLAUDE.md before starting any session:
-
-```
-Do not initialize local git repos. Do not create or modify stop hooks or any files
-under ~/.claude/. GitHub MCP only. Do not run any local git commands.
-```
-
-**Claude Code runs in a Linux container, not your Windows machine**
-
-File paths like `/root/.claude/` are inside Claude Code's cloud container. Closing the session wipes the container state automatically.
-
----
-
-## 2.4 CLAUDE.md -- The Most Important Habit
-
-**Put mandatory read instructions at the very top**
-
-Skill file instructions must be the first lines in CLAUDE.md or Claude Code may skip them entirely.
-
-**CLAUDE.md is a forcing function**
-
-The quality of Claude Code output is directly proportional to the quality of CLAUDE.md. Minimum content for any n8n project: credential names exactly as they appear in n8n, LLM provider and model, Google Sheet structure and column names, output targets, and lessons from prior builds.
-
-**Claude Code will rewrite your CLAUDE.md if you let it**
-
-Always check that your mandatory read instructions and constraints are still present after any session where Claude Code touched CLAUDE.md.
-
-**Include phase-gating instructions in CLAUDE.md**
-
-```
-After completing each phase, push to GitHub and stop. Wait for explicit confirmation
-before proceeding to the next phase.
-```
-
-**Wiring instructions need to be diagram-level specific**
-
-Describe wiring as: "Route By Score True branch connects to BOTH Email Writer Chain AND Log to Summary. Gmail is a dead end -- nothing wires from it."
-
----
-
-## 2.5 Token Limits and Output Management
-
-**32,000 output token limit on Pro plan**
-
-Break large workflow builds into explicit parts and instruct Claude Code to stop and wait after each one.
-
-**Keep prompts lean**
-
-Instructions like "double and triple check your work" dramatically inflate output size without improving quality.
+General Claude Code session-management patterns (setup, session management, local git, CLAUDE.md hygiene, token limits, architecture/design, stop hook sync) live in `reference/claude_code_SKILL.md`. The items below are n8n-specific Claude Code patterns that don't apply to non-n8n projects.
 
 ---
 
@@ -505,28 +408,9 @@ Specify the n8n Cloud version in CLAUDE.md. For Google Sheets Trigger specifical
 
 ---
 
-## 2.7 Architecture and Design
+## 2.7 Post-Import Checklist
 
-**Do design work before opening Claude Code**
-
-Use Claude chat to finalize architecture and then bring a clean spec to Claude Code.
-
-**Claude Code's tool choices are often better than manual build choices**
-
-Trust Claude Code's independent tool selections. The friction is n8n syntax, not design quality.
-
-**Mandatory post-import checklist**
-
-1. Verify every IF node condition
-2. Verify all LLM prompt fields are wrapped in {{ }}
-3. Check that Gmail is not wired to any logging node
-4. Confirm typeVersion on the trigger node
-5. Fill in all placeholder Sheet IDs and email addresses
-6. Confirm credential names match exactly
-7. Verify the Merge node is set to Combine By Position with Include Any Unpaired Items enabled
-8. Verify every node has an outgoing connection
-9. Verify Google Tasks due date fields use full ISO 8601 format
-10. Verify Status sheet column mappings pull from the Build Status Row node
+See `reference/n8n_SKILL.md` § Post-Import Checklist (canonical).
 
 ---
 
@@ -553,10 +437,6 @@ Test data must reflect the actual use case. Always include at least one edge cas
 **PII Export Discipline**
 
 Every workflow export for public sharing must pass a PII checklist before GitHub commit.
-
-**CLAUDE.md Quality Determines Output Quality**
-
-The gap between a Claude Code build that imports cleanly and one that requires hours of post-import fixes is almost entirely determined by CLAUDE.md quality.
 
 **Suppression Before LLM**
 
@@ -642,20 +522,3 @@ if (result.hasNew) {
   emailBody = '<p>No new openings today matching your criteria.</p>';
 }
 ```
-
----
-
-## 2.8 Stop Hook Sync After MCP Push (New Job Openings v2)
-
-**Problem: Local repo appears to have uncommitted changes after an MCP push**
-
-`mcp__github__push_files` creates a new commit on the remote branch. The local repo has no knowledge of this commit. A stop hook that checks for uncommitted local changes will fire after every MCP push.
-
-Resolution: After any MCP push, sync the local branch to the remote:
-
-```bash
-git fetch origin <branch-name>
-git reset --hard origin/<branch-name>
-```
-
-Add this two-command sync as the mandatory cleanup step after every MCP push.

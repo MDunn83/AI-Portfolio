@@ -2,7 +2,7 @@
 
 Mark Dunn's voice — conversational patterns, structural rules, and forbidden phrases extracted from his published LinkedIn posts. Read this before drafting **any document**: LinkedIn posts, READMEs, email bodies, program charters, risk registers, stakeholder maps, or any other written artifact. Voice rules apply regardless of audience or format.
 
-> **Paired document. Sync on every update.** The voice principles in this file are also duplicated in the private `outreach-portfolio/job-search/Dunn_Session_Briefing_v15_3.md` (Section 1, Voice Rules), which is the same content applied to resumes. Any change to voice principles here must be propagated to that file in the same commit, and vice versa. Drift between the two will produce inconsistent resume bullets and LinkedIn posts. See the "Paired Documents" table in root `CLAUDE.md` for the authoritative list.
+> **Paired document. Sync on every update.** The voice principles in this file are also duplicated in the private `outreach-portfolio/job-search/Dunn_Session_Briefing_v15_3.md` (Section 1, Voice Rules), which is the same content applied to resumes. Any change to voice principles here must be propagated to that file in the same commit, and vice versa. Drift between the two will produce inconsistent resume bullets and LinkedIn posts. See the "Paired Documents" table in `.claude/skills/lesson-capture.md` for the authoritative list.
 
 ---
 

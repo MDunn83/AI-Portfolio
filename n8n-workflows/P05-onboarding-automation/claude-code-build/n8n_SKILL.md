@@ -1,5 +1,7 @@
 # n8n_SKILL.md — n8n Build Rules for Claude Code
 
+> **Frozen snapshot.** This is the version of the skill file used for this build, kept for benchmark provenance. For the current canonical rules, see [`reference/n8n_SKILL.md`](../../../reference/n8n_SKILL.md).
+
 Read this file before building any n8n workflow. These rules encode hard-won lessons from production builds. Violating them produces workflows that import but fail at runtime.
 
 ---

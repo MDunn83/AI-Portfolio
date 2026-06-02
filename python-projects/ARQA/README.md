@@ -10,9 +10,9 @@ Instead of manually searching through hundreds of pages of guidebooks, ask quest
 
 ## Tools
 
-### v1.0 — Standards & Guidebook Q&A
+### v1.0 — Standards & Guidebook Q&A (prototype)
 
-Natural language querying across a collection of systems engineering standards and technical guidebooks.
+The original proof of concept: natural language querying across a collection of systems engineering standards and technical guidebooks. It validated the RAG + reranking approach that v2 builds on. Not included in this repo — v2 is the shipped tool.
 
 **Example queries:**
 - *"What are the consequences of poor requirements?"*
@@ -27,9 +27,9 @@ Natural language querying across a collection of systems engineering standards a
 
 ---
 
-### v2.0 — Automated Requirements Quality Assistant
+### v2.0 — Automated Requirements Quality Assistant (current)
 
-Automatically extracts SHALL statements from a performance specification and evaluates each one against a knowledge base of systems engineering standards.
+The shipped tool, and the notebook included in this repo (`ARQA.ipynb`). Automatically extracts SHALL statements from a performance specification and evaluates each one against a knowledge base of systems engineering standards.
 
 **Validation Results (10-requirement synthetic audit):**
 
@@ -70,13 +70,11 @@ Automatically extracts SHALL statements from a performance specification and eva
 
 ### 1. Open in Google Colab
 
-Both notebooks are designed to run in Google Colab — no local installation required.
+The notebook is designed to run in Google Colab — no local installation required.
 
 ### 2. Add your API keys
 
-In Colab, go to the Secrets tab and add:
-- **v1:** `OPENAI_API_KEY`
-- **v2:** `GOOGLE_API_KEY`
+In Colab, go to the Secrets tab and add `GOOGLE_API_KEY` (v2 uses Google Gemini — free tier).
 
 ### 3. Upload your PDF documents
 
@@ -102,8 +100,8 @@ The pipeline is document-agnostic. Swap in your own standards and the tool adapt
 
 | Version | Tool | Status |
 |---------|------|--------|
-| v1.0 | Standards & Guidebook Q&A | ✅ Complete |
-| v2.0 | Automated Requirements Quality Assistant | ✅ Complete |
+| v1.0 | Standards & Guidebook Q&A | ✅ Complete (prototype) |
+| v2.0 | Automated Requirements Quality Assistant | ✅ Complete (current) |
 | v3.0 | Verification Method Generator | 📋 Planned |
 
 ---
@@ -112,6 +110,7 @@ The pipeline is document-agnostic. Swap in your own standards and the tool adapt
 
 - No ground truth oracle — findings require human review
 - SHALL extraction is regex-based — may miss unusually formatted statements
+- Header filtering is heuristic — not exhaustive
 - Colab session storage only — re-upload PDFs on each new session
 
 ---

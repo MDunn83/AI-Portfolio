@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Validation script for proj4_governance_workflow.json
+Validation script for P04-ai-governance.json
 Checks:
   a. JSON is valid and parseable
   b. All node names referenced in connections exist in nodes array
@@ -11,10 +11,11 @@ Checks:
 """
 
 import json
+import os
 import re
 import sys
 
-WORKFLOW_FILE = "/home/user/Proj4-Governance/proj4_governance_workflow.json"
+WORKFLOW_FILE = os.path.join(os.path.dirname(__file__), "P04-ai-governance.json")
 
 results = {
     "pass": [],

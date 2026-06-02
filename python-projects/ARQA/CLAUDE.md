@@ -12,13 +12,13 @@ ARQA (Automated Requirements Quality Assistant) is an AI-powered document intell
 
 | File | Notes |
 |---|---|
-| `ARQA.ipynb` | Main notebook — runs in Google Colab |
+| `ARQA.ipynb` | The v2 notebook (the shipped tool) — runs in Google Colab |
 
 ## Key Architecture
 
 - Designed for Google Colab — no local installation required
-- v1: OpenAI LLM + embeddings, ChromaDB vector store
-- v2: Google Gemini LLM + embeddings (free to run with Google API key)
+- The committed notebook is v2: Google Gemini LLM + embeddings (free with a Google API key)
+- v1 was an OpenAI + ChromaDB prototype that proved the RAG approach; it is not in this repo
 - Vector store does not persist between Colab sessions — re-upload and re-embed on each new session
 - FlashRank reranker (`ms-marco-MiniLM-L-12-v2`) for improved retrieval quality
 - Document-agnostic: swap in any PDF standards or guidelines
@@ -27,12 +27,6 @@ ARQA (Automated Requirements Quality Assistant) is an AI-powered document intell
 
 | Key | Where to set |
 |---|---|
-| `OPENAI_API_KEY` | Colab Secrets tab (v1 only) |
-| `GOOGLE_API_KEY` | Colab Secrets tab (v2) |
+| `GOOGLE_API_KEY` | Colab Secrets tab |
 
-## Known Limitations
-
-- SHALL extraction is regex-based — may miss statements with unusual formatting
-- Header filtering is heuristic — not exhaustive
-- No ground truth oracle — findings require human review before action
-- Colab session storage only — PDFs and vector store do not persist between sessions
+Known limitations (regex extraction, heuristic header filtering, no ground-truth oracle, no Colab persistence) are documented in `README.md` § Known Limitations.

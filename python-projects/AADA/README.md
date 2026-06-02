@@ -4,7 +4,7 @@
 
 Most AI tools give you a confident answer. AADA gives you a **battle-tested** one.
  
-AADA is a multi-model AI pipeline that stress-tests responses by automatically routing them through adversarial critique from competing AI models, then feeding those critiques back to the original model for a final, improved answer. The result is a more defensible, higher-confidence output than any single AI can produce alone, at a fraction of a cent per run.
+AADA is a multi-model AI pipeline that stress-tests responses by automatically routing them through adversarial critique from competing AI models, then feeding those critiques back to the original model for a final, improved answer. The result is a more defensible, higher-confidence output than any single AI can produce alone, for about three cents per run.
  
 Built as a practical governance prototype, the pattern used here (multi-model critique, disagreement routing, audit trail) is directly analogous to how enterprise AI review systems work at scale.
  
@@ -12,7 +12,7 @@ While this doesn't eliminate hallucinations or inaccurate results, it's a practi
 
 ---
 
-## The Road So Far
+## Roadmap
 
 | Version | Theme | Status |
 |---------|-------|--------|
@@ -22,6 +22,8 @@ While this doesn't eliminate hallucinations or inaccurate results, it's a practi
 | **V2.6** | Opt-in disagreement analysis — agreement, disagreement, reversals, defended positions | ✅ Complete |
 | **V3** | Parallel critique — Gemini and GPT-4o critique simultaneously, async architecture | ✅ Complete |
 | **V3.5** | Dynamic routing — automatic second pass triggered by critic disagreement | ✅ Current |
+| **V4** | Web application — browser UI, streaming output | 🔜 Next |
+| **V5** | Commercial product — billing, public API | 📋 Planned |
 
 ## How It Works
 
@@ -118,21 +120,6 @@ All five prompts live in `prompts.yaml` and are shared between the CLI and Strea
 | `revision_prompt` | Sent to Claude with critique attached |
 | `analysis_prompt` | Disagreement analysis (Fast 3 / Deep 3 only) |
 | `routing_prompt` | Evaluates critic disagreement (V3.5 only) |
-
----
-
-## Full Roadmap
-
-| Version | Theme | Status |
-|---------|-------|--------|
-| **V1** | CLI proof of concept | ✅ Complete |
-| **V2** | Fast/Deep modes, retry logic, token tracking | ✅ Complete |
-| **V2.5** | Four modes, GPT-4o, Streamlit UI | ✅ Complete |
-| **V2.6** | Opt-in disagreement analysis | ✅ Complete |
-| **V3** | Parallel critique, async architecture | ✅ Complete |
-| **V3.5** | Dynamic routing | ✅ Current |
-| **V4** | Web application — browser UI, streaming output | 🔜 Next |
-| **V5** | Commercial product — billing, public API | 📋 Planned |
 
 ---
 

@@ -1,6 +1,6 @@
-# Lessons Learned — Proj4 Governance Tool Build
+# Lessons Learned — P04 AI Governance Tool Build
 
-Captured from the Claude Code session that produced `proj4_governance_workflow.json`. These lessons apply to any n8n workflow built with Groq LLMs.
+Captured from the Claude Code session that produced `P04-ai-governance.json`. These lessons apply to any n8n workflow built with Groq LLMs.
 
 ---
 

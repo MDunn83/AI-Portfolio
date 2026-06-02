@@ -6,9 +6,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## MANDATORY: Read Before Building
 
-Read `n8n_SKILL(1).md` completely before writing any node JSON. It encodes hard-won runtime lessons — violating its rules produces workflows that import but fail silently.
+Read `n8n_SKILL.md` completely before writing any node JSON. It encodes hard-won runtime lessons — violating its rules produces workflows that import but fail silently.
 
-Read `Proj7_ClaudeCode_Lessons_Learned.md` before building. It captures project-specific issues and fixes discovered during the initial build of this workflow.
+Read `LESSONS_LEARNED.md` before building. It captures project-specific issues and fixes discovered during the initial build of this workflow.
 
 ---
 

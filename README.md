@@ -13,7 +13,7 @@ The code in this repo is auto-synced from my private wiki on every push to main.
 ### AADA — Adversarial AI Decision Analyzer
 [`python-projects/AADA/`](python-projects/AADA/)
 
-A multi-model pipeline that routes a single question through Claude, Gemini, and GPT-4o, has them critique each other, then folds the critiques back into a final answer. On one real-estate pipeline prompt it caught a federal RESPA anti-kickback violation that the single-model answer missed. About 3 cents per run, roughly 90 seconds end to end.
+A multi-model pipeline that routes a single question through Claude, Gemini, and GPT-4o, has them critique each other, then folds the critiques back into a final answer. On one real-estate pipeline prompt it caught a federal RESPA anti-kickback violation that the single-model answer missed. About 3 cents per run, roughly 95 seconds end to end.
 
 Current version is V3.5 with dynamic routing. The second critique pass only fires when the first-pass critics materially disagree, with a hard cap of two passes regardless.
 
@@ -22,7 +22,7 @@ Current version is V3.5 with dynamic routing. The second critique pass only fire
 
 A LangChain and RAG suite that reads technical specifications, pulls out every SHALL statement, and evaluates each one against a knowledge base of systems engineering standards. Returns page-level citations and a suggested rewrite when a requirement is non-compliant. Built for systems engineers and TPMs who have spent too many afternoons searching PDFs by hand.
 
-v1 handles natural-language Q&A across a guidebook library. v2 automates the full SHALL audit. v3 (verification method generator) is on the roadmap.
+v1 was a prototype for natural-language Q&A across a guidebook library; v2 is the shipped tool that automates the full SHALL audit. v3 (verification method generator) is on the roadmap.
 
 ### n8n Workflows
 [`n8n-workflows/`](n8n-workflows/)
@@ -37,7 +37,7 @@ Production workflows live in `standalone-builds/`. The numbered project folders 
 
 The `reference/` folder collects the runtime rules I lean on when building with Claude Code.
 
-- `n8n_SKILL.md`. Hard-won patterns and constraints for writing n8n workflow JSON.
+- `n8n_SKILL.md`. The pre-build checklist and critical snippets for writing n8n workflow JSON.
 - `WRITING_STYLE.md`. Voice and structure guide for anything user-facing.
 
 ---

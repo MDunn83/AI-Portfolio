@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## MANDATORY: Read Before Building
 
-Read `n8n_SKILL(2).md` completely before writing or editing any node JSON. It encodes runtime lessons (typeVersions, Code-node modes, LLM prompt syntax, IF-node fragility, dedup patterns) that prevent workflows that import but fail silently.
+Read `n8n_SKILL.md` completely before writing or editing any node JSON. It encodes runtime lessons (typeVersions, Code-node modes, LLM prompt syntax, IF-node fragility, dedup patterns) that prevent workflows that import but fail silently.
 
 `CLAUDE_Starter.md` is a **generic, reusable template** for n8n builds — do not specialize it. This file is the concrete, project-specific guide.
 
@@ -114,7 +114,7 @@ Cleanup branch (parallel, off `Get Log`): `Find Old Log Rows → IF Has Old Rows
 
 ## Post-Import Checklist
 
-1. Sheet ID + tab gids are already wired (`1An48EJ3ikZOiwB-4wnO-XNqAO7lX_7OIsIOc8swAljY`, Targets `0`, Log `802787579`) — just confirm they resolve.
+1. Set the Sheet ID (`YOUR_GOOGLE_SHEET_ID`) and confirm the tab gids resolve (Targets `0`, Log `802787579`).
 2. Set `recipientEmail` in the **Config** node.
 3. Map credentials: `Google Sheets OAuth2 API`, `Groq account`, `Gmail OAuth2 API`.
 4. Verify every IF node (`IF Real`, `IF Include`, `IF Has Signals`, `IF Has Old Rows`) — left side is an expression and the operator reads **"is true"** (most import-fragile part).

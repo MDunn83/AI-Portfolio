@@ -1,4 +1,4 @@
-# Proj4 Governance Tool
+# P04 — AI Governance Tool
 
 An n8n workflow that reads user queries from Google Sheets, generates LLM responses via Groq, independently classifies both the query and the response for data governance, logs every result to an audit sheet, and routes sensitive or uncertain items to a human review queue.
 
@@ -72,7 +72,7 @@ Both **Audit Log Claude** and **Review Claude** receive the same columns:
 
 ### Google Sheets
 
-The workflow targets spreadsheet ID `1HmqDSsCl35B9Nv9Fp4tJUhQdVJjAh3aGdKQeTV_Vat4`. Create or verify the following sheets:
+The workflow targets your spreadsheet (set `YOUR_GOOGLE_SHEET_ID` on import). Create or verify the following sheets:
 
 | Sheet name | Required columns |
 |---|---|
@@ -82,7 +82,7 @@ The workflow targets spreadsheet ID `1HmqDSsCl35B9Nv9Fp4tJUhQdVJjAh3aGdKQeTV_Vat
 
 ### Import Steps
 
-1. In n8n, go to **Workflows → Import** and upload `proj4_governance_workflow.json`
+1. In n8n, go to **Workflows → Import** and upload `P04-ai-governance.json`
 2. Open each HTTP Request node and re-select your Groq Bearer Auth credential
 3. Verify the Google Sheets nodes are using your **Google Sheets OAuth2 API** credential
 4. Open the **Route to Review** IF node and confirm all four conditions show as expressions (not static values) — see known issues below
@@ -118,7 +118,7 @@ The workflow targets spreadsheet ID `1HmqDSsCl35B9Nv9Fp4tJUhQdVJjAh3aGdKQeTV_Vat
 
 | File | Description |
 |---|---|
-| `proj4_governance_workflow.json` | n8n workflow export — import this into n8n |
+| `P04-ai-governance.json` | n8n workflow export — import this into n8n |
 | `validate_workflow.py` | Validation script used during development |
 | `LESSONS_LEARNED.md` | Build notes and gotchas for future n8n/Groq workflows |
-| `n8n_SKILL(1).md` | n8n build rules reference used by Claude Code |
+| `n8n_SKILL.md` | n8n build rules reference used by Claude Code |

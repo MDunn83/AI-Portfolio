@@ -1,5 +1,7 @@
 # n8n_SKILL.md -- n8n Build Rules for Claude Code
 
+> **Frozen snapshot.** This is the version of the skill file used for this build, kept for benchmark provenance. For the current canonical rules, see [`reference/n8n_SKILL.md`](../../../reference/n8n_SKILL.md).
+
 ## MANDATORY BEFORE BUILDING
 Read this file completely before writing any node JSON.
 Do not build anything until you confirm you have read it.

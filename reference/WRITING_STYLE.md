@@ -1,6 +1,6 @@
 # Writing Style Guide
 
-Mark Dunn's voice — conversational patterns, structural rules, and forbidden phrases extracted from his published LinkedIn posts. Read this before drafting any user-facing copy: LinkedIn posts, READMEs, email bodies, or any text that will be shared publicly.
+Mark Dunn's voice — conversational patterns, structural rules, and forbidden phrases extracted from his published LinkedIn posts. Read this before drafting **any document**: LinkedIn posts, READMEs, email bodies, program charters, risk registers, stakeholder maps, or any other written artifact. Voice rules apply regardless of audience or format.
 
 > **Paired document. Sync on every update.** The voice principles in this file are also duplicated in the private `outreach-portfolio/job-search/Dunn_Session_Briefing_v15_3.md` (Section 1, Voice Rules), which is the same content applied to resumes. Any change to voice principles here must be propagated to that file in the same commit, and vice versa. Drift between the two will produce inconsistent resume bullets and LinkedIn posts. See the "Paired Documents" table in root `CLAUDE.md` for the authoritative list.
 
@@ -243,6 +243,9 @@ These appear nowhere in Mark's writing. Do not produce them under any circumstan
 - "leverage" used as a verb (use "use" or "apply")
 - "dynamic" applied to environments or teams
 - "proactively" as a filler adverb
+- "demonstrably" as a modifier before any verb (just state the evidence)
+- "systematically" as a filler adverb (if it's systematic, the description shows it)
+- "auditable" (write "audit trail" instead)
 - Any phrase that describes work in the abstract rather than describing what actually happened
 
 ---

@@ -6,6 +6,21 @@ Mark Dunn's voice — conversational patterns, structural rules, and forbidden p
 
 ---
 
+## The Core Standard
+
+This applies to everything Claude writes for Mark, not just public posts. Resumes, READMEs, emails, LinkedIn posts and comments, charters, risk registers, docs, anything. The goal never changes: it should sound like Mark wrote it himself.
+
+The register is business casual. Easy to understand, but still intelligent. Plain language carrying real substance. Never corporate word salad, never a press release, never a soulless textbook, never an AI summarizing someone else's work.
+
+The mirror test: if the sentence sounds like something Mark would type in a chat or say out loud to a smart peer, it is right. If it sounds like a compressed post or a corporate memo, rewrite it.
+
+For LinkedIn comments specifically, strip all post structure (no hook, body, or close) and go even plainer. Model:
+> "The cost vs. accuracy tradeoff is interesting. 12% more tasks completed for 17% more cost. Whether that's worth it probably comes down to the use case."
+
+Two numbers, one plain sentence, one honest hedge. That is the ceiling for comment length and the floor for comment substance.
+
+---
+
 ## Voice Characteristics
 
 ### 1. Conversational but precise

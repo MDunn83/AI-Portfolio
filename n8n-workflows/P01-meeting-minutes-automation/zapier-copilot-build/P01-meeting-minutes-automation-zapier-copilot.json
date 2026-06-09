@@ -1,0 +1,632 @@
+{
+  "metadata": {
+    "version": "gdpr_v1"
+  },
+  "zaps": [
+    {
+      "id": 367553971,
+      "title": "Meeting Minutes to Summary + Actions + Tasks + Log",
+      "status": "on",
+      "nodes": {
+        "367553971": {
+          "id": 367553971,
+          "account_id": 0,
+          "customuser_id": 0,
+          "paused": false,
+          "type_of": "read",
+          "params": {
+            "spreadsheet": "YOUR_FORM_SHEET_ID",
+            "worksheet": "399558677"
+          },
+          "meta": {
+            "$editor": {
+              "has_automatic_issues": false
+            },
+            "parammap": {
+              "spreadsheet": "Proj1-Synthetic Meeting Minutes",
+              "worksheet": "Form Responses 1"
+            }
+          },
+          "triple_stores": {
+            "copied_from": null,
+            "created_by": null,
+            "polling_interval_override": 0,
+            "block_and_release_limit_override": 0,
+            "spread_tasks": 1
+          },
+          "folders": null,
+          "parent_id": null,
+          "root_id": null,
+          "action": "updated_row_notify_hook",
+          "selected_api": "GoogleSheetsV2CLIAPI@2.13.1",
+          "title": "Meeting Minutes to Summary + Actions + Tasks + Log",
+          "authentication_id": 0,
+          "created_at": "2026-06-06T15:45:07+00:00",
+          "last_changed": "2026-06-09T23:11:40+00:00"
+        },
+        "367553974": {
+          "id": 367553974,
+          "account_id": 0,
+          "customuser_id": 0,
+          "paused": true,
+          "type_of": "write",
+          "params": {
+            "provider_id": "openai",
+            "authentication_id": "0",
+            "model_id": "openai/gpt-4o-mini",
+            "isOutputArray": false,
+            "instructions": "You are a meeting minutes parser. Extract and structure the following from the meeting notes and return as plain text (NOT JSON arrays):\n\n1. SUMMARY: A concise 2-3 sentence overview of the meeting's main topic and context.\n\n2. ACTION_ITEMS: A bulleted list of specific tasks with owners assigned. Format each on a new line as: - Owner: Task description (due date if stated)\n   - Preserve due dates VERBATIM as stated in the transcript (e.g., \"by Friday after next\", \"before the demo\", \"end of next week\"). Do NOT normalize to ISO dates.\n   - Omit due dates that were not explicitly stated.\n   - If the meeting contained NO action items, return the literal text: None\n   - Do NOT include personal logistics, social asides, or pleasantries.\n\n3. DECISIONS: A bulleted list of key decisions. Format each on a new line as: - Decision statement\n   - If the meeting contained NO decisions, return the literal text: None\n   - Do NOT include personal logistics, social asides, or pleasantries.\n\n4. OPEN_QUESTIONS: A bulleted list of unresolved questions, blockers, or open issues. Format each on a new line as: - Question/blocker statement\n   - If there were NO open questions or blockers, return the literal text: None\n   - Do NOT include personal logistics, social asides, or pleasantries.\n\n5. PARTICIPANTS: Comma-separated list of attendee names mentioned in the meeting.\n   - Preserve names EXACTLY as written, including diacritics and unusual spellings. Do NOT anglicize or normalize.\n   - If a name appears multiple times with different spellings, use the FIRST instantiation.\n\nIMPORTANT: Filter out side conversations unrelated to the meeting's stated purpose (personal logistics, pleasantries, birthday plans, social asides, off-topic comments). If you would not include it in a recap email to a non-attendee, exclude it from every field.\n\nReturn the extracted data as a structured object with these 5 fields, using plain text (not JSON arrays) for the lists.",
+            "inputFields": {
+              "meeting_minutes": "{{367553971__COL$B}}",
+              "timestamp": "{{367553971__COL$A}}"
+            },
+            "outputSchema": {
+              "summary": "A 2-3 sentence summary of the meeting's main focus and context",
+              "action_items": "Bulleted list of action items with owners (plain text, not JSON array)",
+              "decisions": "Bulleted list of key decisions (plain text, not JSON array)",
+              "open_questions": "Bulleted list of questions/blockers (plain text, not JSON array)",
+              "participants": "Comma-separated list of attendees"
+            },
+            "content_moderation": false
+          },
+          "meta": {
+            "$editor": {
+              "has_automatic_issues": false
+            },
+            "parammap": {
+              "provider_id": "OpenAI",
+              "model_id": "GPT-4o mini",
+              "authentication_id": "Zapier"
+            }
+          },
+          "triple_stores": {
+            "copied_from": null,
+            "created_by": null,
+            "polling_interval_override": 0,
+            "block_and_release_limit_override": 0,
+            "spread_tasks": 1
+          },
+          "folders": null,
+          "parent_id": 367553971,
+          "root_id": 367553971,
+          "action": "get_completion",
+          "selected_api": "AICLIAPI@3.8.5",
+          "title": null,
+          "authentication_id": null,
+          "created_at": "2026-06-06T15:45:07+00:00",
+          "last_changed": "2026-06-09T23:11:40+00:00"
+        },
+        "367792046": {
+          "id": 367792046,
+          "account_id": 0,
+          "customuser_id": 0,
+          "paused": true,
+          "type_of": "write",
+          "params": {
+            "input": {
+              "summary": "{{367553974__summary}}",
+              "action_items": "{{367553974__action_items}}",
+              "decisions": "{{367553974__decisions}}",
+              "open_questions": "{{367553974__open_questions}}",
+              "participants": "{{367553974__participants}}"
+            },
+            "packages_enabled": false,
+            "code": "const fields = ['summary', 'action_items', 'decisions', 'open_questions', 'participants'];\nlet hasDegradation = false;\nconst validatedData = {};\n\nfields.forEach(field => {\n  const value = inputData[field] || '';\n  if (!value.trim()) {\n    validatedData[field] = 'unavailable';\n    hasDegradation = true;\n  } else {\n    validatedData[field] = value;\n  }\n});\n\n// Fix: Normalize action_items to ensure clean loop splitting\nif (validatedData.action_items !== 'unavailable' && validatedData.action_items !== 'None') {\n  // Trim whitespace first\n  let items = validatedData.action_items.trim();\n  // Split by newline, filter for lines starting with \"- \", and rejoin cleanly\n  const lines = items.split('\\n')\n    .map(line => line.trim())\n    .filter(line => line.length > 0 && line.startsWith('- '));\n  // Rejoin with clean delimiter\n  validatedData.action_items = lines.join('\\n');\n}\n\nvalidatedData.has_degradation = hasDegradation;\nreturn validatedData;"
+          },
+          "meta": {
+            "$editor": {
+              "has_automatic_issues": false
+            },
+            "parammap": {}
+          },
+          "triple_stores": {
+            "copied_from": null,
+            "created_by": null,
+            "polling_interval_override": 0,
+            "block_and_release_limit_override": 0,
+            "spread_tasks": 1
+          },
+          "folders": null,
+          "parent_id": 367553974,
+          "root_id": 367553971,
+          "action": "01929fad-d3dd-62c2-52ed-7868d5fcc691",
+          "selected_api": "CodeCLIAPI@1.0.1",
+          "title": null,
+          "authentication_id": null,
+          "created_at": "2026-06-08T22:22:07+00:00",
+          "last_changed": "2026-06-09T23:11:40+00:00"
+        },
+        "367555968": {
+          "id": 367555968,
+          "account_id": 0,
+          "customuser_id": 0,
+          "paused": true,
+          "type_of": "write",
+          "params": {
+            "input": {},
+            "packages_enabled": false,
+            "code": "// Get today's date\nconst today = new Date();\n\n// Extract month, day, and year\nconst month = String(today.getMonth() + 1).padStart(2, '0'); // getMonth() is 0-indexed\nconst day = String(today.getDate()).padStart(2, '0');\nconst year = today.getFullYear();\n\n// Format as MM/DD/YYYY\nconst formattedDate = `${month}/${day}/${year}`;\n\n// Return the formatted date as output_date\nreturn { output_date: formattedDate };"
+          },
+          "meta": {
+            "$editor": {
+              "has_automatic_issues": false
+            },
+            "parammap": {},
+            "stepTitle": "Generate today's date for log"
+          },
+          "triple_stores": {
+            "copied_from": null,
+            "created_by": null,
+            "polling_interval_override": 0,
+            "block_and_release_limit_override": 0,
+            "spread_tasks": 1
+          },
+          "folders": null,
+          "parent_id": 367792046,
+          "root_id": 367553971,
+          "action": "01929fad-d3dd-62c2-52ed-7868d5fcc691",
+          "selected_api": "CodeCLIAPI@1.0.1",
+          "title": "Generate today's date for log",
+          "authentication_id": null,
+          "created_at": "2026-06-06T16:26:46+00:00",
+          "last_changed": "2026-06-09T23:11:40+00:00"
+        },
+        "367554322": {
+          "id": 367554322,
+          "account_id": 0,
+          "customuser_id": 0,
+          "paused": true,
+          "type_of": "write",
+          "params": {},
+          "meta": {
+            "$editor": {
+              "has_automatic_issues": false
+            }
+          },
+          "triple_stores": {
+            "copied_from": null,
+            "created_by": null,
+            "polling_interval_override": 0,
+            "block_and_release_limit_override": 0,
+            "spread_tasks": 1
+          },
+          "folders": null,
+          "parent_id": 367555968,
+          "root_id": 367553971,
+          "action": "branch",
+          "selected_api": "BranchingAPI",
+          "title": null,
+          "authentication_id": null,
+          "created_at": "2026-06-06T15:51:41+00:00",
+          "last_changed": "2026-06-09T23:11:40+00:00"
+        },
+        "367554323": {
+          "id": 367554323,
+          "account_id": 0,
+          "customuser_id": 0,
+          "paused": true,
+          "type_of": "filter",
+          "params": {
+            "color": "Heroine Blue",
+            "emoji": "\ud83d\udce7",
+            "path_eval_index": 0,
+            "filter_criteria": [
+              {
+                "key": "367792046__has_degradation",
+                "value": "false",
+                "action": "continue",
+                "match": "iexact",
+                "group": 1,
+                "id": 1
+              }
+            ]
+          },
+          "meta": {
+            "$editor": {
+              "has_automatic_issues": false
+            },
+            "stepTitle": "Send Email"
+          },
+          "triple_stores": {
+            "copied_from": null,
+            "created_by": null,
+            "polling_interval_override": 0,
+            "block_and_release_limit_override": 0,
+            "spread_tasks": 1
+          },
+          "folders": null,
+          "parent_id": 367554322,
+          "root_id": 367553971,
+          "action": "filter",
+          "selected_api": "BranchingAPI",
+          "title": "Path A",
+          "authentication_id": null,
+          "created_at": "2026-06-06T15:51:41+00:00",
+          "last_changed": "2026-06-09T23:11:40+00:00"
+        },
+        "367554325": {
+          "id": 367554325,
+          "account_id": 0,
+          "customuser_id": 0,
+          "paused": true,
+          "type_of": "filter",
+          "params": {
+            "color": "Peru",
+            "emoji": "\ud83d\udccb",
+            "path_eval_index": 1,
+            "filter_criteria": [
+              {
+                "key": "367553971__COL$B",
+                "value": "",
+                "action": "continue",
+                "match": "iexist",
+                "group": 1,
+                "id": 1
+              }
+            ]
+          },
+          "meta": {
+            "$editor": {
+              "has_automatic_issues": false
+            },
+            "stepTitle": "Log to Google Sheets"
+          },
+          "triple_stores": {
+            "copied_from": null,
+            "created_by": null,
+            "polling_interval_override": 0,
+            "block_and_release_limit_override": 0,
+            "spread_tasks": 1
+          },
+          "folders": null,
+          "parent_id": 367554322,
+          "root_id": 367553971,
+          "action": "filter",
+          "selected_api": "BranchingAPI",
+          "title": "Path B",
+          "authentication_id": null,
+          "created_at": "2026-06-06T15:51:41+00:00",
+          "last_changed": "2026-06-09T23:11:40+00:00"
+        },
+        "367554327": {
+          "id": 367554327,
+          "account_id": 0,
+          "customuser_id": 0,
+          "paused": true,
+          "type_of": "filter",
+          "params": {
+            "color": "Yellow Green",
+            "emoji": "\u2713",
+            "path_eval_index": 2,
+            "filter_criteria": [
+              {
+                "key": "367553971__COL$B",
+                "value": "",
+                "action": "continue",
+                "match": "iexist",
+                "group": 1,
+                "id": 1
+              }
+            ]
+          },
+          "meta": {
+            "$editor": {
+              "has_automatic_issues": false
+            },
+            "stepTitle": "Create Google Tasks"
+          },
+          "triple_stores": {
+            "copied_from": null,
+            "created_by": null,
+            "polling_interval_override": 0,
+            "block_and_release_limit_override": 0,
+            "spread_tasks": 1
+          },
+          "folders": null,
+          "parent_id": 367554322,
+          "root_id": 367553971,
+          "action": "filter",
+          "selected_api": "BranchingAPI",
+          "title": "Path C",
+          "authentication_id": null,
+          "created_at": "2026-06-06T15:51:41+00:00",
+          "last_changed": "2026-06-09T23:11:40+00:00"
+        },
+        "367792048": {
+          "id": 367792048,
+          "account_id": 0,
+          "customuser_id": 0,
+          "paused": true,
+          "type_of": "filter",
+          "params": {
+            "color": "Purple",
+            "emoji": "\u26a0\ufe0f",
+            "path_eval_index": 3,
+            "filter_criteria": [
+              {
+                "key": "367792046__has_degradation",
+                "value": "true",
+                "action": "continue",
+                "match": "iexact",
+                "group": 1,
+                "id": 1
+              }
+            ]
+          },
+          "meta": {
+            "$editor": {
+              "has_automatic_issues": false
+            },
+            "stepTitle": "Path D"
+          },
+          "triple_stores": {
+            "copied_from": null,
+            "created_by": null,
+            "polling_interval_override": 0,
+            "block_and_release_limit_override": 0,
+            "spread_tasks": 1
+          },
+          "folders": null,
+          "parent_id": 367554322,
+          "root_id": 367553971,
+          "action": "filter",
+          "selected_api": "BranchingAPI",
+          "title": "Path D",
+          "authentication_id": null,
+          "created_at": "2026-06-08T22:22:08+00:00",
+          "last_changed": "2026-06-09T23:11:40+00:00"
+        },
+        "367792049": {
+          "id": 367792049,
+          "account_id": 0,
+          "customuser_id": 0,
+          "paused": true,
+          "type_of": "write",
+          "params": {
+            "body_type": "html",
+            "signature_delimiter": true,
+            "send_to_groups": false,
+            "to": [
+              "YOUR_EMAIL_TO"
+            ],
+            "from": "YOUR_EMAIL_FROM",
+            "subject": "\u26a0\ufe0f AI Step Degraded - Missing Data in Run {{367553971__COL$A}}",
+            "body": "<p><strong>AI Step Degradation Alert</strong></p>\n<p>Run timestamp: <strong>{{367553971__COL$A}}</strong></p>\n<p>One or more AI output fields came back empty and were substituted with 'unavailable'. This may indicate:</p>\n<ul>\n<li>Model truncation or timeout</li>\n<li>Malformed meeting minutes input</li>\n<li>Token limit exceeded</li>\n</ul>\n<p><strong>Transcript / Input:</strong></p>\n<pre style='font-family: monospace; background: #f5f5f5; padding: 10px; border-radius: 4px; white-space: pre-wrap;'>{{367553971__COL$B}}</pre>\n<p><strong>Validated Output (with degradation):</strong></p>\n<ul>\n<li><strong>Summary:</strong> {{367792046__summary}}</li>\n<li><strong>Action Items:</strong> {{367792046__action_items}}</li>\n<li><strong>Decisions:</strong> {{367792046__decisions}}</li>\n<li><strong>Open Questions:</strong> {{367792046__open_questions}}</li>\n<li><strong>Participants:</strong> {{367792046__participants}}</li>\n</ul>\n<p>Please review the transcript above to investigate.</p>"
+          },
+          "meta": {
+            "$editor": {
+              "has_automatic_issues": false
+            },
+            "parammap": {
+              "from": "YOUR_EMAIL_FROM",
+              "body_type": "Html"
+            },
+            "stepTitle": "Send Degradation Alert Email"
+          },
+          "triple_stores": {
+            "copied_from": null,
+            "created_by": null,
+            "polling_interval_override": 0,
+            "block_and_release_limit_override": 0,
+            "spread_tasks": 1
+          },
+          "folders": null,
+          "parent_id": 367792048,
+          "root_id": 367553971,
+          "action": "message",
+          "selected_api": "GoogleMailV2CLIAPI@2.10.0",
+          "title": "Send Degradation Alert Email",
+          "authentication_id": 0,
+          "created_at": "2026-06-08T22:22:08+00:00",
+          "last_changed": "2026-06-09T23:11:40+00:00"
+        },
+        "367623115": {
+          "id": 367623115,
+          "account_id": 0,
+          "customuser_id": 0,
+          "paused": true,
+          "type_of": "write",
+          "params": {
+            "delimiter": "\n- ",
+            "trim_whitespace": true,
+            "iteration_start": "1",
+            "iteration_limit": "500",
+            "loop_values": {
+              "action": "{{367792046__action_items}}"
+            }
+          },
+          "meta": {
+            "$editor": {
+              "has_automatic_issues": false
+            },
+            "parammap": {},
+            "stepTitle": "Loop through each action item"
+          },
+          "triple_stores": {
+            "copied_from": null,
+            "created_by": null,
+            "polling_interval_override": 0,
+            "block_and_release_limit_override": 0,
+            "spread_tasks": 1
+          },
+          "folders": null,
+          "parent_id": 367554327,
+          "root_id": 367553971,
+          "action": "loop_values_text",
+          "selected_api": "ZapierLoopingCLIAPI@1.2.6",
+          "title": "Loop through each action item",
+          "authentication_id": null,
+          "created_at": "2026-06-07T19:25:11+00:00",
+          "last_changed": "2026-06-09T23:11:40+00:00"
+        },
+        "367792047": {
+          "id": 367792047,
+          "account_id": 0,
+          "customuser_id": 0,
+          "paused": true,
+          "type_of": "filter",
+          "params": {
+            "filter_criteria": [
+              {
+                "id": 1,
+                "key": "367792046__action_items",
+                "group": 1,
+                "match": "icontains",
+                "value": "\n- ",
+                "action": "continue"
+              }
+            ]
+          },
+          "meta": {
+            "$editor": {
+              "has_automatic_issues": false
+            },
+            "stepTitle": "Check if action items formatted correctly"
+          },
+          "triple_stores": {
+            "copied_from": null,
+            "created_by": null,
+            "polling_interval_override": 0,
+            "block_and_release_limit_override": 0,
+            "spread_tasks": 1
+          },
+          "folders": null,
+          "parent_id": 367623115,
+          "root_id": 367553971,
+          "action": "filter",
+          "selected_api": "FilterAPI",
+          "title": "Check if action items formatted correctly",
+          "authentication_id": null,
+          "created_at": "2026-06-08T22:22:08+00:00",
+          "last_changed": "2026-06-09T23:11:40+00:00"
+        },
+        "367554328": {
+          "id": 367554328,
+          "account_id": 0,
+          "customuser_id": 0,
+          "paused": true,
+          "type_of": "write",
+          "params": {
+            "task_list": "YOUR_TASK_LIST_ID",
+            "title": "{{action}}",
+            "notes": "From meeting: {{367553971__COL$A}}"
+          },
+          "meta": {
+            "$editor": {
+              "has_automatic_issues": true
+            },
+            "parammap": {
+              "task_list": "Zapier meeting minutes"
+            },
+            "stepTitle": "Create task for this action item"
+          },
+          "triple_stores": {
+            "copied_from": null,
+            "created_by": null,
+            "polling_interval_override": 0,
+            "block_and_release_limit_override": 0,
+            "spread_tasks": 1
+          },
+          "folders": null,
+          "parent_id": 367792047,
+          "root_id": 367553971,
+          "action": "task",
+          "selected_api": "GoogleTasksCLIAPI@1.5.0",
+          "title": null,
+          "authentication_id": 0,
+          "created_at": "2026-06-06T15:51:41+00:00",
+          "last_changed": "2026-06-09T23:11:40+00:00"
+        },
+        "367554670": {
+          "id": 367554670,
+          "account_id": 0,
+          "customuser_id": 0,
+          "paused": true,
+          "type_of": "write",
+          "params": {
+            "timezone": false,
+            "spreadsheet": "YOUR_LOG_SHEET_ID",
+            "worksheet": "0",
+            "COL$A": "{{367555968__output_date}}",
+            "COL$C": "{{367792046__summary}}",
+            "COL$D": "{{367792046__action_items}}",
+            "COL$E": "{{367792046__decisions}}",
+            "COL$F": "{{367792046__open_questions}}",
+            "COL$B": "{{367792046__participants}}",
+            "COL$G": "{{367792046__has_degradation}}"
+          },
+          "meta": {
+            "$editor": {
+              "has_automatic_issues": false
+            },
+            "parammap": {
+              "spreadsheet": "Proj1- Meeting Minutes Log",
+              "worksheet": "Sheet1"
+            },
+            "stepTitle": "Log meeting to Google Sheets"
+          },
+          "triple_stores": {
+            "copied_from": null,
+            "created_by": null,
+            "polling_interval_override": 0,
+            "block_and_release_limit_override": 0,
+            "spread_tasks": 1
+          },
+          "folders": null,
+          "parent_id": 367554325,
+          "root_id": 367553971,
+          "action": "add_row",
+          "selected_api": "GoogleSheetsV2CLIAPI@2.13.1",
+          "title": null,
+          "authentication_id": 0,
+          "created_at": "2026-06-06T15:57:54+00:00",
+          "last_changed": "2026-06-09T23:11:40+00:00"
+        },
+        "367554324": {
+          "id": 367554324,
+          "account_id": 0,
+          "customuser_id": 0,
+          "paused": true,
+          "type_of": "write",
+          "params": {
+            "body_type": "html",
+            "signature_delimiter": true,
+            "send_to_groups": false,
+            "to": [
+              "YOUR_EMAIL_TO"
+            ],
+            "from": "YOUR_EMAIL_FROM",
+            "subject": "Meeting Minutes - {{367555968__output_date}}",
+            "body": "<h2>Meeting Summary</h2>\n<p>{{367792046__summary}}</p>\n\n<h3>Key Decisions</h3>\n<pre style='font-family: Arial, sans-serif; white-space: pre-wrap;'>{{367792046__decisions}}</pre>\n\n<h3>Action Items</h3>\n<pre style='font-family: Arial, sans-serif; white-space: pre-wrap;'>{{367792046__action_items}}</pre>\n\n<h3>Open Questions / Blockers</h3>\n<pre style='font-family: Arial, sans-serif; white-space: pre-wrap;'>{{367792046__open_questions}}</pre>"
+          },
+          "meta": {
+            "$editor": {
+              "has_automatic_issues": false
+            },
+            "parammap": {
+              "from": "YOUR_EMAIL_FROM",
+              "body_type": "Html"
+            },
+            "stepTitle": "Send Meeting Summary via Gmail"
+          },
+          "triple_stores": {
+            "copied_from": null,
+            "created_by": null,
+            "polling_interval_override": 0,
+            "block_and_release_limit_override": 0,
+            "spread_tasks": 1
+          },
+          "folders": null,
+          "parent_id": 367554323,
+          "root_id": 367553971,
+          "action": "message",
+          "selected_api": "GoogleMailV2CLIAPI@2.10.0",
+          "title": null,
+          "authentication_id": 0,
+          "created_at": "2026-06-06T15:51:41+00:00",
+          "last_changed": "2026-06-09T23:11:40+00:00"
+        }
+      }
+    }
+  ]
+}

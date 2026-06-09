@@ -1,5 +1,7 @@
 # CLAUDE.md
 
+> **Archived build doc.** This is a snapshot of the project CLAUDE.md from the original `MDunn83/Proj2_Newsletter_Claude` repo. File references below (`CLAUDE_Starter.md`, `n8n_SKILL.md`, `lessons_learned.md`) point to that repo's layout, not this wiki's.
+
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ---

@@ -2,7 +2,7 @@
 
 > **Public sync notice:** This file lives under `n8n-workflows/**` and is mirrored to the public `MDunn83/AI-Portfolio` repo on every merge to `main`. Treat its contents as public. No sheet IDs, no real email addresses, no credential token values.
 
-Applies to the `new-job-openings` project only. Read the root CLAUDE.md and n8n_SKILL.md first — this file adds only project-specific rules.
+Applies to the `new-job-openings` project only. Read the root CLAUDE.md and `reference/n8n_SKILL.md` first — this file adds only project-specific rules.
 
 For workflow topology, node-by-node detail, Google Sheets schemas, API specifics, and bug history, see `BUILD_PROCESS.md`. This file does not duplicate that content.
 

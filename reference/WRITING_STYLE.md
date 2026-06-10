@@ -2,7 +2,7 @@
 
 Mark Dunn's voice — conversational patterns, structural rules, and forbidden phrases extracted from his published LinkedIn posts. Read this before drafting **any document**: LinkedIn posts, READMEs, email bodies, program charters, risk registers, stakeholder maps, or any other written artifact. Voice rules apply regardless of audience or format.
 
-> **Paired document. Sync on every update.** The voice principles in this file are also duplicated in the private `outreach-portfolio/job-search/Dunn_Session_Briefing_v15_3.md` (Section 1, Voice Rules), which is the same content applied to resumes. Any change to voice principles here must be propagated to that file in the same commit, and vice versa. Drift between the two will produce inconsistent resume bullets and LinkedIn posts. See the "Paired Documents" table in `.claude/skills/lesson-capture.md` for the authoritative list.
+> **Canonical voice doc.** This file is the single source of truth for Mark's voice across every artifact: LinkedIn posts, resume bullets, cover letters, READMEs, charters, anything. The resume session briefing (`outreach-portfolio/job-search/Dunn_Session_Briefing_v15_3.md`, Section 1) inherits these rules and adds only resume-specific overlays (banned government-speak terms, project description voice, summary structure). Do not duplicate voice rules into the briefing. When tailoring resumes in the Claude.ai web project, upload this file alongside the briefing so the external session has both.
 
 ---
 
@@ -13,6 +13,8 @@ This applies to everything Claude writes for Mark, not just public posts. Resume
 The register is business casual. Easy to understand, but still intelligent. Plain language carrying real substance. Never corporate word salad, never a press release, never a soulless textbook, never an AI summarizing someone else's work.
 
 The mirror test: if the sentence sounds like something Mark would type in a chat or say out loud to a smart peer, it is right. If it sounds like a compressed post or a corporate memo, rewrite it.
+
+**Compression is the trap.** The most common failure is not violating a rule. It is optimizing Mark's voice into something tighter than he actually writes. Compressed metaphors, dropped connectors, punchy two-beat closes; each move is defensible in isolation, and each one makes the draft sound more like writing and less like Mark. When in doubt, ask whether the change makes the sentence sound more like speech or more like a finished piece of writing. Mark sounds like speech.
 
 For LinkedIn comments specifically, strip all post structure (no hook, body, or close) and go even plainer. Model:
 > "The cost vs. accuracy tradeoff is interesting. 12% more tasks completed for 17% more cost. Whether that's worth it probably comes down to the use case."
@@ -32,6 +34,8 @@ Mark writes like he is talking to a smart peer over coffee. The language is plai
 
 **What makes this his voice:** Casual phrasing ("It's funny how"), recurring metaphor he uses across posts ("the canvas looks simple"), and a precise insight that lands without being preachy.
 
+**Connectors stay.** Conversational also means Mark uses scaffolding that compressed writing strips out: "Here's how I set it up," "In my case," "So what's the purpose," "Basically." These are how he talks. Treating them as filler and removing them makes the draft sound like writing, not speech. Slightly verbose phrasing is fine if it sounds spoken. "I wanted to have a spot for my work that's in progress while being able to push the material that I was confident to share" reads longer than a tightened version, but it is his voice. The shorter version is the writer's voice, not his.
+
 ---
 
 ### 2. Specific over generic
@@ -49,6 +53,8 @@ Mark always names the tool, the number, the exact behavior. He does not write in
 - "The critics found a legal problem"
 
 The specificity IS the credibility.
+
+**One qualifier: the specific thing has to be legible to the reader.** Naming Claude Code, n8n, or GitHub Actions earns credibility because the reader knows what they are. Naming Mark's internal project codes (AADA, ARQA) costs credibility, because the reader does not know what they are and stops to wonder. Spelling the acronyms out does not save it; the spelled-out version is also meaningless externally. Use the category instead: "my Python projects." Specificity earns its place when it serves the reader, not as a default.
 
 ---
 
@@ -81,7 +87,15 @@ Mark closes posts with insight that ties back to a broader theme (career, learni
 
 ---
 
-### 5. Anti-buzzword
+### 5. Plain over clever
+
+Mark does not reach for the compressed metaphor a writer would. "Workshop" for the private repo, "production cut" for the public one, "highlight reel" for polished work. Each of those is technically tighter than the literal description, and none of them is his. He uses the literal version: "private projects," "finished work," "polished work." Drafts that pile on metaphors read as stylized Mark, not Mark.
+
+The recurring metaphors he does use (listed below under Recurring Themes) are the exception. Those are his. New metaphors invented in a draft are almost always the writer's voice slipping in.
+
+---
+
+### 6. Anti-buzzword
 
 Mark strips out corporate language. He uses plain English even when describing technical work.
 
@@ -123,14 +137,16 @@ The most common error is stacking qualifiers, abstractions, and corporate-soundi
 
 ### When Mark gives you his own wording, use it
 
-If Mark rewrites a phrase in his own words, that wording becomes the new floor. Do not polish it back into corporate language. Do not smooth out his natural phrasing. His version is the target. Tighten for length if needed; never for formality.
+If Mark rewrites a phrase in his own words, that wording is the target, full stop. Do not propose tightening it. Do not smooth out his natural phrasing. Do not polish it back into shorter or more formal phrasing. The instinct that his version "could be cleaner" is the instinct that produces stylized Mark instead of Mark. Only flag a clear style violation (em dash, banned phrase, buzzword from the forbidden list). Otherwise, his version stays.
 
 ### What Mark's voice actually sounds like (sentence level)
 
 Sample lines he wrote or approved:
 
 - *"Assessed workflows to identify a serial process in the approval chain that could be restructured to run in parallel. This reduced approval times from 8 weeks to 5 weeks (40% reduction)."*
-- *"Yearly planning of 4 concurrent programs against available tasking, budget, and personnel."*
+- *"Yearly planning of 4 concurrent programs against available tasking, budget, and personnel. Leads programmatic prioritization discussions to align initiatives, managing delivery across 20+ active work packages."*
+- *"Executes cross-functional governance across 5 organizations, owning agendas, decision logs, and actions."*
+- *"Coordinated with internal stakeholders to develop a competitive technology assessment brief and presented it to an external oversight organization, securing retention of software development ownership against a competing proposal. The result: the organization kept its core function of software development in-house."*
 - *"I'd never used n8n before last week."*
 - *"I switched to GNews. That worked but hit a rate limit when five requests fired simultaneously."*
 
@@ -164,6 +180,10 @@ Every post opens with one line that creates curiosity or stakes. Hooks fall into
 
 This last category is common in recent posts. A plain, confident opening line that names what was built or observed, with no setup. Often paired with a semicolon appositive: "Customer outreach; the lifeblood of retention and revenue growth."
 
+**Hooks the post has to earn**
+
+If the hook claims something is interesting, counterintuitive, or surprising, the post has to deliver the payoff before the close, not tease it. A hook like "The interesting part isn't the public half. It's the private wiki feeding it" raises a "why is the private wiki interesting" question and then defers the answer all the way down. Either answer the question in the next sentence ("The interesting decision wasn't what to show. It was what to keep private") or cut the claim and let the post stand on the build itself. A teased hook that never lands is worse than no hook.
+
 ---
 
 ### The Body
@@ -175,6 +195,17 @@ After the hook, Mark sets context in 1-2 short paragraphs, then dives into speci
 - The fix or workaround he applied
 
 He often uses a numbered list when there are 3+ distinct lessons, but not for storytelling.
+
+---
+
+### The Mid-Post Pivot
+
+Mark uses a rhetorical question to pivot from the mechanics to the why. Examples:
+
+- "So what's the purpose of the private and public repo?"
+- "What type of questions do you think would benefit from going through this stress test?"
+
+This is not a generic CTA and it is not a close. It is a hinge sentence that signals the post is moving from how the thing works to why he built it. Do not strip these out as informal.
 
 ---
 
@@ -276,6 +307,9 @@ Run through this checklist before saving:
 - [ ] Is the close punchy or reflective, not a generic CTA?
 - [ ] Are there any em dashes? Remove them (a semicolon is often the right substitute).
 - [ ] Are there any buzzwords from the forbidden list? Rewrite.
+- [ ] Are there clever metaphors that are not in Mark's recurring metaphor list? Replace with literal description.
+- [ ] Did the hook claim something is interesting or counterintuitive? Confirm the post answers that claim before the close, or remove the claim.
+- [ ] Did you tighten Mark's own wording without a clear style violation reason? Restore it.
 - [ ] Did you read every sentence aloud? Any one that sounds formal, stiff, or like it is trying too hard to impress should be rewritten. This test is not optional.
 - [ ] Is it under 400 words?
 - [ ] Are hashtags relevant and capped at 6?

@@ -7,7 +7,7 @@ This is the public AI-Portfolio repo. The source of truth lives in a separate pr
 ## MANDATORY: Read Before Starting Any Session
 
 1. **Read `reference/WRITING_STYLE.md`** before writing any user-facing copy — READMEs, post drafts, email bodies, or anything that will be shared publicly.
-2. **If working with n8n workflow JSON:** read `reference/n8n_SKILL.md` and `n8n-workflows/lessons_learned.md` completely before writing any node JSON.
+2. **If working with n8n workflow JSON:** read `reference/n8n_SKILL.md` and `workflows/lessons_learned.md` completely before writing any node JSON.
 3. **Read the project's own CLAUDE.md** (inside each project folder) before making any changes to that project.
 
 Do not build or modify anything until you have confirmed you have read the relevant files.
@@ -24,7 +24,7 @@ If you want to change something here, change it upstream.
 
 ## What lives here
 
-- `n8n-workflows/` — automation projects built in n8n, including the production builds under `standalone-builds/`
+- `workflows/` — automation projects built in n8n, including the production builds under `standalone-builds/`
 - `python-projects/AADA/` — Adversarial AI Decision Analyzer (CLI + Streamlit)
 - `python-projects/ARQA/` — Requirements quality assistant (LangChain + RAG, Colab)
 - `reference/` — runtime rules and writing guides used across the projects

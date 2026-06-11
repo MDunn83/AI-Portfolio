@@ -4,7 +4,7 @@
 
 Skim once per session for any project work in this repo. These are Claude-Code-as-a-tool patterns: session management, branch handling, token limits, CLAUDE.md hygiene, and GitHub MCP gotchas. They apply equally to n8n, Python, and outreach work.
 
-For n8n-specific syntax and runtime rules, read `n8n_SKILL.md`. For the full n8n build pattern library (node behavior, dedup, execution-order, with code), read `n8n-workflows/lessons_learned.md`.
+For n8n-specific syntax and runtime rules, read `n8n_SKILL.md`. For the full n8n build pattern library (node behavior, dedup, execution-order, with code), read `workflows/lessons_learned.md`.
 
 ---
 

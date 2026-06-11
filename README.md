@@ -24,12 +24,12 @@ A LangChain and RAG suite that reads technical specifications, pulls out every S
 
 v1 was a prototype for natural-language Q&A across a guidebook library; v2 is the shipped tool that automates the full SHALL audit. v3 (verification method generator) is on the roadmap.
 
-### n8n Workflows
-[`n8n-workflows/`](n8n-workflows/)
+### Workflows
+[`workflows/`](workflows/)
 
-A collection of n8n automations. The headline build is a daily job board monitor that watches Greenhouse and Ashby for a target company list, filters by title and location, deduplicates against a Google Sheets history, and emails a digest every morning whether or not anything new showed up.
+Automation builds across two platforms. The headline build is a daily job board monitor that watches Greenhouse and Ashby for a target company list, filters by title and location, deduplicates against a Google Sheets history, and emails a digest every morning whether or not anything new showed up.
 
-Production workflows live in `standalone-builds/`. The numbered project folders (P01 through P07) trace earlier learning builds. `lessons_learned.md` collects the patterns that survived contact with real data.
+Production workflows live in `standalone-builds/`. The numbered project folders (P01 through P07) trace the learning builds, several with the same pipeline built multiple ways: by hand in n8n, with Claude Code, and on Zapier. `lessons_learned.md` collects the patterns that survived contact with real data.
 
 ---
 
@@ -42,6 +42,17 @@ The `reference/` folder collects the runtime rules I lean on when building with 
 
 ---
 
+## How These Get Built
+
+I direct the architecture; Claude Code generates most of the code, which I review, debug, and benchmark against manual builds. That division of labor is deliberate and documented per project. Commits here are made by a sync bot mirroring my private wiki, so the commit history shows the publishing pipeline, not the build work. The build work lives in the project docs.
+
+---
+
 ## About
 
-I'm a technical program manager building the tools I wish I had. This repo is the production half of my work. A private wiki holds the drafts and works-in-progress that are not ready to ship yet.
+I'm Mark Dunn, a technical program manager building the tools I wish I had. I run large software and hardware programs by day and build AI pipelines on my own time. This repo is the production half of that work. A private wiki holds the drafts and works-in-progress that are not ready to ship yet.
+
+- **LinkedIn:** [linkedin.com/in/mdunn83](https://www.linkedin.com/in/mdunn83)
+- **GitHub:** [github.com/MDunn83](https://github.com/MDunn83)
+
+If you're hiring for technical program management in AI or automation, the fastest tour is AADA's README, then the [P01 comparison](workflows/P01-meeting-minutes-automation/): the same pipeline built by hand in n8n, with Claude Code, and with Zapier Copilot, with measured results.

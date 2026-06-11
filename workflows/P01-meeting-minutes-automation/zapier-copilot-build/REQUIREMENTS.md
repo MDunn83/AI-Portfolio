@@ -5,7 +5,7 @@ Requirements for rebuilding the existing n8n meeting intelligence pipeline as a 
 - **Phase 1 — MVP.** Functional end-to-end pipeline using Zapier's idiomatic patterns (built-in AI, Paths for fan-out, Zapier outbound mail). Trades some n8n parity for build speed and platform simplicity. The Zapier Copilot v1 build delivers Phase 1.
 - **Phase 2 — Functional equivalence.** Closes the meaningful gaps between the Zapier build and the n8n manual build on the outcomes that matter (per-action-item tasks, real Gmail sending, graceful degradation on AI failures). Phase 2 deliberately diverges from n8n implementation patterns where Zapier's native primitives produce a better result. The v4 build delivers Phase 2.
 
-The n8n reference build lives in `../manual-build/`. This document defines what each Zapier phase must do, not how each Zap step gets configured.
+The n8n reference build lives in `../n8n-manual-build/`. This document defines what each Zapier phase must do, not how each Zap step gets configured.
 
 ---
 
@@ -242,9 +242,9 @@ Why: zero credential setup, no BYO API key configuration, and GPT-4o-mini qualit
 
 ## Reference
 
-- n8n manual build: `../manual-build/`
+- n8n manual build: `../n8n-manual-build/`
 - n8n Claude Code build: `../claude-code-build/`
-- n8n README (source of truth for the original pipeline): `../manual-build/README.md`
+- n8n README (source of truth for the original pipeline): `../n8n-manual-build/README.md`
 - Eval harness build spec: `../zapier-eval-build/`
 - Future builds: `../../FUTURE_BUILDS.md`
 - Zapier Copilot build artifacts: `README.md`, `LESSONS.md`, `P01-meeting-minutes-automation-zapier-copilot.json` in this folder

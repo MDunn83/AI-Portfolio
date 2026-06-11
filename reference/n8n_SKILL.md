@@ -3,7 +3,7 @@
 ## MANDATORY BEFORE BUILDING
 Read this file completely before writing any node JSON. Do not build until you confirm you have read it.
 
-This is the lean pre-build checklist. The **full patterns, code, and rationale are the source of truth in `n8n-workflows/lessons_learned.md`** — each rule below points to the section there. Both files are read on every n8n task; this one is the fast path, that one is the depth.
+This is the lean pre-build checklist. The **full patterns, code, and rationale are the source of truth in `workflows/lessons_learned.md`** — each rule below points to the section there. Both files are read on every n8n task; this one is the fast path, that one is the depth.
 
 ---
 

@@ -2,6 +2,14 @@
 
 An n8n workflow that reads user queries from Google Sheets, generates LLM responses via Groq, independently classifies both the query and the response for data governance, logs every result to an audit sheet, and routes sensitive or uncertain items to a human review queue.
 
+**Manual build:**
+
+![Manual build canvas](images/Proj4_Governance.png)
+
+**Claude Code build:**
+
+![Claude Code build canvas](images/Proj4_Governance_ClaudeCode.png)
+
 ---
 
 ## What It Does

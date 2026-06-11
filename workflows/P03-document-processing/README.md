@@ -3,6 +3,8 @@
 
 An automated document classification and routing pipeline built in n8n. Drop a PDF into a Google Drive inbox folder — the workflow reads it, classifies it using AI, extracts structured metadata, routes it to the correct subfolder, logs everything to Google Sheets, and sends a formatted email summary. Zero manual sorting required.
 
+![Workflow canvas](images/Proj3_DocProcessing.png)
+
 ---
 
 ## What It Does

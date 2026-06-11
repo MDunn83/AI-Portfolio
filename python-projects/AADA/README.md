@@ -27,6 +27,10 @@ While this doesn't eliminate hallucinations or inaccurate results, it's a practi
 
 ## How It Works
 
+<!-- Screenshot pending: uncomment when images/streamlit-ui.png is uploaded.
+![AADA Streamlit UI](images/streamlit-ui.png)
+-->
+
 V3.5 runs up to three competing models (Claude, Gemini, GPT-4o) across four modes. In Fast 3 and Deep 3, Gemini and GPT-4o critique simultaneously and neither sees the other's output. An optional routing call evaluates critic disagreement after pass 1 and automatically triggers a second pass, if warranted. An optional disagreement analysis provides insight into exactly how the pipeline arrived at its final answer.
 
 | Mode | Models | API Calls | Description |
@@ -67,6 +71,8 @@ After Claude's pass 1 revision, a lightweight Claude call evaluates whether Gemi
 | Structural omissions caught | 1 (NAR settlement) |
 | Cost per run | $0.02945 |
 | Elapsed time | 97 seconds |
+
+A 12-query benchmark against a single-model baseline is planned as a V4.0 milestone; the method and query set are in [`EVAL_PLAN.md`](EVAL_PLAN.md).
 
 ---
 

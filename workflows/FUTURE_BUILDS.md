@@ -27,7 +27,7 @@ A second Zap that exercises the Phase 1 (or Phase 2) Zapier meeting minutes pipe
 - Clean LinkedIn story. "You can't ship LLM workflows without an eval layer. Here's what mine caught — built entirely in Zapier."
 
 ### Where it lives
-- `n8n-workflows/P01-meeting-minutes-automation/zapier-eval-build/` (sibling to `zapier-copilot-build/`).
+- `workflows/P01-meeting-minutes-automation/zapier-eval-build/` (sibling to `zapier-copilot-build/`).
 - Optional follow-on: port the eval pattern to n8n once the Zapier version is shipped and write the comparison. That's a bonus post, not the main deliverable.
 
 ### Effort estimate
@@ -96,7 +96,7 @@ Take the existing P04 AI governance pipeline and add a runtime policy enforcemen
 - Reuses for any future LLM workflow that needs guardrails, including the meeting minutes pipeline and the research agent.
 
 ### Where it lives
-- Extends `n8n-workflows/P04-ai-governance/` rather than starting a new project.
+- Extends `workflows/P04-ai-governance/` rather than starting a new project.
 - Optionally uses NeMo Guardrails, Guardrails AI, or a hand-rolled regex + LLM judge.
 
 ### Effort estimate

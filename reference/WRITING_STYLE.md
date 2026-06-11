@@ -2,7 +2,7 @@
 
 Mark Dunn's voice — conversational patterns, structural rules, and forbidden phrases extracted from his published LinkedIn posts. Read this before drafting **any document**: LinkedIn posts, READMEs, email bodies, program charters, risk registers, stakeholder maps, or any other written artifact. Voice rules apply regardless of audience or format.
 
-> **Canonical voice doc.** This file is the single source of truth for Mark's voice across every artifact: LinkedIn posts, resume bullets, cover letters, READMEs, charters, anything. The resume session briefing (`outreach-portfolio/job-search/Dunn_Session_Briefing_v15_3.md`, Section 1) inherits these rules and adds only resume-specific overlays (banned government-speak terms, project description voice, summary structure). Do not duplicate voice rules into the briefing. When tailoring resumes in the Claude.ai web project, upload this file alongside the briefing so the external session has both.
+> **Canonical voice doc.** This file is the single source of truth for Mark's voice across every artifact: LinkedIn posts, resume bullets, cover letters, READMEs, charters, anything. The resume session briefing (`outreach-portfolio/job-search/Dunn_Session_Briefing_v15_4.md`, Section 1) inherits these rules and adds only resume-specific overlays (banned government-speak terms, project description voice, summary structure). Do not duplicate voice rules into the briefing. When tailoring resumes in the Claude.ai web project, upload this file alongside the briefing so the external session has both.
 
 ---
 

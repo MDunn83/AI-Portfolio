@@ -16,6 +16,21 @@ The mirror test: if the sentence sounds like something Mark would type in a chat
 
 **Compression is the trap.** The most common failure is not violating a rule. It is optimizing Mark's voice into something tighter than he actually writes. Compressed metaphors, dropped connectors, punchy two-beat closes; each move is defensible in isolation, and each one makes the draft sound more like writing and less like Mark. When in doubt, ask whether the change makes the sentence sound more like speech or more like a finished piece of writing. Mark sounds like speech.
 
+**A worked example of the failure (2026-06-12).** This applies to ALL writing, not just comments. Claude drafted this reaction to an article:
+
+> "Build skills, not prompts" is the part I keep relearning. I've been benchmarking the same workflow across a few build tools, and the tool matters far less than how the context is structured going in. The week-one-magic, week-five-disappointment line nails exactly why.
+
+Mark rejected it as sounding "shittily AI" and wrote this instead:
+
+> Great article. I found a lot of commonality with what I've been building. In particular, building skills not prompts has been a game changer for me. Once I have the skill built, I'm not wasting time reprompting every time.
+
+What the rejected draft got wrong, and what to check in every draft of anything:
+- **Quoting-back-with-a-twist** ("is the part I keep relearning") is a writer's move. Mark states his reaction plainly: "I found a lot of commonality."
+- **Compressed callback phrases** ("the week-one-magic, week-five-disappointment line") are pure AI cadence. Mark would never compress someone else's paragraph into a hyphenated tag.
+- **The takeaway gets its own plain sentence** ("Once I have the skill built, I'm not wasting time reprompting every time"), not a clever close.
+- **Openers are ordinary** ("Great article."). Resist the urge to make the first line do work. A normal human opener is the voice.
+- "Game changer" and phrases like it are fine. They sound like a person. Avoiding common phrases because they feel cliché produces the AI sound, not the human one.
+
 For LinkedIn comments specifically, strip all post structure (no hook, body, or close) and go even plainer. Model:
 > "The cost vs. accuracy tradeoff is interesting. 12% more tasks completed for 17% more cost. Whether that's worth it probably comes down to the use case."
 

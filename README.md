@@ -38,7 +38,6 @@ Production workflows live in `standalone-builds/`. The numbered project folders 
 The `reference/` folder collects the runtime rules I lean on when building with Claude Code.
 
 - `n8n_SKILL.md`. The pre-build checklist and critical snippets for writing n8n workflow JSON.
-- `WRITING_STYLE.md`. Voice and structure guide for anything user-facing.
 
 ---
 

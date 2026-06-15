@@ -106,3 +106,6 @@ Use Claude chat to finalize architecture and then bring a clean spec to Claude C
 
 **Claude Code's tool choices are often better than manual build choices.**
 Trust Claude Code's independent tool selections. The friction is target-system syntax, not design quality.
+
+**Wrap deterministic logic in a script, keep judgment in the skill.**
+When a task recurs and has a deterministic core (scrub, transform, validate), build that core as a tested script with its own verification, and keep the skill thin: routing, file placement, sync-check, the calls that need judgment. The skill leans on the script's built-in guard instead of re-deriving the logic in prose each run, so the part that can't be allowed to drift doesn't.

@@ -1,0 +1,437 @@
+{
+  "metadata": {
+    "version": "gdpr_v1"
+  },
+  "zaps": [
+    {
+      "id": 368531070,
+      "title": "AI Governance Workflow - Query Classification & Review Queue",
+      "status": "on",
+      "nodes": {
+        "368531070": {
+          "id": 368531070,
+          "account_id": 0,
+          "customuser_id": 0,
+          "paused": false,
+          "type_of": "read",
+          "params": {
+            "spreadsheet": "YOUR_PROJ4_SHEET_ID",
+            "worksheet": "0"
+          },
+          "meta": {
+            "$editor": {
+              "has_automatic_issues": false
+            },
+            "parammap": {
+              "spreadsheet": "Proj4",
+              "worksheet": "Questions"
+            }
+          },
+          "triple_stores": {
+            "copied_from": null,
+            "created_by": null,
+            "polling_interval_override": 0,
+            "block_and_release_limit_override": 0,
+            "spread_tasks": 1
+          },
+          "folders": null,
+          "parent_id": null,
+          "root_id": null,
+          "action": "new_row_notify_hook",
+          "selected_api": "GoogleSheetsV2CLIAPI@2.13.1",
+          "title": "AI Governance Workflow - Query Classification & Review Queue",
+          "authentication_id": 0,
+          "created_at": "2026-06-14T02:53:48+00:00",
+          "last_changed": "2026-06-14T23:08:56+00:00"
+        },
+        "368531528": {
+          "id": 368531528,
+          "account_id": 0,
+          "customuser_id": 0,
+          "paused": true,
+          "type_of": "write",
+          "params": {
+            "provider_id": "openai",
+            "authentication_id": "0",
+            "model_id": "openai/gpt-4.1-nano",
+            "isOutputArray": false,
+            "instructions": "You are a helpful assistant. Answer the following query in plain text only.\nDo not use markdown formatting, bullet points, or headers.\nQuery: {{368531070__COL$B}}"
+          },
+          "meta": {
+            "$editor": {
+              "has_automatic_issues": false
+            },
+            "parammap": {
+              "provider_id": "OpenAI",
+              "authentication_id": "Zapier-provided",
+              "model_id": "GPT-4.1 nano"
+            }
+          },
+          "triple_stores": {
+            "copied_from": null,
+            "created_by": null,
+            "polling_interval_override": 0,
+            "block_and_release_limit_override": 0,
+            "spread_tasks": 1
+          },
+          "folders": null,
+          "parent_id": 368531070,
+          "root_id": 368531070,
+          "action": "get_completion",
+          "selected_api": "AICLIAPI@3.8.5",
+          "title": null,
+          "authentication_id": null,
+          "created_at": "2026-06-14T03:12:18+00:00",
+          "last_changed": "2026-06-14T23:08:56+00:00"
+        },
+        "368531629": {
+          "id": 368531629,
+          "account_id": 0,
+          "customuser_id": 0,
+          "paused": true,
+          "type_of": "write",
+          "params": {
+            "provider_id": "openai",
+            "authentication_id": "0",
+            "model_id": "openai/gpt-4.1-nano",
+            "instructions": "Classify the following query for data governance purposes.\n\nReturn a JSON object with exactly two fields:\n- \"class\": one of SENSITIVE, STANDARD, or UNCERTAIN\n- \"domain\": one of PII, FINANCIALS, STRATEGIC, CREDENTIALS, LEGAL, MEDICAL, HR, NAMED_INDIVIDUAL, or NONE\n\nDefinitions:\n- SENSITIVE: involves personal data, financial details, credentials, legal matters, medical info, HR decisions, or named individuals in a sensitive context\n- STANDARD: routine query, no sensitive content\n- UNCERTAIN: ambiguous \u2014 may or may not involve sensitive content\n\nQuery: {{368531070__COL$B}}\n\nReturn only the JSON object. No explanation.",
+            "isOutputArray": false
+          },
+          "meta": {
+            "$editor": {
+              "has_automatic_issues": false
+            },
+            "parammap": {
+              "provider_id": "OpenAI",
+              "authentication_id": "Zapier-provided",
+              "model_id": "GPT-4.1 nano"
+            }
+          },
+          "triple_stores": {
+            "copied_from": null,
+            "created_by": null,
+            "polling_interval_override": 0,
+            "block_and_release_limit_override": 0,
+            "spread_tasks": 1
+          },
+          "folders": null,
+          "parent_id": 368531528,
+          "root_id": 368531070,
+          "action": "get_completion",
+          "selected_api": "AICLIAPI@3.8.5",
+          "title": null,
+          "authentication_id": null,
+          "created_at": "2026-06-14T03:17:51+00:00",
+          "last_changed": "2026-06-14T23:08:56+00:00"
+        },
+        "368531630": {
+          "id": 368531630,
+          "account_id": 0,
+          "customuser_id": 0,
+          "paused": true,
+          "type_of": "write",
+          "params": {
+            "provider_id": "openai",
+            "authentication_id": "0",
+            "model_id": "openai/gpt-4.1-nano",
+            "isOutputArray": false,
+            "instructions": "Classify the following response for data governance purposes.\n\nReturn a JSON object with exactly two fields:\n- \"class\": one of SENSITIVE, STANDARD, or UNCERTAIN\n- \"domain\": one of PII, FINANCIALS, STRATEGIC, CREDENTIALS, LEGAL, MEDICAL, HR, NAMED_INDIVIDUAL, or NONE\n\nDefinitions:\n- SENSITIVE: involves personal data, financial details, credentials, legal matters, medical info, HR decisions, or named individuals in a sensitive context\n- STANDARD: routine response, no sensitive content\n- UNCERTAIN: ambiguous \u2014 may or may not involve sensitive content\n\nResponse: {{368531528__output}}\n\nReturn only the JSON object. No explanation."
+          },
+          "meta": {
+            "$editor": {
+              "has_automatic_issues": false
+            },
+            "parammap": {
+              "provider_id": "OpenAI",
+              "authentication_id": "Zapier-provided",
+              "model_id": "GPT-4.1 nano"
+            }
+          },
+          "triple_stores": {
+            "copied_from": null,
+            "created_by": null,
+            "polling_interval_override": 0,
+            "block_and_release_limit_override": 0,
+            "spread_tasks": 1
+          },
+          "folders": null,
+          "parent_id": 368531629,
+          "root_id": 368531070,
+          "action": "get_completion",
+          "selected_api": "AICLIAPI@3.8.5",
+          "title": null,
+          "authentication_id": null,
+          "created_at": "2026-06-14T03:17:52+00:00",
+          "last_changed": "2026-06-14T23:08:56+00:00"
+        },
+        "368531641": {
+          "id": 368531641,
+          "account_id": 0,
+          "customuser_id": 0,
+          "paused": true,
+          "type_of": "write",
+          "params": {
+            "input": {
+              "query_output": "{{368531629__output}}",
+              "response_output": "{{368531630__output}}"
+            },
+            "packages_enabled": false,
+            "code": "const validClasses = ['SENSITIVE', 'STANDARD', 'UNCERTAIN'];\n\n// Parse the query classification JSON\nlet queryData = {};\ntry {\n  queryData = typeof inputData.query_output === 'string' \n    ? JSON.parse(inputData.query_output) \n    : inputData.query_output;\n} catch (e) {\n  queryData = { class: 'UNCERTAIN', domain: 'NONE' };\n}\n\n// Parse the response classification JSON\nlet responseData = {};\ntry {\n  responseData = typeof inputData.response_output === 'string' \n    ? JSON.parse(inputData.response_output) \n    : inputData.response_output;\n} catch (e) {\n  responseData = { class: 'UNCERTAIN', domain: 'NONE' };\n}\n\n// Validate and override (fail-closed: invalid values become SENSITIVE)\nconst queryClass = validClasses.includes(queryData.class) ? queryData.class : 'SENSITIVE';\nconst queryDomain = queryData.domain || 'NONE';\n\nconst responseClass = validClasses.includes(responseData.class) ? responseData.class : 'SENSITIVE';\nconst responseDomain = responseData.domain || 'NONE';\n\nreturn {\n  query_class: queryClass,\n  query_domain: queryDomain,\n  response_class: responseClass,\n  response_domain: responseDomain,\n  validated: true\n};"
+          },
+          "meta": {
+            "$editor": {
+              "has_automatic_issues": false
+            },
+            "parammap": {}
+          },
+          "triple_stores": {
+            "copied_from": null,
+            "created_by": null,
+            "polling_interval_override": 0,
+            "block_and_release_limit_override": 0,
+            "spread_tasks": 1
+          },
+          "folders": null,
+          "parent_id": 368531630,
+          "root_id": 368531070,
+          "action": "01929fad-d3dd-62c2-52ed-7868d5fcc691",
+          "selected_api": "CodeCLIAPI@1.0.1",
+          "title": null,
+          "authentication_id": null,
+          "created_at": "2026-06-14T03:18:57+00:00",
+          "last_changed": "2026-06-14T23:08:56+00:00"
+        },
+        "368531669": {
+          "id": 368531669,
+          "account_id": 0,
+          "customuser_id": 0,
+          "paused": true,
+          "type_of": "write",
+          "params": {
+            "timezone": false,
+            "spreadsheet": "YOUR_PROJ4_SHEET_ID",
+            "worksheet": "328297764",
+            "COL$A": "{{now()}}",
+            "COL$B": "{{368531070__COL$A}}",
+            "COL$C": "{{368531070__COL$B}}",
+            "COL$D": "{{368531528__output}}",
+            "COL$E": "{{368531641__response_class}}",
+            "COL$F": "{{368531641__response_domain}}",
+            "COL$G": "{{368531641__query_class}}",
+            "COL$H": "{{368531641__query_domain}}"
+          },
+          "meta": {
+            "$editor": {
+              "has_automatic_issues": false
+            },
+            "parammap": {
+              "spreadsheet": "Proj4",
+              "worksheet": "Zapier Audit Log"
+            }
+          },
+          "triple_stores": {
+            "copied_from": null,
+            "created_by": null,
+            "polling_interval_override": 0,
+            "block_and_release_limit_override": 0,
+            "spread_tasks": 1
+          },
+          "folders": null,
+          "parent_id": 368531641,
+          "root_id": 368531070,
+          "action": "add_row",
+          "selected_api": "GoogleSheetsV2CLIAPI@2.13.1",
+          "title": null,
+          "authentication_id": 0,
+          "created_at": "2026-06-14T03:19:52+00:00",
+          "last_changed": "2026-06-14T23:08:56+00:00"
+        },
+        "368585431": {
+          "id": 368585431,
+          "account_id": 0,
+          "customuser_id": 0,
+          "paused": true,
+          "type_of": "write",
+          "params": {},
+          "meta": {
+            "$editor": {
+              "has_automatic_issues": false
+            }
+          },
+          "triple_stores": {
+            "copied_from": null,
+            "created_by": null,
+            "polling_interval_override": 0,
+            "block_and_release_limit_override": 0,
+            "spread_tasks": 1
+          },
+          "folders": null,
+          "parent_id": 368531669,
+          "root_id": 368531070,
+          "action": "branch",
+          "selected_api": "BranchingAPI",
+          "title": null,
+          "authentication_id": null,
+          "created_at": "2026-06-14T22:44:56+00:00",
+          "last_changed": "2026-06-14T23:08:56+00:00"
+        },
+        "368585432": {
+          "id": 368585432,
+          "account_id": 0,
+          "customuser_id": 0,
+          "paused": true,
+          "type_of": "filter",
+          "params": {
+            "color": "Heroine Blue",
+            "emoji": "A",
+            "path_eval_index": 0,
+            "filter_criteria": [
+              {
+                "key": "368531641__query_class",
+                "value": "SENSITIVE",
+                "action": "continue",
+                "match": "iexact",
+                "group": 1,
+                "id": 1
+              },
+              {
+                "key": "368531641__query_class",
+                "value": "UNCERTAIN",
+                "action": "continue",
+                "match": "iexact",
+                "group": 2,
+                "id": 2
+              },
+              {
+                "key": "368531641__response_class",
+                "value": "SENSITIVE",
+                "action": "continue",
+                "match": "iexact",
+                "group": 3,
+                "id": 3
+              },
+              {
+                "key": "368531641__response_class",
+                "value": "UNCERTAIN",
+                "action": "continue",
+                "match": "iexact",
+                "group": 4,
+                "id": 4
+              }
+            ]
+          },
+          "meta": {
+            "$editor": {
+              "has_automatic_issues": false
+            },
+            "stepTitle": "Path A"
+          },
+          "triple_stores": {
+            "copied_from": null,
+            "created_by": null,
+            "polling_interval_override": 0,
+            "block_and_release_limit_override": 0,
+            "spread_tasks": 1
+          },
+          "folders": null,
+          "parent_id": 368585431,
+          "root_id": 368531070,
+          "action": "filter",
+          "selected_api": "BranchingAPI",
+          "title": "Path A",
+          "authentication_id": null,
+          "created_at": "2026-06-14T22:44:56+00:00",
+          "last_changed": "2026-06-14T23:08:56+00:00"
+        },
+        "368585433": {
+          "id": 368585433,
+          "account_id": 0,
+          "customuser_id": 0,
+          "paused": true,
+          "type_of": "write",
+          "params": {
+            "timezone": false,
+            "spreadsheet": "YOUR_PROJ4_SHEET_ID",
+            "worksheet": "1475630613",
+            "COL$A": "{{now()}}",
+            "COL$B": "{{368531070__COL$A}}",
+            "COL$C": "{{368531070__COL$B}}",
+            "COL$D": "{{368531528__output}}",
+            "COL$E": "{{368531641__response_class}}",
+            "COL$F": "{{368531641__response_domain}}",
+            "COL$G": "{{368531641__query_class}}",
+            "COL$H": "{{368531641__query_domain}}"
+          },
+          "meta": {
+            "$editor": {
+              "has_automatic_issues": false
+            },
+            "parammap": {
+              "spreadsheet": "Proj4",
+              "worksheet": "Zapier Review"
+            }
+          },
+          "triple_stores": {
+            "copied_from": null,
+            "created_by": null,
+            "polling_interval_override": 0,
+            "block_and_release_limit_override": 0,
+            "spread_tasks": 1
+          },
+          "folders": null,
+          "parent_id": 368585432,
+          "root_id": 368531070,
+          "action": "add_row",
+          "selected_api": "GoogleSheetsV2CLIAPI@2.13.1",
+          "title": null,
+          "authentication_id": 0,
+          "created_at": "2026-06-14T22:44:56+00:00",
+          "last_changed": "2026-06-14T23:08:56+00:00"
+        },
+        "368585434": {
+          "id": 368585434,
+          "account_id": 0,
+          "customuser_id": 0,
+          "paused": true,
+          "type_of": "write",
+          "params": {
+            "body_type": "plain",
+            "signature_delimiter": true,
+            "send_to_groups": false,
+            "to": [
+              "YOUR_EMAIL_TO"
+            ],
+            "from": "YOUR_EMAIL_FROM",
+            "subject": "AI Governance Review Queue - Flagged Item",
+            "body": "A query/response pair has been flagged for governance review.\n\n--- QUERY ---\n{{368531070__COL$B}}\n\n--- RESPONSE ---\n{{368531528__output}}\n\n--- CLASSIFICATIONS ---\nQuery Class: {{368531641__query_class}}\nQuery Domain: {{368531641__query_domain}}\nResponse Class: {{368531641__response_class}}\nResponse Domain: {{368531641__response_domain}}\n\n--- TIMESTAMP ---\n{{=utils.now()}}\n\nPlease review in the Zapier Reviews sheet and update the review_status field (PENDING \u2192 REVIEWED / ESCALATED / DISMISSED)."
+          },
+          "meta": {
+            "$editor": {
+              "has_automatic_issues": false
+            },
+            "parammap": {
+              "from": "YOUR_EMAIL_FROM",
+              "body_type": "Plain"
+            }
+          },
+          "triple_stores": {
+            "copied_from": null,
+            "created_by": null,
+            "polling_interval_override": 0,
+            "block_and_release_limit_override": 0,
+            "spread_tasks": 1
+          },
+          "folders": null,
+          "parent_id": 368585433,
+          "root_id": 368531070,
+          "action": "message",
+          "selected_api": "GoogleMailV2CLIAPI@2.10.0",
+          "title": null,
+          "authentication_id": 0,
+          "created_at": "2026-06-14T22:44:56+00:00",
+          "last_changed": "2026-06-14T23:08:56+00:00"
+        }
+      }
+    }
+  ]
+}

@@ -360,6 +360,15 @@ Pre-filter before any classifier call — every classifier call costs tokens, an
 
 ---
 
+## Governance Workflow Patterns
+
+Platform-agnostic; these held up on both the n8n and Zapier governance builds.
+
+- **Fail closed on invalid classifier output.** Validate the classifier's class against the allowed set in a Code step. If it comes back malformed or unrecognized, default to the most restrictive value (SENSITIVE), never the safe-looking one. A bad classification should get caught, not slip through. Put the override in code, not the prompt.
+- **Log before you filter.** Write every item to the audit log before any routing or filtering runs, regardless of how it was classified. If the routing logic breaks, you still have a complete record. The audit log should never depend on the filter logic being correct.
+
+---
+
 ## Test Data Discipline
 
 Use test data matching the actual target profile, and always include at least one genuinely poor-fit record to confirm IF routing works end to end.

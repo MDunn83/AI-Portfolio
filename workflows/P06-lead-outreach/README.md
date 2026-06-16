@@ -36,5 +36,6 @@ Same requirements document, three build tools, measured results. The point was n
 
 | File | Contents |
 |---|---|
-| [`claude-code-r2/P6_Requirements.md`](claude-code-r2/P6_Requirements.md) | The requirements document all three builds were built against |
-| [`claude-code-r2/CLAUDE.md`](claude-code-r2/CLAUDE.md) | The full build spec: architecture, node tables, scoring prompt guidance |
+| [`claude-code-r2/P6_Requirements.md`](claude-code-r2/P6_Requirements.md) | The requirements document all three builds were built against: scope, functional and non-functional requirements, acceptance criteria |
+| [`claude-code-r2/BUILD_PROCESS.md`](claude-code-r2/BUILD_PROCESS.md) | The build spec: architecture, node tables, technology choices, scoring prompt, JSON output rules |
+| [`claude-code-r2/CLAUDE.md`](claude-code-r2/CLAUDE.md) | Build rules for Claude Code: what to build, constraints, phase gates, pointers to the two docs above |

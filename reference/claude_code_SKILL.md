@@ -109,3 +109,6 @@ Trust Claude Code's independent tool selections. The friction is target-system s
 
 **Wrap deterministic logic in a script, keep judgment in the skill.**
 When a task recurs and has a deterministic core (scrub, transform, validate), build that core as a tested script with its own verification, and keep the skill thin: routing, file placement, sync-check, the calls that need judgment. The skill leans on the script's built-in guard instead of re-deriving the logic in prose each run, so the part that can't be allowed to drift doesn't.
+
+**PostToolUse hooks require settings.json registration — skills cannot fire automatically.**
+A skill is a prompt invoked by the agent or user; it runs only when called. A PostToolUse hook fires on a system event (Edit/Write) without any invocation. To wire a check that runs automatically whenever a file is edited, register it in `.claude/settings.json` under `hooks.PostToolUse`. Use hooks when the check must be automatic; use skills when on-demand is acceptable.

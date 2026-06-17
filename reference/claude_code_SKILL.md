@@ -68,8 +68,8 @@ git reset --hard origin/<branch-name>
 **Put mandatory read instructions at the very top.**
 Skill file instructions must be the first lines in CLAUDE.md or Claude Code may skip them entirely.
 
-**CLAUDE.md is a forcing function.**
-The quality of Claude Code output is directly proportional to the quality of CLAUDE.md. Minimum content for any project CLAUDE.md: credential names exactly as they appear in the target system, LLM provider and model, data source structure and column names, output targets, and lessons from prior builds.
+**CLAUDE.md is a forcing function, not the filing cabinet.**
+Output quality tracks the quality of the spec Claude Code reads -- but the spec is the whole project folder, not CLAUDE.md alone. CLAUDE.md holds directives and pointers (the closed list in the root convention); the substance it points to -- credential names exactly as they appear in the target system, LLM provider and model, data source structure and column names, output targets, lessons from prior builds -- lives in BUILD_PROCESS.md and REQUIREMENTS.md. Putting that substance directly in CLAUDE.md is how the junk drawer forms: the file the agent auto-reads is the path of least resistance, so everything you don't want forgotten gets dumped there until it instructs nothing well. Route by type; CLAUDE.md points.
 
 **Claude Code will rewrite your CLAUDE.md if you let it.**
 Always check that your mandatory read instructions and constraints are still present after any session where Claude Code touched CLAUDE.md.

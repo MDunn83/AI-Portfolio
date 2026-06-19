@@ -38,6 +38,9 @@ If there is no new output after 2 minutes, interrupt it. When in doubt, interrup
 **Resumed sessions carry forward bad state.**
 When a session goes sideways, close it and start fresh rather than resuming. CLAUDE.md is the persistent context -- the session itself is disposable.
 
+**A wrap signal that coincides with compaction can be lost.**
+If "end session" (or any session-wrap phrase) arrives just as the context window compacts, the continuation prompt's "resume without acknowledging" instruction can swallow the End of Session Protocol. After any compaction, re-check whether a wrap was requested before treating the session as ongoing.
+
 ---
 
 ## Local Machine and Git

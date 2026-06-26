@@ -64,6 +64,9 @@ git fetch origin <branch-name>
 git reset --hard origin/<branch-name>
 ```
 
+**A session branch may exist locally without existing on GitHub.**
+A web/remote session can start with the session branch checked out locally and even show a `remotes/origin/<branch>` tracking ref, while the branch does not exist on GitHub yet. That tracking ref is a local artifact of the clone, not proof of a remote branch. Run `git ls-remote origin <branch>` (a live query) to confirm; `git branch -r` only shows what was already fetched. Since the branch isn't really on the remote until the first push, a session branch whose name no longer fits the work (they're auto-named from the opening task) can be renamed with `git branch -m` before that first push, with nothing to clean up remotely.
+
 ---
 
 ## CLAUDE.md -- The Most Important Habit

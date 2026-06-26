@@ -400,3 +400,23 @@ Use Chrome or Edge — Firefox has websocket instability with the n8n editor. Sa
 ## n8n Syntax Claude Code Gets Wrong
 
 A recurring shortlist for any session generating node JSON (full detail in the sections above): backtick literals aren't evaluated (use `{{ }}`); `$input.first()` only returns the first item; return syntax differs by Code-node mode; typeVersion mismatches fail on import (specify the n8n Cloud version in CLAUDE.md; Google Sheets Trigger must be typeVersion 1).
+
+---
+
+## Make (Integromat) Platform Notes
+
+From the P02 Make build (the third build of the newsletter monitor). Make maps to n8n closely (module = node, route = IF branch, aggregator = Aggregate), but the expression layer and editor have their own traps.
+
+- **Never type `{{ }}` yourself.** The field picker inserts the braces when you select a value. Typing them by hand produces a literal text token instead of a bound reference, and it fails silently as plain text. This bit the RSS URL and the Gemini prompts repeatedly.
+- **`+` is numeric only.** There is no string concatenation operator. Putting variables next to each other (adjacency) inside one expression concatenates; for anything else use a function (`encodeURL`, `substring`, etc.).
+- **`=` does not compare reliably inside `if()`.** Use `contains()` for membership tests, or push the comparison into a native Filter operator. The native Filter operators (`date:greater`, `text:contain`, `number:greater`, `number:equal`, `text:notequal`) worked flawlessly for recency, relevance, dedup, and the include/route gating; the `if()` equality did not.
+- **Gemini module: turn on Response Format → JSON Output** for structured returns. Its `result` field is typed inconsistently across runs (sometimes an object, sometimes a string), so don't depend on the shape; JSON Output plus a Parse JSON module is the stable path.
+- **Switch models before fighting the output.** Gemini 2.5 Flash-Lite intermittently fenced its JSON even with JSON Output on; Gemini 3.1 Flash-Lite fixed it with no prompt change. Same lesson as Model Selection above, now confirmed cross-platform: change the model first, then the prompt.
+- **Backtick literals can't be matched** in string functions. Don't try to compare against a backtick-quoted literal.
+- **Heavy editing leaves stale pill references.** After a lot of rewiring, a module can keep pointing at an old mapping that no longer exists. Delete the module and re-add it to force the graph to recompute.
+- **Empty array brackets return an array, not a scalar.** `[].x` gives you an array; index it (`[1]`) to get a value.
+- **Sheets modules cache their columns.** After changing the sheet, the column picker is stale until you "Run this module only" to refresh it.
+- **Gmail body is Raw HTML only.** There's no plain-to-HTML conversion; wrap preformatted text in `<pre>` to keep newlines without converting them yourself.
+- **Don't filter the link into a Router.** Put the filter on each route instead. A filter on the inbound link to a Router will skip every route when the input is empty, which silently produces no output (this was the no-news bug: the no-news route never fired). One filter per route, gated on the aggregated array length.
+- **Batch row deletes need descending order.** `Delete a Row` deletes by the live row index, so top-down deletion renumbers the rows still queued and clobbers the wrong ones. Order the source `Search Rows` by the timestamp column descending; on an append-only sheet that hands Delete the highest row numbers first (bottom-up), which never shifts an index you still need. No separate sort module required. The row index field is `__ROW_NUMBER__`, mapped as `{{1.`__ROW_NUMBER__`}}`. (Same lesson as the n8n "descending sort before batch delete".)
+- **Running one module in isolation starves it of input.** "Run this module only" gives a downstream module no upstream bundles, so anything mapped from a previous module (e.g. `{{1.`__ROW_NUMBER__`}}`) resolves empty and fails validation ("Row number field was empty"). The module isn't broken; the test is. Use "Run once" on the whole flow so each module gets fed in sequence.

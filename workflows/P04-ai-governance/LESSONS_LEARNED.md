@@ -1,4 +1,4 @@
-# Lessons Learned — P04 AI Governance Tool Build
+# Lessons Learned: P04 AI Governance Tool Build
 
 Captured from the Claude Code session that produced `P04-ai-governance.json`. These lessons apply to any n8n workflow built with Groq LLMs.
 
@@ -8,7 +8,7 @@ Captured from the Claude Code session that produced `P04-ai-governance.json`. Th
 
 **Problem:** The Merge node was configured with `"combinationMode": "mergeByPosition"` in the JSON. On import, n8n silently defaulted to "Match Fields" mode, which failed because no matching fields existed.
 
-**Fix:** The correct parameter is `"combineBy": "combineByPosition"` — a different key name and a different value format.
+**Fix:** The correct parameter is `"combineBy": "combineByPosition"`, a different key name and a different value format.
 
 **Takeaway:** Always export a working workflow from the n8n UI and diff it against your generated JSON. The UI export is the ground truth for parameter names.
 
@@ -57,7 +57,7 @@ In the JSON file this must be written as `\\\\n` to survive the double-escaping.
 
 **Fix:** Add `options.batching.batch.batchSize: 1` and `batchInterval: 4000` to every HTTP Request node that calls the Groq API.
 
-**Takeaway:** When rate limits apply to an API, every node that calls that API needs batching — not just the first one.
+**Takeaway:** When rate limits apply to an API, every node that calls that API needs batching, not just the first one.
 
 ---
 
@@ -67,7 +67,7 @@ In the JSON file this must be written as `\\\\n` to survive the double-escaping.
 
 **Fix:** Remove `response_format` entirely. Increase `max_tokens` to 200. Instruct the model in the prompt to return raw JSON only. Add a Code node with try/catch + regex fallback to parse the output.
 
-**Takeaway:** `response_format: json_object` and reasoning models do not mix safely. Rely on prompt instructions and robust parsing instead.
+**Takeaway:** `response_format: json_object` and reasoning models do not mix safely. Rely on prompt instructions and parsing that catches bad output instead.
 
 ---
 

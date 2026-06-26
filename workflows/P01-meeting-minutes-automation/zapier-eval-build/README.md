@@ -1,4 +1,4 @@
-# Zapier Eval Build — Meeting Minutes Pipeline
+# Zapier Eval Build: Meeting Minutes Pipeline
 
 The eval harness for the Zapier meeting minutes build. Defined as Build 1 in `../../FUTURE_BUILDS.md`. This folder currently holds the test data and the extraction rules; the eval Zap itself comes next.
 

@@ -1,6 +1,6 @@
-# New Job Openings — Automated Job Board Monitor
+# New Job Openings: Automated Job Board Monitor
 
-Checks Greenhouse and Ashby job boards for a configurable list of companies every morning. Filters for roles matching your criteria, deduplicates against a history sheet, and emails you a summary — whether or not new listings were found.
+Checks Greenhouse and Ashby job boards for a configurable list of companies every morning. Filters for roles matching your criteria, deduplicates against a history sheet, and emails you a summary, whether or not new listings were found.
 
 Built in n8n. No LLM required. No code to run locally.
 
@@ -12,7 +12,7 @@ Built in n8n. No LLM required. No code to run locally.
 2. Hits the public Greenhouse or Ashby API for each company
 3. Filters jobs by title keywords, exclude terms, and location
 4. Skips any URL already logged in your Jobs DB (dedup)
-5. Emails you the results — new listings with links, or "no new openings today" if none
+5. Emails you the results: new listings with links, or "no new openings today" if none
 6. Appends any new listings to your Jobs DB for future dedup
 
 ---
@@ -26,14 +26,14 @@ Built in n8n. No LLM required. No code to run locally.
 
 ### Step 1: Create Your Google Sheets
 
-**Company List sheet** — one row per company:
+**Company List sheet**: one row per company:
 | Column | Example |
 |---|---|
 | Company | Stripe |
 | Type | greenhouse |
 | Token | stripe |
 
-**Jobs DB sheet** — starts empty, grows over time:
+**Jobs DB sheet**: starts empty, grows over time:
 | Column | Notes |
 |---|---|
 | title | |
@@ -44,7 +44,7 @@ Built in n8n. No LLM required. No code to run locally.
 
 ### Step 2: Find Board Tokens
 
-**Greenhouse:** Visit `https://boards.greenhouse.io/{company-slug}` — the slug in the URL is the token.
+**Greenhouse:** Visit `https://boards.greenhouse.io/{company-slug}`. The slug in the URL is the token.
 Example: `https://boards.greenhouse.io/stripe` → token is `stripe`
 
 **Ashby:** Visit the company's Ashby-hosted job board. The slug in the URL is the token.
@@ -59,8 +59,8 @@ Import `new-job-openings-v2.json` into n8n via the workflow menu.
 ### Step 4: Connect Credentials
 
 Connect the following credentials in n8n after import:
-- **Google Sheets OAuth2 API** — to all three Google Sheets nodes
-- **Gmail OAuth2 API** — to the Send Email node
+- **Google Sheets OAuth2 API**: to all three Google Sheets nodes
+- **Gmail OAuth2 API**: to the Send Email node
 
 ### Step 5: Fill In Placeholders
 
@@ -94,8 +94,8 @@ const LOCATION_MODE = 'any';
 **Filter hierarchy:** Exclude terms are checked first. A title containing any exclude term is dropped, regardless of whether it also matches an include keyword. This prevents "Product Manager" from matching when `Manager` is in your include list.
 
 **TITLE_MODE / LOCATION_MODE options:**
-- `'any'` — job passes if it matches at least one keyword
-- `'all'` — job must match every keyword
+- `'any'`: job passes if it matches at least one keyword
+- `'all'`: job must match every keyword
 
 Empty arrays (`[]`) skip that filter entirely and allow all values through.
 
@@ -103,7 +103,7 @@ Empty arrays (`[]`) skip that filter entirely and allow all values through.
 
 ## Adding or Removing Companies
 
-Edit your Company List sheet. Add or remove rows. The workflow reads the sheet fresh every run — no workflow changes needed.
+Edit your Company List sheet. Add or remove rows. The workflow reads the sheet fresh every run, so no workflow changes are needed.
 
 ---
 

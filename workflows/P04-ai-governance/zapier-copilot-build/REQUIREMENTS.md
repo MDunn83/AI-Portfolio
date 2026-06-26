@@ -1,4 +1,4 @@
-# P04 AI Governance Tool — Zapier Build Requirements
+# P04 AI Governance Tool: Zapier Build Requirements
 
 Rebuilding the n8n AI governance workflow as a Zapier Zap. The n8n reference build lives in `../`. This document is the complete, self-contained spec for the Zapier version. Requirements carried forward from the n8n build are marked **[BASELINE]**. Requirements that are new or improved in this build are marked **[NEW]**.
 
@@ -6,23 +6,23 @@ Rebuilding the n8n AI governance workflow as a Zapier Zap. The n8n reference bui
 
 ## Goal
 
-Govern AI query/response pairs in real time: classify each query and its LLM response, log everything to an audit trail, and route sensitive or uncertain items to a human review queue — notifying a reviewer immediately when something needs attention.
+Govern AI query/response pairs in real time: classify each query and its LLM response, log everything to an audit trail, and route sensitive or uncertain items to a human review queue, notifying a reviewer immediately when something needs attention.
 
 ---
 
 ## Functional Requirements
 
-### FR1 — Trigger
+### FR1: Trigger
 
 **[BASELINE]** The Zap reads user queries from a Google Sheet with two columns: `User ID` and `Query`.
 
-**[NEW — NR1]** The Zap fires on each new row added to the Questions sheet. Governance happens as queries arrive, not in a scheduled batch. Each Zap run governs exactly one query. The n8n version uses a manual trigger that reads the full sheet in one batch run; this build makes governance always-on.
+**[NEW: NR1]** The Zap fires on each new row added to the Questions sheet. Governance happens as queries arrive, not in a scheduled batch. Each Zap run governs exactly one query. The n8n version uses a manual trigger that reads the full sheet in one batch run; this build makes governance always-on.
 
 ---
 
-### FR2 — Response Generation
+### FR2: Response Generation
 
-**[BASELINE]** For each query, generate a plain-text LLM response. The response must have all markdown stripped — no asterisks, headers, or bullet formatting. Output is a clean readable answer.
+**[BASELINE]** For each query, generate a plain-text LLM response. The response must have all markdown stripped: no asterisks, headers, or bullet formatting. Output is a clean readable answer.
 
 Prompt guidance:
 ```
@@ -33,7 +33,7 @@ Query: [query]
 
 ---
 
-### FR3 — Query Classification
+### FR3: Query Classification
 
 **[BASELINE]** Classify the original query independently of the response. Return two values:
 
@@ -41,9 +41,9 @@ Query: [query]
 - **domain:** `PII` | `FINANCIALS` | `STRATEGIC` | `CREDENTIALS` | `LEGAL` | `MEDICAL` | `HR` | `NAMED_INDIVIDUAL` | `NONE`
 
 Classification definitions:
-- `SENSITIVE` — the query involves personal data, financial details, credentials, legal matters, medical information, HR decisions, or named individuals in a sensitive context
-- `STANDARD` — the query is routine and involves no sensitive content
-- `UNCERTAIN` — the query is ambiguous; it may or may not involve sensitive content
+- `SENSITIVE`: the query involves personal data, financial details, credentials, legal matters, medical information, HR decisions, or named individuals in a sensitive context
+- `STANDARD`: the query is routine and involves no sensitive content
+- `UNCERTAIN`: the query is ambiguous; it may or may not involve sensitive content
 
 Prompt guidance:
 ```
@@ -65,17 +65,17 @@ Return only the JSON object. No explanation.
 
 ---
 
-### FR4 — Response Classification
+### FR4: Response Classification
 
-**[BASELINE]** Classify the generated response independently of the query. Use the same classification schema as FR3 (same class values, same domain values). The query classification and response classification are independent — a STANDARD query can produce a SENSITIVE response and vice versa.
+**[BASELINE]** Classify the generated response independently of the query. Use the same classification schema as FR3 (same class values, same domain values). The query classification and response classification are independent, so a STANDARD query can produce a SENSITIVE response and vice versa.
 
 Prompt guidance: same as FR3, substituting `Response: [response]` for the query line.
 
 ---
 
-### FR5 — Fail-Safe Classification Default
+### FR5: Fail-Safe Classification Default
 
-**[NEW — NR2]** Before routing, validate both `query_class` and `response_class`. If either value is not exactly `SENSITIVE`, `STANDARD`, or `UNCERTAIN`, override it to `SENSITIVE`. Governance must fail closed, not open.
+**[NEW: NR2]** Before routing, validate both `query_class` and `response_class`. If either value is not exactly `SENSITIVE`, `STANDARD`, or `UNCERTAIN`, override it to `SENSITIVE`. Governance must fail closed, not open.
 
 The n8n build passes unexpected AI output through as-is. Silently routing an unrecognized value to the STANDARD branch means potentially sensitive content skips review entirely.
 
@@ -83,7 +83,7 @@ Implementation: add a Code step after both classification steps that checks both
 
 ---
 
-### FR6 — Audit Log
+### FR6: Audit Log
 
 **[BASELINE]** Append every query/response pair to the Audit Log sheet regardless of classification result. No item is ever skipped.
 
@@ -102,7 +102,7 @@ Output columns:
 
 ---
 
-### FR7 — Review Queue Routing
+### FR7: Review Queue Routing
 
 **[BASELINE]** Route an item to the Review Queue when **either** the query class or the response class is `SENSITIVE` or `UNCERTAIN`. Items where both are `STANDARD` do not go to the Review Queue.
 
@@ -114,9 +114,9 @@ Routing condition (OR logic):
 
 ---
 
-### FR8 — Review Queue Status Field
+### FR8: Review Queue Status Field
 
-**[NEW — NR4]** When appending to the Review Queue, include a `review_status` column set to `PENDING`. This gives the reviewer a field to update (PENDING → REVIEWED / ESCALATED / DISMISSED) and makes the queue auditable rather than just a log.
+**[NEW: NR4]** When appending to the Review Queue, include a `review_status` column set to `PENDING`. This gives the reviewer a field to update (PENDING → REVIEWED / ESCALATED / DISMISSED) and gives the queue an audit trail rather than just a log.
 
 The n8n build has no status field. You cannot report on how many items were reviewed, how quickly, or what the outcome was.
 
@@ -124,9 +124,9 @@ Review Queue columns: all Audit Log columns (FR6), plus `review_status` defaulti
 
 ---
 
-### FR9 — Active Reviewer Notification
+### FR9: Active Reviewer Notification
 
-**[NEW — NR3]** When an item routes to the Review Queue, send a Gmail alert to a configured reviewer address. The n8n build appends items silently — no one is notified. A review queue with no notification is a queue no one checks.
+**[NEW: NR3]** When an item routes to the Review Queue, send a Gmail alert to a configured reviewer address. The n8n build appends items silently, so no one is notified. A review queue with no notification is a queue no one checks.
 
 The alert email must include:
 - The original query

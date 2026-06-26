@@ -1,17 +1,17 @@
-# New Job Openings v2 — Build Process & Technical Reference
+# New Job Openings v2: Build Process & Technical Reference
 
 ## Why v2 Exists
 
 The original implementation used two separate workflows:
 
-- **PermDB_clean.json** — seeded an initial jobs database by looping over companies and writing all matching jobs to a Google Sheet
-- **new-job-openings.json** — ran daily, rebuilt the full dataset, compared against the database via Compare Datasets node, and emailed net-new listings
+- **PermDB_clean.json**: seeded an initial jobs database by looping over companies and writing all matching jobs to a Google Sheet
+- **new-job-openings.json**: ran daily, rebuilt the full dataset, compared against the database via Compare Datasets node, and emailed net-new listings
 
 **Problems with v1:**
 
 1. Two workflows to maintain and keep in sync on every filter change
 2. Loop Over Items + Merge pattern caused race conditions and is brittle in n8n
-3. Compare Datasets is a JOIN node — it compares items by index, not by "does this URL exist anywhere in the log." This produces incorrect dedup results as the DB grows.
+3. Compare Datasets is a JOIN node. It compares items by index, not by "does this URL exist anywhere in the log." This produces incorrect dedup results as the DB grows.
 4. Temp DB pattern (write fresh, compare, clear) requires manual recovery if a run fails mid-way
 5. HTTP Request nodes for each company stored full API responses in n8n execution data → OOM crashes at 26 companies
 
@@ -39,13 +39,13 @@ Schedule Trigger fans out to **two nodes simultaneously**:
 - **Read Jobs DB** is the first listed connection → executes first → its rows are available via `$('Read Jobs DB').all()` when Fetch Filter Dedup runs
 - **Read Company List** is the second listed connection → its output feeds Fetch Filter Dedup
 
-Read Jobs DB has **no outgoing connection** — it is a dead-end node. Its only purpose is to execute before Fetch Filter Dedup so the known URLs Set can be built for dedup.
+Read Jobs DB has **no outgoing connection**; it is a dead-end node. Its only purpose is to execute before Fetch Filter Dedup so the known URLs Set can be built for dedup.
 
 If Read Jobs DB had an outgoing connection into the main chain, it would multiply items: N DB rows × 26 companies = N×26 items fed into Fetch Filter Dedup, causing a timeout. This was the row multiplication bug encountered during the v2 build (see Bugs section).
 
 ---
 
-## Code Nodes — Detailed
+## Code Nodes: Detailed
 
 ### Fetch Filter Dedup
 
@@ -63,16 +63,16 @@ const LOCATION_MODE = 'any';
 ```
 
 **Filter Hierarchy (order matters):**
-1. Exclude list checked first — title containing ANY exclude term is immediately dropped
-2. Include keywords checked second — title must match the configured mode
+1. Exclude list checked first: title containing ANY exclude term is immediately dropped
+2. Include keywords checked second: title must match the configured mode
 3. Location filter checked third
-4. URL dedup checked last — URLs already in Jobs DB are skipped
+4. URL dedup checked last: URLs already in Jobs DB are skipped
 
 This order means "Product Manager Remote" is dropped at step 1 before include or dedup checks.
 
 **Why all HTTP calls happen inside one Code node:**
 
-n8n stores each node's full output in execution data. If 26 companies each return 200+ job listings through HTTP Request nodes, that's 5,000+ raw items accumulating in memory before any filtering — an OOM crash. By fetching inside a single Code node loop, raw API responses are processed and discarded immediately. Only the small filtered result set (typically 0–30 items) ever enters n8n execution data.
+n8n stores each node's full output in execution data. If 26 companies each return 200+ job listings through HTTP Request nodes, that's 5,000+ raw items accumulating in memory before any filtering, an OOM crash. By fetching inside a single Code node loop, raw API responses are processed and discarded immediately. Only the small filtered result set (typically 0–30 items) ever enters n8n execution data.
 
 **HTTP method inside Code nodes:**
 ```javascript
@@ -107,7 +107,7 @@ if (result.hasNew) {
 }
 ```
 
-**Placeholder:** `recipientEmail: 'YOUR_EMAIL'` — replace after import.
+**Placeholder:** `recipientEmail: 'YOUR_EMAIL'`. Replace after import.
 
 ---
 
@@ -122,7 +122,7 @@ const jobs = $('Fetch Filter Dedup').all()[0].json.matched || [];
 return jobs.map(function(job) { return { json: job }; });
 ```
 
-Uses a cross-node reference rather than `$input` because Send Email outputs Gmail API metadata, not matched jobs. When `matched` is empty, this node returns no items — Append New Jobs does not execute, which is correct.
+Uses a cross-node reference rather than `$input` because Send Email outputs Gmail API metadata, not matched jobs. When `matched` is empty, this node returns no items, so Append New Jobs does not execute, which is correct.
 
 ---
 
@@ -168,7 +168,7 @@ The Code node normalizes both APIs to a unified schema: `title`, `url`, `locatio
 **Fix:** Fan-out from Schedule Trigger to both nodes simultaneously. Read Jobs DB is now a dead-end with no outgoing connection. Read Company List always receives exactly 1 trigger item and always produces 26 items regardless of DB size.
 
 ### Bug 4: Filter placeholders never replaced
-**Symptom:** Workflow returned "No output data" — Fetch Filter Dedup matched zero jobs
+**Symptom:** Workflow returned "No output data". Fetch Filter Dedup matched zero jobs
 **Cause:** Filter configuration constants still had `YOUR_FILTER_KEYWORD` placeholder values. No job title ever contains that string.
 **Fix:** Bake actual keyword values into the file before export. The constants are now the real values.
 
@@ -195,8 +195,8 @@ After importing into n8n, replace these before activating:
 | File | Status | Notes |
 |---|---|---|
 | `new-job-openings-v2.json` | **Active** | Import this one |
-| `archive/new-job-openings.json` | Superseded | Original v1 Workflow 2 — kept for reference |
-| `archive/PermDB_clean.json` | Superseded | Original v1 Workflow 1 (seeder) — kept for reference |
+| `archive/new-job-openings.json` | Superseded | Original v1 Workflow 2, kept for reference |
+| `archive/PermDB_clean.json` | Superseded | Original v1 Workflow 1 (seeder), kept for reference |
 | `archive/README_v1.md` | Superseded | Original v1 user-facing README |
 | `README.md` | Active | User setup guide |
 | `BUILD_PROCESS.md` | Active | This file |

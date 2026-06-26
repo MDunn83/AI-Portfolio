@@ -1,4 +1,4 @@
-# Zapier Copilot Build — Meeting Intelligence Pipeline
+# Zapier Copilot Build: Meeting Intelligence Pipeline
 
 A second build of the meeting minutes workflow, this time on Zapier, with Zapier Copilot (Zapier's built-in AI builder) doing the wiring. Same goal as the n8n version: paste a transcript in, get a summary email, a logged row, and Google Tasks out. Different platform, different shortcuts, different tradeoffs.
 
@@ -16,10 +16,10 @@ When a new transcript row lands in a Google Sheet (via a connected Google Form),
 2. A Validate-and-Substitute Code step that checks each field for emptiness, substitutes `"unavailable"` when needed, and sets a `has_degradation` flag. Also normalizes the `action_items` format so the downstream Looping step works for single-item meetings.
 3. A Code step that stamps today's date.
 4. A 4-way Path branch:
-   - **Path A** (📧) — Recap email via Gmail. Only fires when no degradation.
-   - **Path B** (📋) — Append row to the meeting log Google Sheet, including the degradation flag.
-   - **Path C** (✓) — Loop through each action item and create one Google Task per item. Loop guard skips Path C if action items are malformed.
-   - **Path D** (⚠️) — Degradation alert email via Gmail. Only fires when at least one AI field came back empty.
+   - **Path A** (📧): Recap email via Gmail. Only fires when no degradation.
+   - **Path B** (📋): Append row to the meeting log Google Sheet, including the degradation flag.
+   - **Path C** (✓): Loop through each action item and create one Google Task per item. Loop guard skips Path C if action items are malformed.
+   - **Path D** (⚠️): Degradation alert email via Gmail. Only fires when at least one AI field came back empty.
 
 ---
 
@@ -82,7 +82,7 @@ The v4 build adds defensive layers around the AI step. See `LESSONS.md` "Pushbac
 
 Both emails (Path A recap and Path D alert) send via Gmail (`GoogleMailV2CLIAPI`).
 
-**Path A — Recap email format:**
+**Path A, recap email format:**
 
 ```
 Subject: Meeting Minutes - [MM/DD/YYYY]
@@ -100,7 +100,7 @@ Open Questions / Blockers
 [bulleted list]
 ```
 
-**Path D — Degradation alert format:**
+**Path D, degradation alert format:**
 
 ```
 Subject: ⚠️ AI Step Degraded - Missing Data in Run [timestamp]
@@ -212,8 +212,8 @@ zapier-copilot-build/
 
 ## Built With
 
-- [Zapier](https://zapier.com) — workflow automation with Copilot AI builder, Paths, Looping
-- GPT-4o-mini (via Zapier's native AI integration) — extraction
-- Google Sheets — trigger and persistent log
-- Google Tasks — action item capture
-- Gmail — recap email and degradation alert delivery
+- [Zapier](https://zapier.com): workflow automation with Copilot AI builder, Paths, Looping
+- GPT-4o-mini (via Zapier's native AI integration): extraction
+- Google Sheets: trigger and persistent log
+- Google Tasks: action item capture
+- Gmail: recap email and degradation alert delivery

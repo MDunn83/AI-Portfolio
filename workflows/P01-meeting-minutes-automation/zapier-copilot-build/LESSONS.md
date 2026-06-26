@@ -72,9 +72,9 @@ The recap email (Path A) only fires when degradation is false, so the recipient 
 
 This is more defensive than the n8n build, which doesn't have any of these guards. The Zapier build is genuinely better here.
 
-**Bug I hit while wiring it up: empty first iteration.** My first cut at action item normalization did a small prepend: if `action_items` started with `- `, prepend `\n` so the loop delimiter `\n- ` would match for single-item meetings. Looked right on paper. In practice, splitting `\n- A\n- B\n- C\n- D` on `\n- ` produces `['', 'A', 'B', 'C', 'D']` — five elements with an empty string at the front. Zapier Looping's `trim_whitespace: true` option doesn't drop empty iterations, so Google Tasks tried to create a task with no title and errored on "Required field Title is missing." Every multi-item run failed.
+**Bug I hit while wiring it up: empty first iteration.** My first cut at action item normalization did a small prepend: if `action_items` started with `- `, prepend `\n` so the loop delimiter `\n- ` would match for single-item meetings. Looked right on paper. In practice, splitting `\n- A\n- B\n- C\n- D` on `\n- ` produces `['', 'A', 'B', 'C', 'D']`, five elements with an empty string at the front. Zapier Looping's `trim_whitespace: true` option doesn't drop empty iterations, so Google Tasks tried to create a task with no title and errored on "Required field Title is missing." Every multi-item run failed.
 
-The fix is more aggressive normalization in the Validate step: split the field by newline, trim each line, drop any line that isn't a bullet, rejoin with `\n`. That guarantees no phantom empties hit the loop. The single-item edge case (e.g., `- A` with no `\n- ` anywhere) still slips through the loop guard filter and Path C gets skipped silently — known limitation, mitigated by the recap email still showing the item.
+The fix is more aggressive normalization in the Validate step: split the field by newline, trim each line, drop any line that isn't a bullet, rejoin with `\n`. That guarantees no phantom empties hit the loop. The single-item edge case (e.g., `- A` with no `\n- ` anywhere) still slips through the loop guard filter and Path C gets skipped silently. Known limitation, mitigated by the recap email still showing the item.
 
 The lesson: when a Zapier text-split delimiter doesn't match what you think `trim_whitespace` will catch, fix the data before it hits the loop. Don't rely on the loop step to clean up.
 
@@ -102,6 +102,6 @@ The lesson: the prompt is part of the pipeline under test. Writing the eval rule
 
 ## What's Next
 
-Same workflow now exists in n8n (manual and Claude Code) and Zapier (Copilot v4). Three builds of the same pipeline; three different tradeoff profiles. Next up is the Zapier-native eval harness in `../zapier-eval-build/` — the one that turned out to be the reason this prompt got rewritten in the first place.
+Same workflow now exists in n8n (manual and Claude Code) and Zapier (Copilot v4). Three builds of the same pipeline; three different tradeoff profiles. Next up is the Zapier-native eval harness in `../zapier-eval-build/`, the one that turned out to be the reason this prompt got rewritten in the first place.
 
 The canvas looks simple in both tools. What's configured inside the nodes is still where the real work gets done.

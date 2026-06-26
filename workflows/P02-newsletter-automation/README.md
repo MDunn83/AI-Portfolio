@@ -1,4 +1,4 @@
-# P02 — AI Competitive Intelligence Monitor
+# P02: AI Competitive Intelligence Monitor
 
 An n8n workflow that watches 10 AI companies daily, filters and classifies the news, and emails a synthesized executive briefing every morning. Every signal is logged to a persistent Google Sheets record with cross-run deduplication, so the same article never gets reported twice.
 

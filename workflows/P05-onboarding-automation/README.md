@@ -1,6 +1,6 @@
-# P05 — Employee Onboarding Orchestrator
+# P05: Employee Onboarding Orchestrator
 
-An n8n workflow that runs the full new-hire onboarding sequence from a single trigger. Add a row to a Google Sheet and the workflow generates a personalized welcome email and a 30-60-90 day plan for the new hire, action items and a first-week agenda for the manager, one Google Task per action item, a calculated 30-day check-in date, and a status log entry. All generation runs on Groq (`llama-3.3-70b-versatile`), personalized per hire.
+An n8n workflow that runs the full new-hire onboarding sequence from a single trigger. Add a row to a Google Sheet and the workflow generates a personalized welcome email and a 30-60-90 day plan for the new hire, action items and a first-week agenda for the manager, one Google Task per action item, a calculated 30-day check-in date, and a status log entry. All generation runs on Groq (`llama-3.3-70b-versatile`) and is personalized per hire.
 
 **Manual n8n build:**
 

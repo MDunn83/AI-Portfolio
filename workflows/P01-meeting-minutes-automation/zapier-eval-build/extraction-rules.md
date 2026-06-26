@@ -6,7 +6,7 @@ Without rules, ground truth is just one person's opinion of what should come out
 
 ---
 
-## R1 — Action Items
+## R1: Action Items
 
 An item counts as an action item if and only if all three are present:
 
@@ -26,7 +26,7 @@ An item counts as an action item if and only if all three are present:
 
 ---
 
-## R2 — Decisions
+## R2: Decisions
 
 An item counts as a decision if it's stated in final, committing language:
 
@@ -48,7 +48,7 @@ If the transcript shows a topic being discussed but never resolved with committi
 
 ---
 
-## R3 — Open Questions, Blockers, and Dependencies
+## R3: Open Questions, Blockers, and Dependencies
 
 Anything where the transcript shows explicit unresolved uncertainty:
 
@@ -61,7 +61,7 @@ Anything where the transcript shows explicit unresolved uncertainty:
 
 ---
 
-## R4 — Participants
+## R4: Participants
 
 Every person named as a speaker in the transcript. Rules:
 
@@ -71,7 +71,7 @@ Every person named as a speaker in the transcript. Rules:
 
 ---
 
-## R5 — Side Conversation Filter
+## R5: Side Conversation Filter
 
 Any topic clearly outside the meeting's stated purpose is filtered out of every output field, even when the language matches an action item or decision pattern.
 
@@ -90,9 +90,9 @@ The filter rule is the hardest of the six to apply because LLMs love structure a
 
 ---
 
-## R6 — Due Dates and Time References
+## R6: Due Dates and Time References
 
-When an action item includes a due date, capture the date language **exactly as stated in the transcript**. Don't normalize to ISO format — that's the pipeline's job downstream, not the extraction step's.
+When an action item includes a due date, capture the date language **exactly as stated in the transcript**. Don't normalize to ISO format; that's the pipeline's job downstream, not the extraction step's.
 
 **Qualifies (preserve as written):**
 - "by Friday"

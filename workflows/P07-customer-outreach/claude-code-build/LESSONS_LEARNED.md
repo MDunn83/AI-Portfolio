@@ -1,4 +1,4 @@
-# n8n and Claude Code — Lessons Learned (Proj7 Outreach)
+# n8n and Claude Code: Lessons Learned (Proj7 Outreach)
 
 This document captures issues encountered and resolved during the build of the customer outreach automation workflow. Add to this file as new issues are discovered.
 
@@ -6,18 +6,18 @@ This document captures issues encountered and resolved during the build of the c
 
 ## Google Sheets Node
 
-### `getAll` does not exist — use `getRows`
+### `getAll` does not exist: use `getRows`
 - The operation name in the UI is **Get Row(s)**, which maps to `"operation": "getRows"` in JSON.
 - `"operation": "getAll"` is not a valid value and causes the node to fail on import.
 
 ### Never add a `resource` field to a Google Sheets read node
-- Adding `"resource": "sheetWithinDocument"` (or any resource value) to a Sheets getRows node causes the node to render only the Resource selector in the UI — all other parameters disappear and the node becomes unconfigurable.
+- Adding `"resource": "sheetWithinDocument"` (or any resource value) to a Sheets getRows node causes the node to render only the Resource selector in the UI. All other parameters disappear and the node becomes unconfigurable.
 - The correct config for a working getRows node is `operation`, `documentId`, `sheetName`, and `options` only. No `resource` field.
 
 ### Sheet name must match the actual tab name exactly
 - The `sheetName` parameter is case-sensitive and must match the Google Sheets tab name character-for-character.
 - Verify tab names in the actual spreadsheet before setting them in JSON. Do not assume `Sheet1`, `Customers`, or any other default.
-- The customer sheet and the activity log sheet will have different tab names — confirm both before exporting.
+- The customer sheet and the activity log sheet will have different tab names, so confirm both before exporting.
 
 ### Update node requires `matchingColumns` to contain a column that uniquely identifies the row
 - For the **Update Last Contacted** nodes, the `Email` column was used as the matching key.
@@ -31,11 +31,11 @@ This document captures issues encountered and resolved during the build of the c
 - Using `"leftValue": "{{ $json.isSuppressed }}"` (without the `=` prefix) causes a type error at runtime: `Wrong type: '{{ $json.isSuppressed }}' is a string but was expecting a boolean`.
 - Correct syntax: `"leftValue": "={{ $json.isSuppressed }}"`
 - This applies to every boolean field used in IF node conditions.
-- IF node conditions are the **most import-fragile** part of any n8n workflow. Always verify them manually after import — the left side must show as an expression (not a static string) in the UI.
+- IF node conditions are the **most import-fragile** part of any n8n workflow. Always verify them manually after import. The left side must show as an expression (not a static string) in the UI.
 
 ### Use `"operation": "true"` operator for boolean checks
 - Operator object: `{ "type": "boolean", "operation": "true" }`
-- Do not use `"equal to true"` — it causes type mismatch errors.
+- Do not use `"equal to true"`; it causes type mismatch errors.
 
 ---
 
@@ -50,14 +50,14 @@ This document captures issues encountered and resolved during the build of the c
 
 ## Gmail Node
 
-### Gmail terminates its branch — wire logging from the node before Gmail, not after
+### Gmail terminates its branch: wire logging from the node before Gmail, not after
 - Gmail does not pass data through to downstream nodes.
 - The correct sequence is: **LLM Chain → Sanitize Text → Gmail → Log → Update Last Contacted**.
   - Gmail fires first to confirm delivery.
-  - The Log node receives output from Gmail (even though it carries no useful data — use cross-node refs to pull the email body from the Sanitize Text node).
+  - The Log node receives output from Gmail (even though it carries no useful data, so use cross-node refs to pull the email body from the Sanitize Text node).
 - Never wire a log or update node as a parallel sibling of Gmail expecting to receive the email body from Gmail's output.
 
-### Always reference email address dynamically — never hardcode
+### Always reference email address dynamically: never hardcode
 - `sendTo` must always be an expression: `={{ $('Category Router').item.json.email }}`
 - A hardcoded address in `sendTo` is always a production bug.
 
@@ -67,7 +67,7 @@ This document captures issues encountered and resolved during the build of the c
 
 ### LLM prompt expressions must use `={{ }}` wrapper
 - All prompt `text` fields must be set to expression mode with `={{ ... }}` syntax.
-- Using backtick template literals (`` `${...}` ``) or bare string concatenation without `={{ }}` causes silent failures — the expression is not evaluated.
+- Using backtick template literals (`` `${...}` ``) or bare string concatenation without `={{ }}` causes silent failures; the expression is not evaluated.
 
 ### Add explicit formatting rules to every LLM prompt
 - Without formatting instructions, Groq models insert hard line breaks mid-sentence and produce fragmented email text.
@@ -102,7 +102,7 @@ This document captures issues encountered and resolved during the build of the c
   $('Category Router').item.json.customerName
   $('Sanitize Text Ticket').item.json.text
   ```
-- Never rely on `$json.fieldName` after a chain node — the field will be undefined.
+- Never rely on `$json.fieldName` after a chain node; the field will be undefined.
 
 ### Groq sub-node connects via `ai_languageModel`, not `main`
 - The `lmChatGroq` sub-node connects to its parent `chainLlm` node using connection type `ai_languageModel`, not `main`.
@@ -134,7 +134,7 @@ This document captures issues encountered and resolved during the build of the c
 
 ### Use `runOnceForEachItem` for row-by-row processing
 - In this mode, `$json` refers to the current item.
-- Return a single object: `return { json: { ... } }` — not an array.
+- Return a single object: `return { json: { ... } }`, not an array.
 
 ---
 
@@ -143,7 +143,7 @@ This document captures issues encountered and resolved during the build of the c
 ### All file changes go through `mcp__github__push_files` only
 - Do not run local git commands.
 - Do not write or copy files to the local machine.
-- Do not read local files to verify push results — trust the MCP push response.
+- Do not read local files to verify push results; trust the MCP push response.
 - All commits go to branch `claude/plan-n8n-outreach-PKA07` on `mdunn83/proj7_outreach_claude`.
 
 ---

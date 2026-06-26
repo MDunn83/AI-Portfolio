@@ -1,4 +1,4 @@
-# Future Builds — Pushing the Portfolio Up the Difficulty Curve
+# Future Builds: Pushing the Portfolio Up the Difficulty Curve
 
 The current portfolio covers automation workflows in n8n, Python projects (AADA, ARQA), and a Zapier port of P01. The next moves should aim higher than another workflow port. These three builds add capabilities that are currently missing and that AI/automation TPM roles are actually hiring against in 2026: evaluation, agent loops with budget controls, and runtime policy enforcement.
 
@@ -24,7 +24,7 @@ A second Zap that exercises the Phase 1 (or Phase 2) Zapier meeting minutes pipe
 - Forces you into Zapier's harder surface area. Looping by Zapier for the transcript loop, Sub-Zaps for invoking the pipeline under test, Storage by Zapier for state across runs, Code steps for the score math. That's a much bigger Zapier flex than another single-Zap port.
 - Almost nobody has shipped a public LLM-eval pipeline on Zapier. Searching for it turns up nothing. Being the first public reference is the signal.
 - Generalizes. Once the eval pattern works on Zapier, the same pattern plugs into every other Zapier workflow you build.
-- Clean LinkedIn story. "You can't ship LLM workflows without an eval layer. Here's what mine caught — built entirely in Zapier."
+- Clean LinkedIn story. "You can't ship LLM workflows without an eval layer. Here's what mine caught, built entirely in Zapier."
 
 ### Where it lives
 - `workflows/P01-meeting-minutes-automation/zapier-eval-build/` (sibling to `zapier-copilot-build/`).

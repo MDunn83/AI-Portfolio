@@ -1,9 +1,9 @@
-# P01 Meeting Minutes Automation — Zapier Build
+# P01 Meeting Minutes Automation: Zapier Build
 
 Requirements for rebuilding the existing n8n meeting intelligence pipeline as a Zapier Zap, in two phases.
 
-- **Phase 1 — MVP.** Functional end-to-end pipeline using Zapier's idiomatic patterns (built-in AI, Paths for fan-out, Zapier outbound mail). Trades some n8n parity for build speed and platform simplicity. The Zapier Copilot v1 build delivers Phase 1.
-- **Phase 2 — Functional equivalence.** Closes the meaningful gaps between the Zapier build and the n8n manual build on the outcomes that matter (per-action-item tasks, real Gmail sending, graceful degradation on AI failures). Phase 2 deliberately diverges from n8n implementation patterns where Zapier's native primitives produce a better result. The v4 build delivers Phase 2.
+- **Phase 1, MVP.** A working pipeline using Zapier's idiomatic patterns (built-in AI, Paths for fan-out, Zapier outbound mail). Trades some n8n parity for build speed and platform simplicity. The Zapier Copilot v1 build delivers Phase 1.
+- **Phase 2, Functional equivalence.** Closes the meaningful gaps between the Zapier build and the n8n manual build on the outcomes that matter (per-action-item tasks, real Gmail sending, graceful degradation on AI failures). Phase 2 deliberately diverges from n8n implementation patterns where Zapier's native primitives produce a better result. The v4 build delivers Phase 2.
 
 The n8n reference build lives in `../n8n-manual-build/`. This document defines what each Zapier phase must do, not how each Zap step gets configured.
 
@@ -17,7 +17,7 @@ Paste a meeting transcript into a Google Form. Get back, within a couple of minu
 2. A row appended to a persistent Google Sheet log.
 3. One Google Task per action item.
 
-No manual note-taking. No copy-paste. The Zap runs end-to-end from a single form submission.
+No manual note-taking. No copy-paste. The whole thing runs from a single form submission.
 
 ---
 
@@ -42,17 +42,17 @@ No manual note-taking. No copy-paste. The Zap runs end-to-end from a single form
 
 ---
 
-# Phase 1 — MVP Scope
+# Phase 1: MVP Scope
 
-The goal of Phase 1 is to prove the pipeline works end-to-end on Zapier with the minimum number of moving parts. Idiomatic Zapier patterns win over n8n parity where they conflict.
+The goal of Phase 1 is to prove the whole pipeline works on Zapier with the minimum number of moving parts. Idiomatic Zapier patterns win over n8n parity where they conflict.
 
 ## Functional Requirements (Phase 1)
 
-### P1-FR1 — Trigger
+### P1-FR1: Trigger
 
 Zap fires when a new row is appended to the form-responses Google Sheet. The transcript text lives in a column named `Meeting Minutes`. Empty submissions must not fan out to all three destinations.
 
-### P1-FR2 — Single AI extraction
+### P1-FR2: Single AI extraction
 
 One AI step pulls all five fields out of the transcript in a single call:
 
@@ -66,11 +66,11 @@ One AI step pulls all five fields out of the transcript in a single call:
 
 The prompt must explicitly require plain-text bullets, not JSON arrays, and instruct the model to start with the data (no preamble).
 
-### P1-FR3 — Parallel fan-out via Paths
+### P1-FR3: Parallel fan-out via Paths
 
 After the AI step, a Path branch fans out to email, log, and tasks simultaneously. Each path has a filter so empty transcripts short-circuit cleanly.
 
-### P1-FR4 — Email via Zapier outbound mail
+### P1-FR4: Email via Zapier outbound mail
 
 HTML email sent via Zapier's built-in mail service. Format:
 
@@ -90,25 +90,25 @@ Open Questions / Blockers
 [bulleted list]
 ```
 
-### P1-FR5 — Append to log sheet
+### P1-FR5: Append to log sheet
 
 Append one row to the persistent meeting-log Google Sheet with columns: `Date | Participants | Summary | Action Items | Decisions | Open Questions`. The date is the submission date generated at runtime by a Code step.
 
-### P1-FR6 — Single Google Task per run
+### P1-FR6: Single Google Task per run
 
 Create one Google Task in a configured task list. The task title carries the full action-items bullet list; the task notes carry the submission timestamp.
 
 ## Non-functional Requirements (Phase 1)
 
-### P1-NFR1 — Latency
+### P1-NFR1: Latency
 
-End-to-end runtime, form submission to all three outputs delivered, within 2 minutes for a transcript of 2,000 words or fewer.
+Total runtime, form submission to all three outputs delivered, within 2 minutes for a transcript of 2,000 words or fewer.
 
-### P1-NFR2 — Zapier task cost
+### P1-NFR2: Zapier task cost
 
 Target: under 10 tasks per run. Phase 1 build is approximately 7 tasks.
 
-### P1-NFR3 — No hardcoded credentials
+### P1-NFR3: No hardcoded credentials
 
 API keys, sheet IDs, email addresses, and task-list IDs supplied via Zapier's credential manager. Exported Zap JSON committed to this repo uses placeholders.
 
@@ -127,7 +127,7 @@ API keys, sheet IDs, email addresses, and task-list IDs supplied via Zapier's cr
 
 ---
 
-# Phase 2 — Functional Equivalence Scope
+# Phase 2: Functional Equivalence Scope
 
 The goal of Phase 2 is to close the gaps that affect outcomes, not to mirror n8n implementation details. Where a Zapier-native primitive produces a better result than the n8n pattern, the Zapier build uses the native pattern and documents why.
 
@@ -139,7 +139,7 @@ Phase 2 flips that. Architecture decisions are made up front by reading these re
 
 ## Functional Requirements (Phase 2)
 
-### P2-FR1 — One Google Task per action item
+### P2-FR1: One Google Task per action item
 
 Replace the single-task-per-run pattern with one task per action item. Implementation:
 
@@ -150,13 +150,13 @@ Replace the single-task-per-run pattern with one task per action item. Implement
 
 **Delivered (v4).** Note: this deliberately diverges from the n8n pattern (LLM Chain + Structured Output Parser + Split Out) in favor of a single Looping step that splits plain text. See "Platform-Native Tradeoffs" below.
 
-### P2-FR2 — Gmail send
+### P2-FR2: Gmail send
 
 Replace Zapier outbound mail with Gmail integration so emails originate from the user's actual Gmail address.
 
 **Delivered (v2).** Switched from `ZapierMailCLIAPI` to `GoogleMailV2CLIAPI`. Recap email and degradation alert both use Gmail.
 
-### P2-FR3 — AI prompt aligned with eval extraction rules
+### P2-FR3: AI prompt aligned with eval extraction rules
 
 The AI prompt must match the rules defined in `../zapier-eval-build/extraction-rules.md` so the eval harness measures the right thing. Specifically:
 
@@ -169,11 +169,11 @@ The AI prompt must match the rules defined in `../zapier-eval-build/extraction-r
 
 ## Non-functional Requirements (Phase 2)
 
-### P2-NFR1 — Latency
+### P2-NFR1: Latency
 
-End-to-end runtime under 90 seconds for a 2,000-word transcript.
+Total runtime under 90 seconds for a 2,000-word transcript.
 
-### P2-NFR2 — Failure isolation (three-layer)
+### P2-NFR2: Failure isolation (three-layer)
 
 When the AI step degrades (truncation, partial output, malformed bullets), the Zap continues running and surfaces the degradation rather than failing silently or producing garbage. Three layers:
 
@@ -187,7 +187,7 @@ The normal recap email (Path A) only fires when `has_degradation == false`, so t
 
 **Delivered (v4).**
 
-### P2-NFR3 — Eval harness coverage
+### P2-NFR3: Eval harness coverage
 
 The pipeline must be runnable through the eval harness defined in `../zapier-eval-build/` against test transcripts T01-T07 without code changes. The judge applies `extraction-rules.md` against pipeline output.
 
@@ -212,7 +212,7 @@ The Zapier build deliberately diverges from the n8n manual build in three places
 
 ### Tradeoff 1: Single AI call instead of four parallel chains
 
-n8n runs four parallel LLM chains (summary, actions, decisions, QBD) then merges. Zapier doesn't have a parallel-then-merge primitive — true parallelism would require Sub-Zaps or Looping with extra orchestration. Cost: more steps, more tasks per run, more debugging surface.
+n8n runs four parallel LLM chains (summary, actions, decisions, QBD) then merges. Zapier doesn't have a parallel-then-merge primitive; true parallelism would require Sub-Zaps or Looping with extra orchestration. Cost: more steps, more tasks per run, more debugging surface.
 
 The Zapier build uses one GPT-4o-mini call that returns all five fields. For transcripts under 2,000 words the single-shot call holds up. If quality regresses on long transcripts, reopen this decision; the four-chain pattern can be reintroduced as Sub-Zaps.
 
@@ -236,7 +236,7 @@ Why: real meeting notes rarely include explicit dates in the transcript. Extract
 
 n8n uses Groq `llama-3.1-8b-instant` via BYO API key. The Zapier build uses Zapier's native GPT-4o-mini.
 
-Why: zero credential setup, no BYO API key configuration, and GPT-4o-mini quality is acceptable for transcripts at this length. If a documented cost or latency gap emerges, swap in Groq via BYO key — the prompt and output schema don't change.
+Why: zero credential setup, no BYO API key configuration, and GPT-4o-mini quality is acceptable for transcripts at this length. If a documented cost or latency gap emerges, swap in Groq via BYO key; the prompt and output schema don't change.
 
 ---
 

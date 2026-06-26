@@ -1,4 +1,4 @@
-# P07 — Customer Trigger Messaging Pipeline
+# P07: Customer Trigger Messaging Pipeline
 
 An n8n workflow that watches a customer database and sends personalized, AI-generated outreach when one of four behavioral triggers fires: a support ticket closed in the last 24 hours, 14+ days of inactivity, a renewal within 30 days, or a milestone reached. Each trigger type gets its own prompt and its own email. A 7-day cooldown suppresses repeat contact, and every send (or suppression) is written to an append-only activity log.
 

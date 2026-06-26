@@ -1,4 +1,4 @@
-# Proj7 Outreach — Customer Message Automation
+# Proj7 Outreach: Customer Message Automation
 
 An n8n workflow that monitors a Google Sheet of customers and automatically sends personalized, AI-generated outreach emails when key events occur. Each email is written by an LLM (Groq / Llama 3.3 70B) using the customer's real data, then logged back to the sheet.
 
@@ -7,7 +7,7 @@ An n8n workflow that monitors a Google Sheet of customers and automatically send
 ## How It Works
 
 ### Trigger
-The workflow fires whenever a row is updated in the **Customers** tab of the linked Google Sheet. Every update is evaluated — but a built-in cooldown prevents a customer from being contacted more than once every 7 days.
+The workflow fires whenever a row is updated in the **Customers** tab of the linked Google Sheet. Every update is evaluated, but a built-in cooldown prevents a customer from being contacted more than once every 7 days.
 
 ### Cooldown Check
 An **If** node computes how many days have passed since `Last Contacted Date`. If it's been 7 days or fewer, the workflow skips sending and instead writes a suppressed-email record to the Activity Log. If it's been more than 7 days (or the field is blank), the workflow continues to routing.
@@ -25,10 +25,10 @@ The updated row is evaluated against four conditions in order. The first match w
 ### AI Email Generation
 Each path passes the customer's data to a **Groq Chat Model** (llama-3.3-70b-versatile) via an LLM Chain node. The prompt is tailored per path:
 
-- **Ticket** — Warm follow-up acknowledging the resolved issue; subtly notes the relationship if renewal is near
-- **Inactivity** — Re-engagement email noting how long the customer has been inactive and offering help
-- **Renewal** — Courtesy auto-renewal notice with days-until-renewal and an offer to answer questions
-- **Milestone** — Congratulatory note celebrating the customer's milestone
+- **Ticket**: Warm follow-up acknowledging the resolved issue; subtly notes the relationship if renewal is near
+- **Inactivity**: Re-engagement email noting how long the customer has been inactive and offering help
+- **Renewal**: Courtesy auto-renewal notice with days-until-renewal and an offer to answer questions
+- **Milestone**: Congratulatory note celebrating the customer's milestone
 
 All prompts produce plain-text email bodies only (no subject line, no sign-off, 2–3 paragraphs).
 
@@ -45,8 +45,8 @@ Each path sends the generated body via **Gmail** (OAuth2). Subject lines are pre
 ### Logging & Record Update
 After each email is sent, two write-back steps run in sequence:
 
-1. **Append to Activity Log** — Adds a row to the `Activity Log` sheet with: Timestamp, Customer Name, Company, Trigger Type, Email Sent (`Yes`), and the first 100 characters of the email as a preview.
-2. **Update Last Contacted Date** — Sets `Last Contacted Date` on the customer's row to today, which resets the 7-day cooldown clock.
+1. **Append to Activity Log**: Adds a row to the `Activity Log` sheet with: Timestamp, Customer Name, Company, Trigger Type, Email Sent (`Yes`), and the first 100 characters of the email as a preview.
+2. **Update Last Contacted Date**: Sets `Last Contacted Date` on the customer's row to today, which resets the 7-day cooldown clock.
 
 Suppressed (cooldown-blocked) emails are also logged in step 1 with `Email Sent = No` and `Message Preview = "Contacted less than 7 days ago"`.
 
@@ -54,7 +54,7 @@ Suppressed (cooldown-blocked) emails are also logged in step 1 with `Email Sent 
 
 ## Google Sheet Structure
 
-**Customers tab** — one row per customer:
+**Customers tab**: one row per customer:
 
 | Column | Description |
 |---|---|
@@ -68,7 +68,7 @@ Suppressed (cooldown-blocked) emails are also logged in step 1 with `Email Sent 
 | Milestone Reached? | `Yes` / blank |
 | Support Ticket Closed Date | ISO date a support ticket was closed |
 
-**Activity Log tab** — append-only audit trail written by the workflow:
+**Activity Log tab**: append-only audit trail written by the workflow:
 
 | Column | Description |
 |---|---|

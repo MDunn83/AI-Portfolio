@@ -1,4 +1,4 @@
-# P01 — Meeting Intelligence Pipeline
+# P01: Meeting Intelligence Pipeline
 
 An automation that turns a raw meeting transcript into a structured debrief: summary, action items, decisions, and open questions, routed to Gmail, Google Sheets, and Google Tasks in a single run. Paste a transcript in, get a complete meeting record out.
 

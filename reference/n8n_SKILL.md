@@ -1,15 +1,15 @@
-# n8n_SKILL.md — Pre-Build Essentials
+# n8n_SKILL.md: Pre-Build Essentials
 
 ## MANDATORY BEFORE BUILDING
 Read this file completely before writing any node JSON. Do not build until you confirm you have read it.
 
-This is the lean pre-build checklist. The **full patterns, code, and rationale are the source of truth in `workflows/lessons_learned.md`** — each rule below points to the section there. Both files are read on every n8n task; this one is the fast path, that one is the depth.
+This is the lean pre-build checklist. The **full patterns, code, and rationale are the source of truth in `workflows/lessons_learned.md`**, each rule below points to the section there. Both files are read on every n8n task; this one is the fast path, that one is the depth.
 
 ---
 
 ## n8n Credentials
 
-Exact credential-manager names. Every Google Sheets, Gmail, or Groq node must reference these strings verbatim — a mismatch is a silent post-import failure.
+Exact credential-manager names. Every Google Sheets, Gmail, or Groq node must reference these strings verbatim, a mismatch is a silent post-import failure.
 
 | Service | Credential Name in n8n |
 |---|---|
@@ -52,7 +52,7 @@ Any branch producing N items that feeds the gate needs a Limit node (`maxItems: 
 const company = $('New Lead Added').item.json.company;   // not $json.company
 ```
 
-**Sanitize before email** — sequence is always **LLM Chain → Sanitize Text → Gmail → Log → Update** (§ LLM Output Sanitization for Email):
+**Sanitize before email**: sequence is always **LLM Chain → Sanitize Text → Gmail → Log → Update** (§ LLM Output Sanitization for Email):
 ```javascript
 let text = $json.text || '';
 text = text.replace(/\\n/g, ' ');        // in a JSON workflow file: \\\\n
@@ -61,7 +61,7 @@ text = text.replace(/ {2,}/g, ' ');
 return { json: { text: text.trim() } };
 ```
 
-**Structured output — default to inline parse, no parser node** (§ Structured Output from LLMs): instruct the LLM to return raw JSON, then:
+**Structured output: default to inline parse, no parser node** (§ Structured Output from LLMs): instruct the LLM to return raw JSON, then:
 ```javascript
 const raw = ($json.text || '').trim();
 try {
@@ -72,28 +72,28 @@ try {
   return { json: { score: m ? +m[1] : 5, rationale: 'Could not parse LLM output.' } };
 }
 ```
-Use the n8n Structured Output Parser node *only* when a downstream Split Out/loop needs a true typed array — see the section for that exception.
+Use the n8n Structured Output Parser node *only* when a downstream Split Out/loop needs a true typed array, see the section for that exception.
 
 ---
 
-## Hard Rules — Silent-Failure Index
+## Hard Rules: Silent-Failure Index
 
 Violating these produces workflows that import but fail at runtime with no error. One line each; full pattern + code under the named `lessons_learned.md` section.
 
 **Triggers & Sheets reads** (§ Triggers and Batch Processing)
 - Operation is `getRows` ("Get Row(s)"); there is no `getAll`.
-- Never add a `resource` field to a Sheets read node — it hides all other params.
+- Never add a `resource` field to a Sheets read node, it hides all other params.
 - Get Rows returns nothing → enable Execute Once.
 
 **Code nodes** (§ Code Nodes)
 - Always set `mode`; return an array in `runOnceForAllItems`, a single object in `runOnceForEachItem`.
 - Never `$input.first()`. Open every Code node by assigning fields off `$json` first.
-- `fetch()` is unavailable — use `this.helpers.httpRequest()`; loop fetches in one Code node to avoid execution-data OOM.
+- `fetch()` is unavailable, use `this.helpers.httpRequest()`; loop fetches in one Code node to avoid execution-data OOM.
 
 **Data flow & order** (§ Data Flow Between Nodes)
-- HTTP, file, and chainLlm nodes strip upstream context — carry fields forward with an Edit Fields/Code node.
-- Cross-node refs only resolve if that node already executed; force order via the connection chain or a fan-out dead-end (never wire the prerequisite into the main chain — it multiplies items).
-- Never return `[]` when downstream must always fire — return one wrapper item and branch on it.
+- HTTP, file, and chainLlm nodes strip upstream context, carry fields forward with an Edit Fields/Code node.
+- Cross-node refs only resolve if that node already executed; force order via the connection chain or a fan-out dead-end (never wire the prerequisite into the main chain, it multiplies items).
+- Never return `[]` when downstream must always fire; return one wrapper item and branch on it.
 
 **LLM prompts** (§ LLM Prompt Syntax, § LLM Prompt Behavior)
 - Wrap every expression in `{{ }}`; never backtick `${ }`. Label every field on its own line.
@@ -103,15 +103,15 @@ Violating these produces workflows that import but fail at runtime with no error
 - Guard arrays in Gmail bodies with `Array.isArray`; parse funding suffixes (B/M/K) before numeric compare.
 
 **Merge / IF / Gmail**
-- Merge gate: `combineBy`, `numberInputs`, `includeUnpaired` — see Critical Snippets (§ Merge Nodes and Synchronization Gates).
-- IF conditions: expression-mode left side, `is true`/`is false` operator; **verify every IF on import** — the most import-fragile node (§ IF Node Conditions).
+- Merge gate: `combineBy`, `numberInputs`, `includeUnpaired`, see Critical Snippets (§ Merge Nodes and Synchronization Gates).
+- IF conditions: expression-mode left side, `is true`/`is false` operator; **verify every IF on import**, the most import-fragile node (§ IF Node Conditions).
 - Never hardcode Gmail `sendTo`; never wire Gmail straight from an LLM Chain (§ Gmail and Logging Pattern).
 
 **Dedup, dates, APIs**
 - Dedup with a JS `Set`, not Compare Datasets; log at dedup time; sort descending before batch delete (§ Deduplication).
-- Sheets Trigger returns date serials — format columns as Plain Text; guard blank dates; Luxon needs the `.days` suffix (§ Date and Time Handling).
+- Sheets Trigger returns date serials, format columns as Plain Text; guard blank dates; Luxon needs the `.days` suffix (§ Date and Time Handling).
 - Google Tasks due dates need full ISO 8601, not bare dates (§ Google Tasks Due Dates).
-- Use the native Jina node, not HTTP to `r.jina.ai`; NewsAPI blocks cloud requests — use Google News RSS; batch free-tier calls at 2000ms (§ External APIs and Rate Limiting).
+- Use the native Jina node, not HTTP to `r.jina.ai`; NewsAPI blocks cloud requests, use Google News RSS; batch free-tier calls at 2000ms (§ External APIs and Rate Limiting).
 - Pre-filter on title + lede (500 chars) before any classifier call (§ Relevance Pre-Filtering).
 
 **`__rl` reference format** for Google Sheets document/sheet selectors:
@@ -126,7 +126,7 @@ Violating these produces workflows that import but fail at runtime with no error
 
 After importing a generated workflow into n8n, verify in this order:
 
-1. Every IF node condition — left side in expression mode, operator correct.
+1. Every IF node condition, left side in expression mode, operator correct.
 2. All LLM prompt fields wrapped in `{{ }}` and evaluating.
 3. Every LLM Chain is followed by a Sanitize Text node before any Gmail node.
 4. Log nodes after Gmail use cross-node refs (`$('Sanitize Text Ticket').item.json.text`), not `$json.text`.
@@ -134,7 +134,7 @@ After importing a generated workflow into n8n, verify in this order:
 6. All placeholder Sheet IDs, Task List IDs, and email addresses are filled in.
 7. Credential names match n8n's credential manager exactly (see n8n Credentials above).
 8. Merge node set to `combineByPosition` (not Matching Fields) with `includeUnpaired` enabled.
-9. Every node has an outgoing connection — Limit, Check_In, and Merge-gate inputs are the most commonly missing.
+9. Every node has an outgoing connection; Limit, Check_In, and Merge-gate inputs are the most commonly missing.
 10. Google Tasks due dates use full ISO 8601 (`2026-07-01T00:00:00.000Z`).
 11. Status-sheet column mappings pull from the Build Status Row node, not the original trigger.
 12. `sendTo` fields in all Gmail nodes are dynamic expressions, never hardcoded.
@@ -148,7 +148,7 @@ After importing a generated workflow into n8n, verify in this order:
 
 Run before exporting any workflow JSON to GitHub or for sharing. Replace all literal values with labeled placeholders (e.g. `YOUR_GOOGLE_SHEET_ID`).
 
-- `sendTo` fields in Gmail nodes — dynamic expressions, never hardcoded addresses
+- `sendTo` fields in Gmail nodes: dynamic expressions, never hardcoded addresses
 - Google Sheet IDs/URLs in `documentId` and `sheetName`
 - Task List IDs in Google Tasks nodes
 - OAuth2 credential IDs in all credentials blocks

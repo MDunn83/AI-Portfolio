@@ -1,4 +1,4 @@
-# P06 — Lead Generation and Enrichment Pipeline
+# P06: Lead Generation and Enrichment Pipeline
 
 An n8n workflow that takes a Google Sheet of target companies and automates the research, scoring, and outreach. For each new company it scrapes the website via Jina Reader, pulls recent news, summarizes with an LLM, scores fit 1 to 10 against a defined persona, and sends a personalized outreach email only when the score clears a threshold. Everything is logged, and a 30-day dedup window keeps recently contacted companies from being reprocessed.
 

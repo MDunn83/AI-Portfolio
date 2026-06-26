@@ -13,7 +13,7 @@ Add a target company to a Google Sheet. Get back, automatically:
 2. A personalized cold outreach email sent to the contact -- if the fit score clears the threshold.
 3. A log entry in the summary sheet regardless of outcome.
 
-No manual research. No copy-paste. The pipeline runs end to end from a single row added to the sheet.
+No manual research. No copy-paste. The pipeline runs from a single row added to the sheet.
 
 ---
 

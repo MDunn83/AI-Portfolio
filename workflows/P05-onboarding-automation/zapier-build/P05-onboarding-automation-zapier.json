@@ -1,0 +1,404 @@
+{
+  "metadata": {
+    "version": "gdpr_v1"
+  },
+  "zaps": [
+    {
+      "id": 369490443,
+      "title": "Employee Onboarding Automation with AI-Generated Content",
+      "status": "off",
+      "nodes": {
+        "369490443": {
+          "id": 369490443,
+          "account_id": 0,
+          "customuser_id": 0,
+          "paused": true,
+          "type_of": "read",
+          "params": {
+            "spreadsheet": "YOUR_GOOGLE_SHEET_ID",
+            "worksheet": "0"
+          },
+          "meta": {
+            "$editor": {
+              "has_automatic_issues": false
+            },
+            "parammap": {
+              "spreadsheet": "Proj5 New Hires",
+              "worksheet": "NewHires"
+            }
+          },
+          "triple_stores": {
+            "copied_from": null,
+            "created_by": null,
+            "polling_interval_override": 0,
+            "block_and_release_limit_override": 0,
+            "spread_tasks": 1
+          },
+          "folders": null,
+          "parent_id": null,
+          "root_id": null,
+          "action": "new_row_notify_hook",
+          "selected_api": "GoogleSheetsV2CLIAPI@2.14.1",
+          "title": "Employee Onboarding Automation with AI-Generated Content",
+          "authentication_id": 0,
+          "created_at": "2026-06-19T23:09:38+00:00",
+          "last_changed": "2026-06-22T17:40:56+00:00"
+        },
+        "369490444": {
+          "id": 369490444,
+          "account_id": 0,
+          "customuser_id": 0,
+          "paused": true,
+          "type_of": "write",
+          "params": {
+            "api_branch_name": "",
+            "provider_id": "openai",
+            "model_id": "openai/gpt-4.1",
+            "instructions": "You are an HR specialist. Generate onboarding content for a new employee. Create exactly these 4 items:\n\n1. A warm welcome email (brief, 2-3 sentences)\n2. A 30/60/90 day plan (bullet points for each phase)\n3. 4-5 manager action items (specific, numbered list)\n4. A 30-day manager agenda (key milestones/check-ins)\n\nNew Hire: {{369490443__COL$A}} {{369490443__COL$B}}\nRole: {{369490443__COL$C}}\nDepartment: {{369490443__COL$D}}\nStart Date: {{369490443__COL$E}}\nManager: {{369490443__COL$F}}\nPlan Tier: {{369490443__COL$I}}\n\nFormat your response with clear section headers: WELCOME_EMAIL, PLAN_30_60_90, MANAGER_ACTIONS, MANAGER_AGENDA",
+            "inputFields": {
+              "first_name": "{{369490443__COL$A}}",
+              "last_name": "{{369490443__COL$B}}",
+              "role": "{{369490443__COL$C}}",
+              "department": "{{369490443__COL$D}}",
+              "start_date": "{{369490443__COL$E}}",
+              "manager": "{{369490443__COL$F}}",
+              "manager_email": "{{369490443__COL$G}}",
+              "contact_email": "{{369490443__COL$H}}",
+              "plan_tier": "{{369490443__COL$I}}"
+            },
+            "outputSchema": {
+              "welcome_email": "The welcome email text for the new hire",
+              "plan_30_60_90": "The 30/60/90 day onboarding plan",
+              "manager_action_items": "Comma-separated list of 4-5 specific action items for the manager",
+              "manager_agenda": "30-day manager agenda with key checkpoints"
+            },
+            "authentication_id": "0",
+            "isOutputArray": false
+          },
+          "meta": {
+            "$editor": {
+              "has_automatic_issues": false
+            },
+            "parammap": {
+              "provider_id": "Anthropic",
+              "authentication_id": "0",
+              "model_id": "GPT-4.1"
+            }
+          },
+          "triple_stores": {
+            "copied_from": null,
+            "created_by": null,
+            "polling_interval_override": 0,
+            "block_and_release_limit_override": 0,
+            "spread_tasks": 1
+          },
+          "folders": null,
+          "parent_id": 369490443,
+          "root_id": 369490443,
+          "action": "get_completion",
+          "selected_api": "AICLIAPI@4.0.8",
+          "title": null,
+          "authentication_id": null,
+          "created_at": "2026-06-19T23:09:38+00:00",
+          "last_changed": "2026-06-26T15:49:11+00:00"
+        },
+        "369490895": {
+          "id": 369490895,
+          "account_id": 0,
+          "customuser_id": 0,
+          "paused": true,
+          "type_of": "write",
+          "params": {
+            "body_type": "html",
+            "signature_delimiter": true,
+            "send_to_groups": false,
+            "to": [
+              "YOUR_EMAIL",
+              "{{369490443__COL$H}}"
+            ],
+            "from": "YOUR_EMAIL",
+            "subject": "Welcome to the team, {{369490443__COL$A}}!",
+            "body": "{{369490444__welcome_email}}<br/><br/>We're excited to have you join our team as a {{369490443__COL$C}} in {{369490443__COL$D}}. Your manager, {{369490443__COL$F}}, will be reaching out shortly with your first-week agenda and key action items to get you up to speed.<br/><br/>If you have any questions or need anything before your start date on {{369490443__COL$E}}, please don't hesitate to reach out.<br/><br/>Regards,<br/>Mark"
+          },
+          "meta": {
+            "$editor": {
+              "has_automatic_issues": false
+            },
+            "parammap": {
+              "from": "YOUR_EMAIL",
+              "body_type": "Html"
+            }
+          },
+          "triple_stores": {
+            "copied_from": null,
+            "created_by": null,
+            "polling_interval_override": 0,
+            "block_and_release_limit_override": 0,
+            "spread_tasks": 1
+          },
+          "folders": null,
+          "parent_id": 369490444,
+          "root_id": 369490443,
+          "action": "message",
+          "selected_api": "GoogleMailV2CLIAPI@2.10.0",
+          "title": null,
+          "authentication_id": 0,
+          "created_at": "2026-06-19T23:19:12+00:00",
+          "last_changed": "2026-06-20T02:28:13+00:00"
+        },
+        "369490977": {
+          "id": 369490977,
+          "account_id": 0,
+          "customuser_id": 0,
+          "paused": true,
+          "type_of": "write",
+          "params": {
+            "to": [
+              "YOUR_EMAIL",
+              "{{369490443__COL$G}}"
+            ],
+            "from": "YOUR_EMAIL",
+            "subject": "Action Items & 30-Day Agenda for {{369490443__COL$A}} {{369490443__COL$B}}",
+            "body_type": "html",
+            "body": "<h3>Manager Action Items:</h3>\n<pre>{{=Text.replace(369490444__manager_action_items, String.fromCharCode(10), \"</pre><pre>\")}}</pre>\n\n<h3>30-Day Agenda:</h3>\n{{369490444__manager_agenda}}<br/><br/>Regards,<br/>Mark",
+            "signature_delimiter": true,
+            "send_to_groups": false
+          },
+          "meta": {
+            "$editor": {
+              "has_automatic_issues": false
+            },
+            "parammap": {
+              "from": "YOUR_EMAIL",
+              "body_type": "Html"
+            }
+          },
+          "triple_stores": {
+            "copied_from": null,
+            "created_by": null,
+            "polling_interval_override": 0,
+            "block_and_release_limit_override": 0,
+            "spread_tasks": 1
+          },
+          "folders": null,
+          "parent_id": 369490895,
+          "root_id": 369490443,
+          "action": "message",
+          "selected_api": "GoogleMailV2CLIAPI@2.10.0",
+          "title": null,
+          "authentication_id": 0,
+          "created_at": "2026-06-19T23:21:08+00:00",
+          "last_changed": "2026-06-20T02:28:13+00:00"
+        },
+        "369490982": {
+          "id": 369490982,
+          "account_id": 0,
+          "customuser_id": 0,
+          "paused": true,
+          "type_of": "write",
+          "params": {
+            "input": {
+              "manager_action_items": "{{369490444__manager_action_items}}",
+              "start_date": "{{369490443__COL$E}}",
+              "first_name": "{{369490443__COL$A}}",
+              "last_name": "{{369490443__COL$B}}",
+              "manager": "{{369490443__COL$F}}"
+            },
+            "packages_enabled": false,
+            "code": "import re\nfrom datetime import datetime, timedelta\n\nmanager_action_items = input_data.get('manager_action_items', '') or ''\nstart_date = input_data.get('start_date', '')\nfirst_name = input_data.get('first_name', '')\nlast_name = input_data.get('last_name', '')\nmanager = input_data.get('manager', '')\n\n# Split the numbered list on its \"1.\" \"2.\" markers, NOT on internal commas.\nparts = re.split(r'(?:^|\\s)\\d+\\.\\s+', manager_action_items)\naction_items = [p.strip() for p in parts if p.strip()]\n\n# Fallback to newline split if the items weren't numbered.\nif len(action_items) <= 1:\n    action_items = [line.strip(' -\\t') for line in manager_action_items.splitlines() if line.strip()]\n\n# Base date for due-date math.\ntry:\n    start_dt = datetime.strptime(start_date, '%Y-%m-%d')\nexcept (ValueError, TypeError):\n    start_dt = datetime.now()\n\ndef due_for(item):\n    # Honor the phase the item references (30/60/90 days); default to 30.\n    if '90' in item:\n        days = 90\n    elif '60' in item:\n        days = 60\n    else:\n        days = 30\n    return (start_dt + timedelta(days=days)).strftime('%Y-%m-%d')\n\ntasks = []\nfor item in action_items:\n    tasks.append({\n        'title': f\"{item} - for {first_name} {last_name}\",\n        'description': item,\n        'due_date': due_for(item),\n        'manager': manager\n    })\n\nreturn {\n    'tasks_created': len(tasks),\n    'status': 'success' if tasks else 'no_items',\n    'tasks': tasks\n}"
+          },
+          "meta": {
+            "$editor": {
+              "has_automatic_issues": false
+            },
+            "parammap": {}
+          },
+          "triple_stores": {
+            "copied_from": null,
+            "created_by": null,
+            "polling_interval_override": 0,
+            "block_and_release_limit_override": 0,
+            "spread_tasks": 1
+          },
+          "folders": null,
+          "parent_id": 369490977,
+          "root_id": 369490443,
+          "action": "01929fad-d3f6-c57c-1b40-ef8691be1f86",
+          "selected_api": "CodeCLIAPI@1.0.1",
+          "title": null,
+          "authentication_id": null,
+          "created_at": "2026-06-19T23:21:29+00:00",
+          "last_changed": "2026-06-20T02:28:13+00:00"
+        },
+        "369491017": {
+          "id": 369491017,
+          "account_id": 0,
+          "customuser_id": 0,
+          "paused": true,
+          "type_of": "write",
+          "params": {
+            "timezone": false,
+            "spreadsheet": "YOUR_GOOGLE_SHEET_ID",
+            "worksheet": "1169503093",
+            "COL$A": "{{=meta[\"est_iso\"]}}",
+            "COL$B": "{{=gives[\"369490443\"][\"COL$A\"]}}",
+            "COL$C": "{{=gives[\"369490443\"][\"COL$B\"]}}",
+            "COL$D": "{{=gives[\"369490443\"][\"COL$H\"]}}",
+            "COL$E": "{{=gives[\"369490443\"][\"COL$C\"]}}",
+            "COL$F": "{{=gives[\"369490443\"][\"COL$D\"]}}",
+            "COL$G": "{{=gives[\"369490443\"][\"COL$E\"]}}",
+            "COL$H": "{{=gives[\"369490443\"][\"COL$F\"]}}",
+            "COL$I": "Yes",
+            "COL$J": "Yes",
+            "COL$K": "Yes",
+            "COL$L": "{{=36949044314,'days')}} ",
+            "COL$M": "Initiated",
+            "COL$N": "{{369490443__COL$I}} "
+          },
+          "meta": {
+            "$editor": {
+              "has_automatic_issues": false
+            },
+            "parammap": {
+              "spreadsheet": "Proj5 New Hires",
+              "worksheet": "Status_Zapier"
+            }
+          },
+          "triple_stores": {
+            "copied_from": null,
+            "created_by": null,
+            "polling_interval_override": 0,
+            "block_and_release_limit_override": 0,
+            "spread_tasks": 1
+          },
+          "folders": null,
+          "parent_id": 369490982,
+          "root_id": 369490443,
+          "action": "add_row",
+          "selected_api": "GoogleSheetsV2CLIAPI@2.14.1",
+          "title": null,
+          "authentication_id": 0,
+          "created_at": "2026-06-19T23:22:05+00:00",
+          "last_changed": "2026-06-22T17:40:56+00:00"
+        },
+        "369497559": {
+          "id": 369497559,
+          "account_id": 0,
+          "customuser_id": 0,
+          "paused": true,
+          "type_of": "write",
+          "params": {
+            "drive": "",
+            "spreadsheet": "YOUR_GOOGLE_SHEET_ID",
+            "worksheet": "0",
+            "COL$J": "Yes",
+            "row_number": "{{=gives[\"369490443\"][\"row\"]}}"
+          },
+          "meta": {
+            "$editor": {
+              "has_automatic_issues": false
+            },
+            "parammap": {
+              "drive": "My Google Drive",
+              "spreadsheet": "Proj5 New Hires",
+              "worksheet": "NewHires"
+            }
+          },
+          "triple_stores": {
+            "copied_from": null,
+            "created_by": null,
+            "polling_interval_override": 0,
+            "block_and_release_limit_override": 0,
+            "spread_tasks": 1
+          },
+          "folders": null,
+          "parent_id": 369491017,
+          "root_id": 369490443,
+          "action": "update_row_lines",
+          "selected_api": "GoogleSheetsV2CLIAPI@2.14.1",
+          "title": null,
+          "authentication_id": 0,
+          "created_at": "2026-06-20T02:24:57+00:00",
+          "last_changed": "2026-06-22T17:40:56+00:00"
+        },
+        "369491010": {
+          "id": 369491010,
+          "account_id": 0,
+          "customuser_id": 0,
+          "paused": true,
+          "type_of": "write",
+          "params": {
+            "trim_whitespace": "true",
+            "iteration_start": "1",
+            "iteration_limit": "500",
+            "loop_values": {
+              "action_item": "{{=gives['369490982'][\"tasks[]title\"]}}",
+              "due_date": "{{=gives['369490982'][\"tasks[]due_date\"]}}",
+              "manager": "{{=gives['369490982'][\"tasks[]manager\"]}}",
+              "description": "{{=gives['369490982'][\"tasks[]description\"]}}"
+            }
+          },
+          "meta": {
+            "$editor": {
+              "has_automatic_issues": false
+            },
+            "parammap": {}
+          },
+          "triple_stores": {
+            "copied_from": null,
+            "created_by": null,
+            "polling_interval_override": 0,
+            "block_and_release_limit_override": 0,
+            "spread_tasks": 1
+          },
+          "folders": null,
+          "parent_id": 369497559,
+          "root_id": 369490443,
+          "action": "loop_values_line_items",
+          "selected_api": "ZapierLoopingCLIAPI@1.2.6",
+          "title": null,
+          "authentication_id": null,
+          "created_at": "2026-06-19T23:22:02+00:00",
+          "last_changed": "2026-06-20T02:28:13+00:00"
+        },
+        "369491012": {
+          "id": 369491012,
+          "account_id": 0,
+          "customuser_id": 0,
+          "paused": true,
+          "type_of": "write",
+          "params": {
+            "task_list": "YOUR_TASK_LIST_ID",
+            "title": "{{=gives['369491010'][\"manager\"]}}- {{=gives['369491010'][\"action_item\"]}}",
+            "notes": "{{=gives['369491010'][\"description\"]}}",
+            "due": "{{=gives['369491010'][\"due_date\"]}}"
+          },
+          "meta": {
+            "$editor": {
+              "has_automatic_issues": false
+            },
+            "parammap": {
+              "task_list": "Proj5 NewHires"
+            }
+          },
+          "triple_stores": {
+            "copied_from": null,
+            "created_by": null,
+            "polling_interval_override": 0,
+            "block_and_release_limit_override": 0,
+            "spread_tasks": 1
+          },
+          "folders": null,
+          "parent_id": 369491010,
+          "root_id": 369490443,
+          "action": "task",
+          "selected_api": "GoogleTasksCLIAPI@1.5.0",
+          "title": null,
+          "authentication_id": 0,
+          "created_at": "2026-06-19T23:22:04+00:00",
+          "last_changed": "2026-06-20T02:28:13+00:00"
+        }
+      }
+    }
+  ]
+}

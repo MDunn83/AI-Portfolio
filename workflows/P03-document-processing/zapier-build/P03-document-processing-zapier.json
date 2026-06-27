@@ -1,0 +1,1050 @@
+{
+  "id": 369352154,
+  "title": "Document Processing Pipeline - Classify & Route PDFs",
+  "status": "on",
+  "nodes": {
+    "369352154": {
+      "id": 369352154,
+      "account_id": 0,
+      "customuser_id": 0,
+      "paused": false,
+      "type_of": "read",
+      "params": {
+        "includeDeleted": "false",
+        "folder": "YOUR_INBOX_FOLDER_ID",
+        "drive": ""
+      },
+      "meta": {
+        "$editor": {
+          "has_automatic_issues": false
+        },
+        "parammap": {
+          "folder": "Inbox",
+          "includeDeleted": "Only return non-deleted files",
+          "drive": "My Google Drive"
+        }
+      },
+      "triple_stores": {
+        "copied_from": null,
+        "created_by": null,
+        "polling_interval_override": 0,
+        "block_and_release_limit_override": 0,
+        "spread_tasks": 1
+      },
+      "folders": null,
+      "parent_id": null,
+      "root_id": null,
+      "action": "file_in_folder_v2",
+      "selected_api": "GoogleDriveCLIAPI@1.18.6",
+      "title": "Document Processing Pipeline - Classify & Route PDFs",
+      "authentication_id": 0,
+      "created_at": "2026-06-18T23:48:47+00:00",
+      "last_changed": "2026-06-19T04:39:38+00:00"
+    },
+    "369362192": {
+      "id": 369362192,
+      "account_id": 0,
+      "customuser_id": 0,
+      "paused": true,
+      "type_of": "write",
+      "params": {
+        "convertType": "TEXT-SIMPLE",
+        "lang": "eng",
+        "lineGrouping": false,
+        "unwrap": false,
+        "inline": true,
+        "url": "{{=gives[\"369352154\"][\"webContentLink\"]}}"
+      },
+      "meta": {
+        "$editor": {
+          "has_automatic_issues": false
+        },
+        "parammap": {}
+      },
+      "triple_stores": {
+        "copied_from": null,
+        "created_by": null,
+        "polling_interval_override": 0,
+        "block_and_release_limit_override": 0,
+        "spread_tasks": 1
+      },
+      "folders": null,
+      "parent_id": 369352154,
+      "root_id": 369352154,
+      "action": "ConvertPDFToAnything",
+      "selected_api": "PDFcoCLIAPI@3.18.4",
+      "title": null,
+      "authentication_id": 0,
+      "created_at": "2026-06-19T02:53:48+00:00",
+      "last_changed": "2026-06-19T04:39:38+00:00"
+    },
+    "369352233": {
+      "id": 369352233,
+      "account_id": 0,
+      "customuser_id": 0,
+      "paused": true,
+      "type_of": "write",
+      "params": {
+        "authentication_id": "0",
+        "model_id": "openai/gpt-4.1-nano",
+        "isOutputArray": false,
+        "provider_id": "openai",
+        "instructions": "Analyze the following document text and classify it into ONE of these 5 categories: 'Funding Doc', 'Contract', 'Invoice', 'Certificate', or 'Review'.\n\nDocument text:\n{{=gives['369362192'][\"body\"]}}\n\nReturn ONLY a JSON object with these fields: {\"category\": \"[one of the 5 categories]\", \"confidence\": \"[high/medium/low]\", \"reasoning\": \"[brief explanation of why this category]\"}. If the document contains multiple types or doesn't fit any category clearly, use 'Review' as the category.",
+        "inputFields": {
+          "extracted_text": "{{369352155__extracted_text}}"
+        },
+        "outputSchema": {
+          "category": "The classified document type (Funding Doc, Contract, Invoice, Certificate, or Review)",
+          "confidence": "Confidence level of the classification (high, medium, or low)",
+          "reasoning": "Brief explanation for the classification"
+        }
+      },
+      "meta": {
+        "$editor": {
+          "has_automatic_issues": true
+        },
+        "parammap": {
+          "authentication_id": "0",
+          "model_id": "GPT-4.1 nano"
+        },
+        "stepTitle": "AI: Classify document type"
+      },
+      "triple_stores": {
+        "copied_from": null,
+        "created_by": null,
+        "polling_interval_override": 0,
+        "block_and_release_limit_override": 0,
+        "spread_tasks": 1
+      },
+      "folders": null,
+      "parent_id": 369362192,
+      "root_id": 369352154,
+      "action": "get_completion",
+      "selected_api": "AICLIAPI@4.0.6",
+      "title": null,
+      "authentication_id": null,
+      "created_at": "2026-06-18T23:49:57+00:00",
+      "last_changed": "2026-06-19T04:39:38+00:00"
+    },
+    "369352849": {
+      "id": 369352849,
+      "account_id": 0,
+      "customuser_id": 0,
+      "paused": true,
+      "type_of": "write",
+      "params": {
+        "authentication_id": "0",
+        "model_id": "standard/auto",
+        "provider_id": "",
+        "instructions": "Based on the document category provided below, return a JSON object containing:\n\n1. A `category` field echoing back the classification you were given.\n2. ONLY the relevant metadata fields for that category (schema below).\n\nDocument category: {{=gives[\"369352233\"][\"category\"]}}\n\nDocument text:/{{=gives['369362192'][\"body\"]}}\n\nSchema by category:\n\n- Funding Doc: funder_name, recipient_name, award_amount, program_name, key_terms\n- Contract: vendor, customer, effective_date, expiration_date, contract_value, key_services, governing_law\n- Invoice: vendor, customer, invoice_number, invoice_date, due_date, total_amount, line_items (as array of {description, quantity, unit_price, amount}), payment_status\n- Certificate: certificate_holder, issuer, certification_name, cert_type, issue_date, expiration_date, credential_id\n- Review: return {\"category\": \"Review\"} with no other fields.\n\nRules:\n- Use null for missing or unknown values.\n- DO NOT include fields from other categories.\n- Return ONLY the JSON object. No prose, no markdown fences.",
+        "inputFields": {
+          "document_text": "{{369352155__extracted_text}}",
+          "document_category": "{{369352233__category}}"
+        },
+        "outputSchema": {
+          "extracted_metadata": "JSON object containing extracted metadata fields based on document category"
+        },
+        "isOutputArray": false
+      },
+      "meta": {
+        "$editor": {
+          "has_automatic_issues": true
+        },
+        "parammap": {}
+      },
+      "triple_stores": {
+        "copied_from": null,
+        "created_by": null,
+        "polling_interval_override": 0,
+        "block_and_release_limit_override": 0,
+        "spread_tasks": 1
+      },
+      "folders": null,
+      "parent_id": 369352233,
+      "root_id": 369352154,
+      "action": "get_completion",
+      "selected_api": "AICLIAPI@4.0.6",
+      "title": null,
+      "authentication_id": null,
+      "created_at": "2026-06-18T23:58:49+00:00",
+      "last_changed": "2026-06-19T04:39:38+00:00"
+    },
+    "369353155": {
+      "id": 369353155,
+      "account_id": 0,
+      "customuser_id": 0,
+      "paused": true,
+      "type_of": "write",
+      "params": {
+        "input": {
+          "extracted_metadata": "{{=gives[\"369352849\"][\"extracted_metadata\"]}}",
+          "classifier_raw": "{{=Object.to_json(output[\"369352233\"])}}"
+        },
+        "packages_enabled": false,
+        "code": "// Get inputs from upstream steps\nconst rawInput = inputData.extracted_metadata || inputData.result || JSON.stringify(inputData);\nconst classifierRaw = inputData.classifier_raw || '';\n\nfunction tryParse(value) {\n  if (typeof value !== 'string') return value;\n  try {\n    return JSON.parse(value);\n  } catch (e) {\n    const match = value.match(/\\{[\\s\\S]*\\}/);\n    if (match) {\n      try { return JSON.parse(match[0]); } catch (e2) { return null; }\n    }\n    return null;\n  }\n}\n\nconst classifierParsed = tryParse(classifierRaw);\nconst classifierCategory = (classifierParsed && classifierParsed.category) || '';\nconst classifierConfidence = (classifierParsed && classifierParsed.confidence) || '';\nconst classifierReasoning = (classifierParsed && classifierParsed.reasoning) || '';\n\nlet metadata = tryParse(rawInput) || {};\nif (metadata && metadata.extracted_metadata) {\n  const inner = tryParse(metadata.extracted_metadata);\n  if (inner) metadata = inner;\n}\n\nconst category = metadata.category || classifierCategory || '';\nconst confidence = metadata.confidence || classifierConfidence || '';\nconst reasoning = metadata.reasoning || classifierReasoning || '';\n\n// Line items handling for invoices\nlet lineItemsArray = [];\nlet lineItemsJson = '';\nif (Array.isArray(metadata.line_items)) {\n  lineItemsArray = metadata.line_items;\n  lineItemsJson = JSON.stringify(metadata.line_items);\n}\n\n// Explicit schema \u2014 every possible field declared, null if not applicable\nreturn {\n  // Shared fields\n  category: category,\n  confidence: confidence,\n  reasoning: reasoning,\n\n  // Funding Doc fields\n  funder_name: metadata.funder_name || '',\n  recipient_name: metadata.recipient_name || '',\n  award_amount: metadata.award_amount || '',\n  program_name: metadata.program_name || '',\n  key_terms: metadata.key_terms || '',\n\n  // Contract fields\n  vendor: metadata.vendor || '',\n  customer: metadata.customer || '',\n  effective_date: metadata.effective_date || '',\n  expiration_date: metadata.expiration_date || '',\n  contract_value: metadata.contract_value || '',\n  key_services: metadata.key_services || '',\n  governing_law: metadata.governing_law || '',\n\n  // Invoice fields\n  invoice_number: metadata.invoice_number || '',\n  invoice_date: metadata.invoice_date || '',\n  due_date: metadata.due_date || '',\n  total_amount: metadata.total_amount || '',\n  payment_status: metadata.payment_status || '',\n  line_items_json: lineItemsJson,\n  line_items_array: lineItemsArray,\n\n  // Certificate fields\n  certificate_holder: metadata.certificate_holder || '',\n  issuer: metadata.issuer || '',\n  certification_name: metadata.certification_name || '',\n  cert_type: metadata.cert_type || '',\n  issue_date: metadata.issue_date || '',\n\n  // Shared with multiple categories \u2014 only one will actually have a value\n  credential_id: metadata.credential_id || ''\n};"
+      },
+      "meta": {
+        "$editor": {
+          "has_automatic_issues": false
+        },
+        "parammap": {}
+      },
+      "triple_stores": {
+        "copied_from": null,
+        "created_by": null,
+        "polling_interval_override": 0,
+        "block_and_release_limit_override": 0,
+        "spread_tasks": 1
+      },
+      "folders": null,
+      "parent_id": 369352849,
+      "root_id": 369352154,
+      "action": "01929fad-d3dd-62c2-52ed-7868d5fcc691",
+      "selected_api": "CodeCLIAPI@1.0.1",
+      "title": null,
+      "authentication_id": null,
+      "created_at": "2026-06-19T00:03:31+00:00",
+      "last_changed": "2026-06-19T04:39:38+00:00"
+    },
+    "369356041": {
+      "id": 369356041,
+      "account_id": 0,
+      "customuser_id": 0,
+      "paused": true,
+      "type_of": "write",
+      "params": {},
+      "meta": {
+        "$editor": {
+          "has_automatic_issues": false
+        }
+      },
+      "triple_stores": {
+        "copied_from": null,
+        "created_by": null,
+        "polling_interval_override": 0,
+        "block_and_release_limit_override": 0,
+        "spread_tasks": 1
+      },
+      "folders": null,
+      "parent_id": 369353155,
+      "root_id": 369352154,
+      "action": "branch",
+      "selected_api": "BranchingAPI",
+      "title": null,
+      "authentication_id": null,
+      "created_at": "2026-06-19T00:50:47+00:00",
+      "last_changed": "2026-06-19T04:39:38+00:00"
+    },
+    "369356042": {
+      "id": 369356042,
+      "account_id": 0,
+      "customuser_id": 0,
+      "paused": true,
+      "type_of": "filter",
+      "params": {
+        "color": "Heroine Blue",
+        "emoji": "A",
+        "path_eval_index": 0,
+        "filter_criteria": [
+          {
+            "id": 1,
+            "key": "{{=gives['369353155'][\"category\"]}}",
+            "value": "Funding Doc",
+            "match": "icontains",
+            "action": "continue",
+            "group": 1
+          }
+        ]
+      },
+      "meta": {
+        "$editor": {
+          "has_automatic_issues": false
+        },
+        "stepTitle": "Funding Doc"
+      },
+      "triple_stores": {
+        "copied_from": null,
+        "created_by": null,
+        "polling_interval_override": 0,
+        "block_and_release_limit_override": 0,
+        "spread_tasks": 1
+      },
+      "folders": null,
+      "parent_id": 369356041,
+      "root_id": 369352154,
+      "action": "filter",
+      "selected_api": "BranchingAPI",
+      "title": "Path A",
+      "authentication_id": null,
+      "created_at": "2026-06-19T00:50:47+00:00",
+      "last_changed": "2026-06-19T04:39:38+00:00"
+    },
+    "369356044": {
+      "id": 369356044,
+      "account_id": 0,
+      "customuser_id": 0,
+      "paused": true,
+      "type_of": "filter",
+      "params": {
+        "color": "Peru",
+        "emoji": "B",
+        "path_eval_index": 1,
+        "filter_criteria": [
+          {
+            "id": 1,
+            "key": "{{=gives['369353155'][\"category\"]}}",
+            "value": "Contract",
+            "match": "icontains",
+            "action": "continue",
+            "group": 1
+          }
+        ]
+      },
+      "meta": {
+        "$editor": {
+          "has_automatic_issues": false
+        },
+        "stepTitle": "Contract"
+      },
+      "triple_stores": {
+        "copied_from": null,
+        "created_by": null,
+        "polling_interval_override": 0,
+        "block_and_release_limit_override": 0,
+        "spread_tasks": 1
+      },
+      "folders": null,
+      "parent_id": 369356041,
+      "root_id": 369352154,
+      "action": "filter",
+      "selected_api": "BranchingAPI",
+      "title": "Path B",
+      "authentication_id": null,
+      "created_at": "2026-06-19T00:50:47+00:00",
+      "last_changed": "2026-06-19T04:39:38+00:00"
+    },
+    "369356046": {
+      "id": 369356046,
+      "account_id": 0,
+      "customuser_id": 0,
+      "paused": true,
+      "type_of": "filter",
+      "params": {
+        "color": "Yellow Green",
+        "emoji": "C",
+        "path_eval_index": 2,
+        "filter_criteria": [
+          {
+            "id": 6405619837371988,
+            "group": 6182849074831191,
+            "key": "{{=gives['369353155'][\"category\"]}}",
+            "value": "Invoice",
+            "match": "icontains",
+            "action": "continue"
+          }
+        ]
+      },
+      "meta": {
+        "$editor": {
+          "has_automatic_issues": false
+        },
+        "stepTitle": "Path C"
+      },
+      "triple_stores": {
+        "copied_from": null,
+        "created_by": null,
+        "polling_interval_override": 0,
+        "block_and_release_limit_override": 0,
+        "spread_tasks": 1
+      },
+      "folders": null,
+      "parent_id": 369356041,
+      "root_id": 369352154,
+      "action": "filter",
+      "selected_api": "BranchingAPI",
+      "title": "Path C",
+      "authentication_id": null,
+      "created_at": "2026-06-19T00:50:47+00:00",
+      "last_changed": "2026-06-19T04:39:38+00:00"
+    },
+    "369356048": {
+      "id": 369356048,
+      "account_id": 0,
+      "customuser_id": 0,
+      "paused": true,
+      "type_of": "filter",
+      "params": {
+        "color": "Dark Magenta",
+        "emoji": "D",
+        "path_eval_index": 3,
+        "filter_criteria": [
+          {
+            "id": 1382533121801552,
+            "group": 5011187363590998,
+            "key": "{{=gives['369353155'][\"category\"]}}",
+            "value": "Certificate",
+            "match": "icontains",
+            "action": "continue"
+          }
+        ]
+      },
+      "meta": {
+        "$editor": {
+          "has_automatic_issues": false
+        },
+        "stepTitle": "Path D"
+      },
+      "triple_stores": {
+        "copied_from": null,
+        "created_by": null,
+        "polling_interval_override": 0,
+        "block_and_release_limit_override": 0,
+        "spread_tasks": 1
+      },
+      "folders": null,
+      "parent_id": 369356041,
+      "root_id": 369352154,
+      "action": "filter",
+      "selected_api": "BranchingAPI",
+      "title": "Path D",
+      "authentication_id": null,
+      "created_at": "2026-06-19T00:50:47+00:00",
+      "last_changed": "2026-06-19T04:39:38+00:00"
+    },
+    "369356050": {
+      "id": 369356050,
+      "account_id": 0,
+      "customuser_id": 0,
+      "paused": true,
+      "type_of": "filter",
+      "params": {
+        "color": "Dark Olive Green",
+        "emoji": "E",
+        "path_eval_index": 4,
+        "filter_criteria": [
+          {
+            "id": 1,
+            "key": "{{=gives['369353155'][\"category\"]}}",
+            "value": "Review",
+            "match": "icontains",
+            "action": "continue",
+            "group": 1
+          }
+        ]
+      },
+      "meta": {
+        "$editor": {
+          "has_automatic_issues": false
+        },
+        "stepTitle": "Review"
+      },
+      "triple_stores": {
+        "copied_from": null,
+        "created_by": null,
+        "polling_interval_override": 0,
+        "block_and_release_limit_override": 0,
+        "spread_tasks": 1
+      },
+      "folders": null,
+      "parent_id": 369356041,
+      "root_id": 369352154,
+      "action": "filter",
+      "selected_api": "BranchingAPI",
+      "title": "Path E",
+      "authentication_id": null,
+      "created_at": "2026-06-19T00:50:47+00:00",
+      "last_changed": "2026-06-19T04:39:38+00:00"
+    },
+    "369356051": {
+      "id": 369356051,
+      "account_id": 0,
+      "customuser_id": 0,
+      "paused": true,
+      "type_of": "write",
+      "params": {
+        "timezone": false,
+        "spreadsheet": "YOUR_GOOGLE_SHEET_ID",
+        "worksheet": "1899982114",
+        "COL$A": "{{=meta[\"est_iso\"]}}",
+        "COL$B": "{{=gives[\"369352154\"][\"title\"]}}",
+        "COL$D": "{{=gives[\"369353155\"][\"confidence\"]}}",
+        "COL$E": "{{=gives[\"369353155\"][\"reasoning\"]}}",
+        "COL$C": "{{=gives[\"369353155\"][\"category\"]}}"
+      },
+      "meta": {
+        "$editor": {
+          "has_automatic_issues": false
+        },
+        "parammap": {
+          "spreadsheet": "Doc Classification",
+          "worksheet": "Review"
+        }
+      },
+      "triple_stores": {
+        "copied_from": null,
+        "created_by": null,
+        "polling_interval_override": 0,
+        "block_and_release_limit_override": 0,
+        "spread_tasks": 1
+      },
+      "folders": null,
+      "parent_id": 369356050,
+      "root_id": 369352154,
+      "action": "add_row",
+      "selected_api": "GoogleSheetsV2CLIAPI@2.14.0",
+      "title": null,
+      "authentication_id": 0,
+      "created_at": "2026-06-19T00:50:47+00:00",
+      "last_changed": "2026-06-19T04:39:38+00:00"
+    },
+    "369357971": {
+      "id": 369357971,
+      "account_id": 0,
+      "customuser_id": 0,
+      "paused": true,
+      "type_of": "write",
+      "params": {
+        "body_type": "plain",
+        "signature_delimiter": true,
+        "send_to_groups": false,
+        "to": "YOUR_EMAIL@example.com",
+        "subject": "Document Requires Review - {{369352154__title}}",
+        "body": "Document: {{369352154__title}}\nFile ID: {{369352154__id}}\nClassification: NEEDS REVIEW\nDetected Type: {{369353155__category}}\nConfidence: {{369353155__confidence}}\n\nReasoning:\n{{369353155__reasoning}}\n\nPlease review this document and classify it manually."
+      },
+      "meta": {
+        "$editor": {
+          "has_automatic_issues": false
+        },
+        "parammap": {}
+      },
+      "triple_stores": {
+        "copied_from": null,
+        "created_by": null,
+        "polling_interval_override": 0,
+        "block_and_release_limit_override": 0,
+        "spread_tasks": 1
+      },
+      "folders": null,
+      "parent_id": 369356051,
+      "root_id": 369352154,
+      "action": "message",
+      "selected_api": "GoogleMailV2CLIAPI@2.10.0",
+      "title": null,
+      "authentication_id": 0,
+      "created_at": "2026-06-19T01:32:03+00:00",
+      "last_changed": "2026-06-19T04:39:38+00:00"
+    },
+    "369357973": {
+      "id": 369357973,
+      "account_id": 0,
+      "customuser_id": 0,
+      "paused": true,
+      "type_of": "write",
+      "params": {
+        "file": "{{369352154__id}}",
+        "folder": "YOUR_REVIEW_FOLDER_ID",
+        "drive": ""
+      },
+      "meta": {
+        "$editor": {
+          "has_automatic_issues": false
+        },
+        "parammap": {
+          "drive": "My Google Drive"
+        }
+      },
+      "triple_stores": {
+        "copied_from": null,
+        "created_by": null,
+        "polling_interval_override": 0,
+        "block_and_release_limit_override": 0,
+        "spread_tasks": 1
+      },
+      "folders": null,
+      "parent_id": 369357971,
+      "root_id": 369352154,
+      "action": "move_file",
+      "selected_api": "GoogleDriveCLIAPI@1.18.6",
+      "title": null,
+      "authentication_id": 0,
+      "created_at": "2026-06-19T01:32:06+00:00",
+      "last_changed": "2026-06-19T04:39:38+00:00"
+    },
+    "369356049": {
+      "id": 369356049,
+      "account_id": 0,
+      "customuser_id": 0,
+      "paused": true,
+      "type_of": "write",
+      "params": {
+        "timezone": false,
+        "spreadsheet": "YOUR_GOOGLE_SHEET_ID",
+        "worksheet": "322035996",
+        "COL$A": "{{=meta[\"est_iso\"]}}",
+        "COL$B": "{{=gives[\"369352154\"][\"title\"]}}",
+        "COL$C": "{{=gives[\"369352154\"][\"id\"]}}",
+        "COL$D": "{{=gives[\"369353155\"][\"certificate_holder\"]}}",
+        "COL$E": "{{=gives[\"369353155\"][\"issuer\"]}}",
+        "COL$G": "{{=gives[\"369353155\"][\"issue_date\"]}}",
+        "COL$H": "{{=gives[\"369353155\"][\"expiration_date\"]}}",
+        "COL$I": "{{=gives[\"369353155\"][\"credential_id\"]}}",
+        "COL$J": "",
+        "COL$F": "{{=gives[\"369353155\"][\"cert_type\"]}}"
+      },
+      "meta": {
+        "$editor": {
+          "has_automatic_issues": false
+        },
+        "parammap": {
+          "spreadsheet": "Doc Classification",
+          "worksheet": "Certs"
+        }
+      },
+      "triple_stores": {
+        "copied_from": null,
+        "created_by": null,
+        "polling_interval_override": 0,
+        "block_and_release_limit_override": 0,
+        "spread_tasks": 1
+      },
+      "folders": null,
+      "parent_id": 369356048,
+      "root_id": 369352154,
+      "action": "add_row",
+      "selected_api": "GoogleSheetsV2CLIAPI@2.14.0",
+      "title": null,
+      "authentication_id": 0,
+      "created_at": "2026-06-19T00:50:47+00:00",
+      "last_changed": "2026-06-19T04:39:38+00:00"
+    },
+    "369357950": {
+      "id": 369357950,
+      "account_id": 0,
+      "customuser_id": 0,
+      "paused": true,
+      "type_of": "write",
+      "params": {
+        "to": "YOUR_EMAIL@example.com",
+        "subject": "Document Classified: Certificate - {{369352154__title}}",
+        "body": "Document: {{369352154__title}}\nFile ID: {{369352154__id}}\nClassification: Certificate\nConfidence: {{369353155__confidence}}\n\nExtracted Metadata:\nCertificate Holder: {{369353155__certificate_holder}}\nIssuer: {{369353155__issuer}}\nCertification Name: {{369353155__certification_name}}\nIssue Date: {{369353155__issue_date}}\nExpiration Date: {{369353155__expiration_date}}\nCredential ID: {{369353155__credential_id}}\n\nReasoning: {{369353155__reasoning}}",
+        "body_type": "plain",
+        "signature_delimiter": true,
+        "send_to_groups": false
+      },
+      "meta": {
+        "$editor": {
+          "has_automatic_issues": false
+        },
+        "parammap": {}
+      },
+      "triple_stores": {
+        "copied_from": null,
+        "created_by": null,
+        "polling_interval_override": 0,
+        "block_and_release_limit_override": 0,
+        "spread_tasks": 1
+      },
+      "folders": null,
+      "parent_id": 369356049,
+      "root_id": 369352154,
+      "action": "message",
+      "selected_api": "GoogleMailV2CLIAPI@2.10.0",
+      "title": null,
+      "authentication_id": 0,
+      "created_at": "2026-06-19T01:31:45+00:00",
+      "last_changed": "2026-06-19T04:39:38+00:00"
+    },
+    "369357952": {
+      "id": 369357952,
+      "account_id": 0,
+      "customuser_id": 0,
+      "paused": true,
+      "type_of": "write",
+      "params": {
+        "file": "{{369352154__id}}",
+        "folder": "YOUR_CERTIFICATES_FOLDER_ID",
+        "drive": ""
+      },
+      "meta": {
+        "$editor": {
+          "has_automatic_issues": false
+        },
+        "parammap": {
+          "drive": "My Google Drive"
+        }
+      },
+      "triple_stores": {
+        "copied_from": null,
+        "created_by": null,
+        "polling_interval_override": 0,
+        "block_and_release_limit_override": 0,
+        "spread_tasks": 1
+      },
+      "folders": null,
+      "parent_id": 369357950,
+      "root_id": 369352154,
+      "action": "move_file",
+      "selected_api": "GoogleDriveCLIAPI@1.18.6",
+      "title": null,
+      "authentication_id": 0,
+      "created_at": "2026-06-19T01:31:47+00:00",
+      "last_changed": "2026-06-19T04:39:38+00:00"
+    },
+    "369356047": {
+      "id": 369356047,
+      "account_id": 0,
+      "customuser_id": 0,
+      "paused": true,
+      "type_of": "write",
+      "params": {
+        "timezone": false,
+        "drive": "",
+        "spreadsheet": "YOUR_GOOGLE_SHEET_ID",
+        "worksheet": "1036253344",
+        "COL$A": "{{=meta[\"est_iso\"]}}",
+        "COL$B": "{{=gives[\"369352154\"][\"title\"]}}",
+        "COL$C": "{{=gives[\"369352154\"][\"id\"]}}",
+        "COL$D": "{{=gives[\"369353155\"][\"vendor\"]}}",
+        "COL$E": "{{=gives[\"369353155\"][\"customer\"]}}",
+        "COL$F": "{{=gives[\"369353155\"][\"invoice_number\"]}}",
+        "COL$G": "{{=gives[\"369353155\"][\"issue_date\"]}}",
+        "COL$H": "{{=gives[\"369353155\"][\"due_date\"]}}",
+        "COL$I": "{{=gives[\"369353155\"][\"total_amount\"]}}",
+        "COL$J": "{{=gives[\"369353155\"][\"line_items_json\"]}}",
+        "COL$K": "{{=gives[\"369353155\"][\"payment_status\"]}}"
+      },
+      "meta": {
+        "$editor": {
+          "has_automatic_issues": false
+        },
+        "parammap": {
+          "drive": "My Google Drive",
+          "spreadsheet": "Doc Classification",
+          "worksheet": "Invoices"
+        }
+      },
+      "triple_stores": {
+        "copied_from": null,
+        "created_by": null,
+        "polling_interval_override": 0,
+        "block_and_release_limit_override": 0,
+        "spread_tasks": 1
+      },
+      "folders": null,
+      "parent_id": 369356046,
+      "root_id": 369352154,
+      "action": "add_row",
+      "selected_api": "GoogleSheetsV2CLIAPI@2.14.0",
+      "title": null,
+      "authentication_id": 0,
+      "created_at": "2026-06-19T00:50:47+00:00",
+      "last_changed": "2026-06-19T04:39:38+00:00"
+    },
+    "369357929": {
+      "id": 369357929,
+      "account_id": 0,
+      "customuser_id": 0,
+      "paused": true,
+      "type_of": "write",
+      "params": {
+        "to": "YOUR_EMAIL@example.com",
+        "subject": "Document Classified: Invoice - {{369352154__title}}",
+        "body": "Document: {{369352154__title}}\nFile ID: {{369352154__id}}\nClassification: Invoice\nConfidence: {{369353155__confidence}}\n\nExtracted Metadata:\nVendor: {{369353155__vendor}}\nCustomer: {{369353155__customer}}\nInvoice Number: {{369353155__invoice_number}}\nInvoice Date: {{369353155__invoice_date}}\nDue Date: {{369353155__due_date}}\nTotal Amount: {{369353155__total_amount}}\nPayment Status: {{369353155__payment_status}}\n\nReasoning: {{369353155__reasoning}}",
+        "body_type": "plain",
+        "signature_delimiter": true,
+        "send_to_groups": false
+      },
+      "meta": {
+        "$editor": {
+          "has_automatic_issues": false
+        }
+      },
+      "triple_stores": {
+        "copied_from": null,
+        "created_by": null,
+        "polling_interval_override": 0,
+        "block_and_release_limit_override": 0,
+        "spread_tasks": 1
+      },
+      "folders": null,
+      "parent_id": 369356047,
+      "root_id": 369352154,
+      "action": "message",
+      "selected_api": "GoogleMailV2CLIAPI@2.10.0",
+      "title": null,
+      "authentication_id": 0,
+      "created_at": "2026-06-19T01:31:27+00:00",
+      "last_changed": "2026-06-19T04:39:38+00:00"
+    },
+    "369358546": {
+      "id": 369358546,
+      "account_id": 0,
+      "customuser_id": 0,
+      "paused": true,
+      "type_of": "write",
+      "params": {
+        "file": "{{369352154__id}}",
+        "folder": "YOUR_INVOICES_FOLDER_ID",
+        "drive": ""
+      },
+      "meta": {
+        "$editor": {
+          "has_automatic_issues": false
+        },
+        "parammap": {
+          "drive": "My Google Drive"
+        }
+      },
+      "triple_stores": {
+        "copied_from": null,
+        "created_by": null,
+        "polling_interval_override": 0,
+        "block_and_release_limit_override": 0,
+        "spread_tasks": 1
+      },
+      "folders": null,
+      "parent_id": 369357929,
+      "root_id": 369352154,
+      "action": "move_file",
+      "selected_api": "GoogleDriveCLIAPI@1.18.6",
+      "title": null,
+      "authentication_id": 0,
+      "created_at": "2026-06-19T01:42:21+00:00",
+      "last_changed": "2026-06-19T04:39:38+00:00"
+    },
+    "369356045": {
+      "id": 369356045,
+      "account_id": 0,
+      "customuser_id": 0,
+      "paused": true,
+      "type_of": "write",
+      "params": {
+        "timezone": false,
+        "drive": "",
+        "spreadsheet": "YOUR_GOOGLE_SHEET_ID",
+        "worksheet": "0",
+        "COL$A": "{{=meta[\"est_iso\"]}}",
+        "COL$B": "{{=gives[\"369352154\"][\"title\"]}}",
+        "COL$C": "{{=gives[\"369352154\"][\"id\"]}}",
+        "COL$D": "{{=gives[\"369353155\"][\"vendor\"]}}",
+        "COL$E": "{{=gives[\"369353155\"][\"customer\"]}}",
+        "COL$F": "{{=gives[\"369353155\"][\"effective_date\"]}}",
+        "COL$G": "{{=gives[\"369353155\"][\"expiration_date\"]}}",
+        "COL$H": "{{=gives[\"369353155\"][\"contract_value\"]}}",
+        "COL$I": "{{=gives[\"369353155\"][\"key_services\"]}}",
+        "COL$J": "{{=gives[\"369353155\"][\"governing_law\"]}}"
+      },
+      "meta": {
+        "$editor": {
+          "has_automatic_issues": false
+        },
+        "parammap": {
+          "drive": "My Google Drive",
+          "spreadsheet": "Doc Classification",
+          "worksheet": "Contracts"
+        }
+      },
+      "triple_stores": {
+        "copied_from": null,
+        "created_by": null,
+        "polling_interval_override": 0,
+        "block_and_release_limit_override": 0,
+        "spread_tasks": 1
+      },
+      "folders": null,
+      "parent_id": 369356044,
+      "root_id": 369352154,
+      "action": "add_row",
+      "selected_api": "GoogleSheetsV2CLIAPI@2.14.0",
+      "title": null,
+      "authentication_id": 0,
+      "created_at": "2026-06-19T00:50:47+00:00",
+      "last_changed": "2026-06-19T04:39:38+00:00"
+    },
+    "369357919": {
+      "id": 369357919,
+      "account_id": 0,
+      "customuser_id": 0,
+      "paused": true,
+      "type_of": "write",
+      "params": {
+        "body_type": "plain",
+        "signature_delimiter": true,
+        "send_to_groups": false,
+        "to": "YOUR_EMAIL@example.com",
+        "subject": "Document Classified: Contract - {{369352154__title}}",
+        "body": "Document: {{369352154__title}}\nFile ID: {{369352154__id}}\nClassification: Contract\nConfidence: {{369353155__confidence}}\n\nExtracted Metadata:\nVendor: {{369353155__vendor}}\nCustomer: {{369353155__customer}}\nEffective Date: {{369353155__effective_date}}\nExpiration Date: {{369353155__expiration_date}}\nContract Value: {{369353155__contract_value}}\nKey Services: {{369353155__key_services}}\nGoverning Law: {{369353155__governing_law}}\n\nReasoning: {{369353155__reasoning}}"
+      },
+      "meta": {
+        "$editor": {
+          "has_automatic_issues": false
+        },
+        "parammap": {}
+      },
+      "triple_stores": {
+        "copied_from": null,
+        "created_by": null,
+        "polling_interval_override": 0,
+        "block_and_release_limit_override": 0,
+        "spread_tasks": 1
+      },
+      "folders": null,
+      "parent_id": 369356045,
+      "root_id": 369352154,
+      "action": "message",
+      "selected_api": "GoogleMailV2CLIAPI@2.10.0",
+      "title": null,
+      "authentication_id": 0,
+      "created_at": "2026-06-19T01:31:11+00:00",
+      "last_changed": "2026-06-19T04:39:38+00:00"
+    },
+    "369357920": {
+      "id": 369357920,
+      "account_id": 0,
+      "customuser_id": 0,
+      "paused": true,
+      "type_of": "write",
+      "params": {
+        "file": "{{369352154__id}}",
+        "folder": "YOUR_CONTRACTS_FOLDER_ID",
+        "drive": ""
+      },
+      "meta": {
+        "$editor": {
+          "has_automatic_issues": false
+        },
+        "parammap": {
+          "drive": "My Google Drive"
+        }
+      },
+      "triple_stores": {
+        "copied_from": null,
+        "created_by": null,
+        "polling_interval_override": 0,
+        "block_and_release_limit_override": 0,
+        "spread_tasks": 1
+      },
+      "folders": null,
+      "parent_id": 369357919,
+      "root_id": 369352154,
+      "action": "move_file",
+      "selected_api": "GoogleDriveCLIAPI@1.18.6",
+      "title": null,
+      "authentication_id": 0,
+      "created_at": "2026-06-19T01:31:12+00:00",
+      "last_changed": "2026-06-19T04:39:38+00:00"
+    },
+    "369356043": {
+      "id": 369356043,
+      "account_id": 0,
+      "customuser_id": 0,
+      "paused": true,
+      "type_of": "write",
+      "params": {
+        "spreadsheet": "YOUR_GOOGLE_SHEET_ID",
+        "worksheet": "245106515",
+        "timezone": false,
+        "COL$A": "{{=meta[\"est_iso\"]}}",
+        "COL$B": "{{=gives[\"369352154\"][\"title\"]}}",
+        "COL$C": "{{=gives[\"369352154\"][\"id\"]}}",
+        "COL$D": "{{=gives[\"369353155\"][\"funder_name\"]}}",
+        "COL$E": "{{=gives[\"369353155\"][\"recipient_name\"]}}",
+        "COL$F": "{{=gives[\"369353155\"][\"award_amount\"]}}",
+        "COL$K": "{{=gives[\"369353155\"][\"key_terms\"]}}",
+        "COL$J": "{{=gives[\"369353155\"][\"program_name\"]}}"
+      },
+      "meta": {
+        "$editor": {
+          "has_automatic_issues": false
+        },
+        "parammap": {}
+      },
+      "triple_stores": {
+        "copied_from": null,
+        "created_by": null,
+        "polling_interval_override": 0,
+        "block_and_release_limit_override": 0,
+        "spread_tasks": 1
+      },
+      "folders": null,
+      "parent_id": 369356042,
+      "root_id": 369352154,
+      "action": "add_row",
+      "selected_api": "GoogleSheetsV2CLIAPI@2.14.0",
+      "title": null,
+      "authentication_id": 0,
+      "created_at": "2026-06-19T00:50:47+00:00",
+      "last_changed": "2026-06-19T04:39:38+00:00"
+    },
+    "369356137": {
+      "id": 369356137,
+      "account_id": 0,
+      "customuser_id": 0,
+      "paused": true,
+      "type_of": "write",
+      "params": {
+        "to": "YOUR_EMAIL@example.com",
+        "subject": "Document Classified: Funding Doc - {{369352154__title}}",
+        "body": "Document: {{369352154__title}}\nFile ID: {{369352154__id}}\nClassification: Funding Doc\nConfidence: {{369353155__confidence}}\n\nExtracted Metadata:\nFunder Name: {{369353155__funder_name}}\nRecipient Name: {{369353155__recipient_name}}\nAward Amount: {{369353155__award_amount}}\nProgram Name: {{369353155__program_name}}\nKey Terms: {{369353155__key_terms}}\n\nReasoning: {{369353155__reasoning}}",
+        "body_type": "plain",
+        "signature_delimiter": true,
+        "send_to_groups": false
+      },
+      "meta": {
+        "$editor": {
+          "has_automatic_issues": false
+        },
+        "parammap": {}
+      },
+      "triple_stores": {
+        "copied_from": null,
+        "created_by": null,
+        "polling_interval_override": 0,
+        "block_and_release_limit_override": 0,
+        "spread_tasks": 1
+      },
+      "folders": null,
+      "parent_id": 369356043,
+      "root_id": 369352154,
+      "action": "message",
+      "selected_api": "GoogleMailV2CLIAPI@2.10.0",
+      "title": null,
+      "authentication_id": 0,
+      "created_at": "2026-06-19T00:52:22+00:00",
+      "last_changed": "2026-06-19T04:39:38+00:00"
+    },
+    "369356138": {
+      "id": 369356138,
+      "account_id": 0,
+      "customuser_id": 0,
+      "paused": true,
+      "type_of": "write",
+      "params": {
+        "file": "{{369352154__id}}",
+        "folder": "YOUR_FUNDING_DOCS_FOLDER_ID"
+      },
+      "meta": {
+        "$editor": {
+          "has_automatic_issues": false
+        },
+        "parammap": {}
+      },
+      "triple_stores": {
+        "copied_from": null,
+        "created_by": null,
+        "polling_interval_override": 0,
+        "block_and_release_limit_override": 0,
+        "spread_tasks": 1
+      },
+      "folders": null,
+      "parent_id": 369356137,
+      "root_id": 369352154,
+      "action": "move_file",
+      "selected_api": "GoogleDriveCLIAPI@1.18.6",
+      "title": null,
+      "authentication_id": 0,
+      "created_at": "2026-06-19T00:52:24+00:00",
+      "last_changed": "2026-06-19T04:39:38+00:00"
+    }
+  }
+}

@@ -1,0 +1,334 @@
+{
+  "metadata": {
+    "version": "gdpr_v1"
+  },
+  "zaps": [
+    {
+      "id": 368769852,
+      "title": "Lead Generation: Research, Score & Outreach Automation",
+      "status": "on",
+      "nodes": {
+        "368769852": {
+          "id": 368769852,
+          "account_id": 0,
+          "customuser_id": 0,
+          "paused": false,
+          "type_of": "read",
+          "params": {
+            "weekends": "yes",
+            "hod": "5:00 AM"
+          },
+          "meta": {
+            "$editor": {
+              "has_automatic_issues": false
+            },
+            "parammap": {}
+          },
+          "triple_stores": {
+            "copied_from": null,
+            "created_by": null,
+            "polling_interval_override": 0,
+            "block_and_release_limit_override": 0,
+            "spread_tasks": 1
+          },
+          "folders": null,
+          "parent_id": null,
+          "root_id": null,
+          "action": "everyDay",
+          "selected_api": "ScheduleCLIAPI@1.6.0",
+          "title": "Lead Generation: Research, Score & Outreach Automation",
+          "authentication_id": 0,
+          "created_at": "2026-06-16T01:18:36+00:00",
+          "last_changed": "2026-06-16T23:13:28+00:00"
+        },
+        "368769853": {
+          "id": 368769853,
+          "account_id": 0,
+          "customuser_id": 0,
+          "paused": true,
+          "type_of": "search",
+          "params": {
+            "range": "A:E",
+            "row_count": "500",
+            "output_format": "raw_rows",
+            "first_row": "2",
+            "_zap_search_success_on_miss": false,
+            "_zap_search_multiple_results": "first",
+            "spreadsheet": "YOUR_LEADS_SHEET_ID",
+            "worksheet": "0"
+          },
+          "meta": {
+            "$editor": {
+              "has_automatic_issues": false
+            },
+            "parammap": {
+              "output_format": "(JSON) Raw Rows",
+              "_zap_search_success_on_miss": "False: step run status is \"stopped: halted\". (Default)",
+              "_zap_search_multiple_results": "Return first search result. Step run status is \"success\". (Default)",
+              "spreadsheet": "Proj6: Leads",
+              "worksheet": "Companies"
+            }
+          },
+          "triple_stores": {
+            "copied_from": null,
+            "created_by": null,
+            "polling_interval_override": 0,
+            "block_and_release_limit_override": 0,
+            "spread_tasks": 1
+          },
+          "folders": null,
+          "parent_id": 368769852,
+          "root_id": 368769852,
+          "action": "get_many_rows",
+          "selected_api": "GoogleSheetsV2CLIAPI@2.14.0",
+          "title": null,
+          "authentication_id": 0,
+          "created_at": "2026-06-16T01:18:36+00:00",
+          "last_changed": "2026-06-16T23:13:27+00:00"
+        },
+        "368770443": {
+          "id": 368770443,
+          "account_id": 0,
+          "customuser_id": 0,
+          "paused": true,
+          "type_of": "write",
+          "params": {
+            "input": {
+              "raw_rows": "{{368769853__raw_rows}}"
+            },
+            "packages_enabled": false,
+            "code": "const rawRowsString = inputData.raw_rows || '[]'; let rawRows = []; try { rawRows = JSON.parse(rawRowsString); } catch (e) { return { companies: [], websites: [], contactNames: [], roles: [], emails: [] }; } const companies = []; const websites = []; const contactNames = []; const roles = []; const emails = []; rawRows.forEach(row => { if (Array.isArray(row) && row.length >= 5) { companies.push(row[0] || ''); websites.push(row[1] || ''); contactNames.push(row[2] || ''); roles.push(row[3] || ''); emails.push(row[4] || ''); } }); return { companies, websites, contactNames, roles, emails };",
+            "isOutputArray": false
+          },
+          "meta": {
+            "$editor": {
+              "has_automatic_issues": false
+            },
+            "parammap": {}
+          },
+          "triple_stores": {
+            "copied_from": null,
+            "created_by": null,
+            "polling_interval_override": 0,
+            "block_and_release_limit_override": 0,
+            "spread_tasks": 1
+          },
+          "folders": null,
+          "parent_id": 368769853,
+          "root_id": 368769852,
+          "action": "01929fad-d3dd-62c2-52ed-7868d5fcc691",
+          "selected_api": "CodeCLIAPI@1.0.1",
+          "title": null,
+          "authentication_id": null,
+          "created_at": "2026-06-16T01:26:19+00:00",
+          "last_changed": "2026-06-16T23:13:27+00:00"
+        },
+        "368770524": {
+          "id": 368770524,
+          "account_id": 0,
+          "customuser_id": 0,
+          "paused": true,
+          "type_of": "write",
+          "params": {
+            "trim_whitespace": true,
+            "iteration_start": "1",
+            "iteration_limit": "500",
+            "loop_values": {
+              "Company": "{{368770443__companies}}",
+              "Website": "{{368770443__websites}}",
+              "ContactName": "{{368770443__contactNames}}",
+              "Role": "{{368770443__roles}}",
+              "Email": "{{368770443__emails}}"
+            }
+          },
+          "meta": {
+            "$editor": {
+              "has_automatic_issues": false
+            },
+            "parammap": {
+              "trim_whitespace": "True"
+            }
+          },
+          "triple_stores": {
+            "copied_from": null,
+            "created_by": null,
+            "polling_interval_override": 0,
+            "block_and_release_limit_override": 0,
+            "spread_tasks": 1
+          },
+          "folders": null,
+          "parent_id": 368770443,
+          "root_id": 368769852,
+          "action": "loop_values_line_items",
+          "selected_api": "ZapierLoopingCLIAPI@1.2.6",
+          "title": null,
+          "authentication_id": null,
+          "created_at": "2026-06-16T01:27:59+00:00",
+          "last_changed": "2026-06-16T23:13:27+00:00"
+        },
+        "368770671": {
+          "id": 368770671,
+          "account_id": 0,
+          "customuser_id": 0,
+          "paused": true,
+          "type_of": "write",
+          "params": {
+            "provider_id": "openai",
+            "authentication_id": "0",
+            "model_id": "openai/gpt-4.1",
+            "isOutputArray": false,
+            "instructions": "You are an AI automation consultant evaluating companies for fit. Analyze the company data provided and return ONLY valid JSON with no markdown formatting or extra text.\n\nCompany: {{368770524__Company}}\nWebsite: {{368770524__Website}}\nRole: {{368770524__Role}}\n\nBased on this information, create a JSON object with:\n- summary: 2-3 sentence description focusing on operational complexity and automation potential\n- score: integer 1-10 where 10 = perfect fit for AI workflow automation consulting. High score (7-10): SaaS/tech, 10-500 employees, visible operational complexity, non-technical ops roles. Mid score (4-6): relevant industry but unclear need or wrong size. Low score (1-3): large enterprise, non-tech, or no web presence.\n- rationale: one sentence explaining the score\n\nReturn ONLY the JSON object, no other text."
+          },
+          "meta": {
+            "$editor": {
+              "has_automatic_issues": false
+            },
+            "parammap": {
+              "provider_id": "OpenAI",
+              "authentication_id": "Zapier-provided",
+              "model_id": "GPT-4.1"
+            }
+          },
+          "triple_stores": {
+            "copied_from": null,
+            "created_by": null,
+            "polling_interval_override": 0,
+            "block_and_release_limit_override": 0,
+            "spread_tasks": 1
+          },
+          "folders": null,
+          "parent_id": 368770524,
+          "root_id": 368769852,
+          "action": "get_completion",
+          "selected_api": "AICLIAPI@4.0.6",
+          "title": null,
+          "authentication_id": null,
+          "created_at": "2026-06-16T01:30:34+00:00",
+          "last_changed": "2026-06-16T23:13:27+00:00"
+        },
+        "368770838": {
+          "id": 368770838,
+          "account_id": 0,
+          "customuser_id": 0,
+          "paused": true,
+          "type_of": "filter",
+          "params": {
+            "filter_criteria": [
+              {
+                "key": "368770671__score",
+                "value": "7",
+                "action": "continue",
+                "match": "igreater",
+                "group": 1,
+                "id": 1
+              }
+            ]
+          },
+          "meta": {
+            "$editor": {
+              "has_automatic_issues": false
+            }
+          },
+          "triple_stores": {
+            "copied_from": null,
+            "created_by": null,
+            "polling_interval_override": 0,
+            "block_and_release_limit_override": 0,
+            "spread_tasks": 1
+          },
+          "folders": null,
+          "parent_id": 368770671,
+          "root_id": 368769852,
+          "action": "filter",
+          "selected_api": "FilterAPI",
+          "title": null,
+          "authentication_id": null,
+          "created_at": "2026-06-16T01:33:53+00:00",
+          "last_changed": "2026-06-16T23:13:27+00:00"
+        },
+        "368770812": {
+          "id": 368770812,
+          "account_id": 0,
+          "customuser_id": 0,
+          "paused": true,
+          "type_of": "write",
+          "params": {
+            "to": "{{368770524__Email}}",
+            "subject": "I noticed {{368770524__Company}} - quick thought on workflow automation",
+            "body": "Hi {{368770524__ContactName}}, I came across {{368770524__Company}} and was impressed by what you're building. Based on your {{368770524__Role}} role, I thought you might find value in exploring workflow automation for your operations. My background is in helping {{368770524__Role}}-focused teams eliminate manual processes and scale without adding headcount. Would you be open to a brief 20-minute conversation to explore if there's a fit? Best, Mark",
+            "body_type": "plain",
+            "signature_delimiter": true,
+            "send_to_groups": false
+          },
+          "meta": {
+            "$editor": {
+              "has_automatic_issues": false
+            },
+            "parammap": {}
+          },
+          "triple_stores": {
+            "copied_from": null,
+            "created_by": null,
+            "polling_interval_override": 0,
+            "block_and_release_limit_override": 0,
+            "spread_tasks": 1
+          },
+          "folders": null,
+          "parent_id": 368770838,
+          "root_id": 368769852,
+          "action": "message",
+          "selected_api": "GoogleMailV2CLIAPI@2.10.0",
+          "title": null,
+          "authentication_id": 0,
+          "created_at": "2026-06-16T01:33:29+00:00",
+          "last_changed": "2026-06-16T23:13:27+00:00"
+        },
+        "368770829": {
+          "id": 368770829,
+          "account_id": 0,
+          "customuser_id": 0,
+          "paused": true,
+          "type_of": "search_or_write",
+          "params": {
+            "row_count": "10",
+            "spreadsheet": "YOUR_SUMMARY_SHEET_ID",
+            "worksheet": "0",
+            "lookup_key": "COL$A",
+            "lookup_value": "{{368770524__Company}}",
+            "COL$A": "{{368770524__Company}}",
+            "COL$B": "",
+            "COL$C": "{{368770671__summary}}",
+            "COL$D": "{{368770671__score}}",
+            "COL$E": ""
+          },
+          "meta": {
+            "$editor": {
+              "has_automatic_issues": false
+            },
+            "parammap": {
+              "spreadsheet": "Proj6: Leads",
+              "worksheet": "Summary",
+              "lookup_key": "Company"
+            }
+          },
+          "triple_stores": {
+            "copied_from": null,
+            "created_by": null,
+            "polling_interval_override": 0,
+            "block_and_release_limit_override": 0,
+            "spread_tasks": 1
+          },
+          "folders": null,
+          "parent_id": 368770812,
+          "root_id": 368769852,
+          "action": "lookup_row",
+          "selected_api": "GoogleSheetsV2CLIAPI@2.13.1",
+          "title": null,
+          "authentication_id": 0,
+          "created_at": "2026-06-16T01:33:41+00:00",
+          "last_changed": "2026-06-16T23:13:27+00:00"
+        }
+      }
+    }
+  ]
+}

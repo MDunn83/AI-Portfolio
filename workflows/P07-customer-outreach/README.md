@@ -18,5 +18,6 @@ An n8n workflow that watches a customer database and sends personalized, AI-gene
 |---|---|
 | [`n8n-manual-build/`](n8n-manual-build/) | The hand-built workflow JSON and the full README: routing logic, prompts per trigger type, sheet schemas |
 | [`claude-code-build/`](claude-code-build/) | The Claude Code rebuild, with build notes in `LESSONS_LEARNED.md` |
+| [`snowflake-build/`](snowflake-build/) | The data layer rebuilt on Snowflake: a customer dimension, an append-only activity fact, and a SQL view that does the 7-day suppression and the priority cascade. Spec plus runnable `setup.sql` |
 
 Full detail is in [`n8n-manual-build/README.md`](n8n-manual-build/README.md). The design choice that matters most: suppression is policy logic in an IF node, not an LLM decision, so a model can never talk the pipeline into over-contacting a customer.

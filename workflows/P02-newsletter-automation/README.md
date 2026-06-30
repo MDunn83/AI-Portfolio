@@ -33,5 +33,6 @@ The manual build came first and proved the concept with paid-tier semantic searc
 |---|---|
 | [`n8n-manual-build/`](n8n-manual-build/) | The Exa.ai + Jina workflow JSON |
 | [`claude-code-build/`](claude-code-build/) | The RSS + Groq rebuild, with the full architecture doc in its `CLAUDE.md` |
+| [`snowflake-build/`](snowflake-build/) | The data layer rebuilt on Snowflake: a raw landing zone, a SQL transform that dedups into a modeled fact table, and classification run in-warehouse with Cortex. Spec plus runnable `setup.sql` |
 
 The Claude Code build's [`CLAUDE.md`](claude-code-build/CLAUDE.md) documents the architectural decisions: rate-limit mitigation, cross-run dedup keyed on URL, 7-day log retention, and why intra-run duplicates are intentionally kept.

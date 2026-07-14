@@ -141,7 +141,7 @@ Create the following credentials in n8n's credential manager:
 - **Google Tasks OAuth2 API**: OAuth2 for the task creation node
 
 ### Step 5: Import and configure
-1. Import `Meeting_Minutes_clean.json` into n8n via the workflow menu
+1. Import `P01-meeting-minutes-automation-manual.json` into n8n via the workflow menu
 2. Update the Google Sheets Trigger node to point to your form responses sheet (`YOUR_FORM_SHEET_ID`)
 3. Update the Append row in sheet node to point to your log sheet (`YOUR_LOG_SHEET_ID`)
 4. Update the Send a message node with your email address (`YOUR_EMAIL_HERE`)
@@ -166,7 +166,7 @@ The QBD section is specifically designed to preserve uncertainty. Open questions
 
 ```
 n8n-meeting-intelligence/
-├── Meeting_Minutes_clean.json    # n8n workflow (credentials scrubbed)
+├── P01-meeting-minutes-automation-manual.json    # n8n workflow (credentials scrubbed)
 └── README.md
 ```
 

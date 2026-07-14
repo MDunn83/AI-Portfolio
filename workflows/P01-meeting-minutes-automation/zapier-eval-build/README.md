@@ -86,4 +86,4 @@ If adding the transcript would require a new rule, update `extraction-rules.md` 
 - The pipeline under test (Phase 1): `../zapier-copilot-build/`
 - Build spec: `../../FUTURE_BUILDS.md`
 - Extraction rules: `extraction-rules.md`
-- Original test data file (now split into T0X): see `git log` for `synthetic-transcripts.md`
+- Test transcripts: `T01.md`–`T07.md` (originally one `synthetic-transcripts.md`, since split; see `git log` for that history)

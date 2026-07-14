@@ -160,7 +160,7 @@ Create a task list in Google Tasks to receive onboarding action items. Note the 
 
 ### 4. Import the Workflow
 
-1. Download `Proj5_Clean.json`
+1. Download `P05-onboarding-automation-manual.json`
 2. In n8n, go to Workflows, click Import, and select the file
 3. After import, update the following placeholders:
 

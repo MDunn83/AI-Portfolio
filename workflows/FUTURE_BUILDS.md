@@ -13,7 +13,7 @@ Ranked by signal-per-hour-of-build. Top pick has the highest portfolio multiplie
 ### What you build
 A second Zap that exercises the Phase 1 (or Phase 2) Zapier meeting minutes pipeline against a fixed set of test transcripts and scores the outputs.
 
-- 6 to 8 synthetic transcripts in a Google Sheet, each with a known ground truth (X action items, Y decisions, Z attendees, etc.). Pre-generated in `zapier-eval-build/synthetic-transcripts.md`, chosen to cover the categories that actually expose regressions: short clean, long messy, no decisions, no action items, weird names, ambiguous due dates, side-conversation noise. More samples don't help when the judge has its own variance; tightening the rubric does.
+- 6 to 8 synthetic transcripts in a Google Sheet, each with a known ground truth (X action items, Y decisions, Z attendees, etc.). Pre-generated as `T01.md`–`T07.md` in `zapier-eval-build/`, chosen to cover the categories that actually expose regressions: short clean, long messy, no decisions, no action items, weird names, ambiguous due dates, side-conversation noise. More samples don't help when the judge has its own variance; tightening the rubric does.
 - A runner Zap that loops the transcript list and either fires the existing pipeline directly or replays its key steps inline.
 - A separate LLM judge step (one more Zapier AI step) that scores each output against a rubric: did it catch every decision, did action items have owners, did it hallucinate names or dates, is the summary faithful.
 - Scores logged to a Google Sheet with prompt version, model version, and timestamp on every row.
@@ -31,7 +31,7 @@ A second Zap that exercises the Phase 1 (or Phase 2) Zapier meeting minutes pipe
 - Optional follow-on: port the eval pattern to n8n once the Zapier version is shipped and write the comparison. That's a bonus post, not the main deliverable.
 
 ### Effort estimate
-- Test transcripts: pre-generated in `zapier-eval-build/synthetic-transcripts.md`. Paste into a Sheet.
+- Test transcripts: pre-generated as `T01.md`–`T07.md` in `zapier-eval-build/`. Paste into a Sheet.
 - Eval Zap: 1 to 2 hours of implementation with Copilot doing the wiring, on top of architecture decisions made up front from this spec.
 - Judge prompt tuning so scores are consistent run-to-run: 1 to 2 hours. This is the part Copilot can't shortcut; the model's first prompt rarely scores reliably and dialing it in is iterative.
 - Total: 3 to 5 hours, plus 1 hour to load the transcripts into the Sheet and verify the ground truth.

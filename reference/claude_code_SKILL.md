@@ -69,6 +69,19 @@ A web/remote session can start with the session branch checked out locally and e
 
 ---
 
+## GitHub Actions
+
+**Scheduled workflows are dropped or delayed at the top of the hour.**
+GitHub runs `schedule:` crons on a best-effort queue that is congested at :00 -- and the other round minutes (:05, :10, :15, :30). A daily `0 13 * * *` can simply never fire. Use an off-peak odd minute (e.g. `56 13 * * *`) and expect a few minutes of drift regardless. A newly changed cron may also skip its first cycle, so don't count on the very next slot.
+
+**An invalid workflow YAML makes every push spawn a failed run.**
+A malformed `.github/workflows/*.yml` (e.g. a duplicated `schedule:` key from a bad re-sync) isn't inert -- GitHub creates a failed run on each push and emails "No jobs were run." Validate workflow YAML (duplicate keys included) before pushing; a burst of those emails right after an edit points straight at the workflow file.
+
+**The GitHub MCP token can't trigger workflow_dispatch.**
+`run_workflow` returns 403 "Resource not accessible by integration" -- the app token lacks `actions:write`. Only the user (Actions UI / `gh`) or the cron can start a run. Don't promise to trigger a workflow yourself; wait for the schedule or hand the user the `gh workflow run` command.
+
+---
+
 ## CLAUDE.md -- The Most Important Habit
 
 **Put mandatory read instructions at the very top.**

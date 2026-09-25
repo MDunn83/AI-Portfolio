@@ -1,6 +1,6 @@
 # AADA — Project CLAUDE.md
 
-Applies to the `AADA` project only. Read the root CLAUDE.md and `../../reference/WRITING_STYLE.md` first — this file adds project-specific context.
+Applies to the `AADA` project only. Read the root `AGENTS.md` (the shared operating manual for every agent; Claude Code also loads `CLAUDE.md`) and `../../reference/WRITING_STYLE.md` first — this file adds project-specific context.
 
 ---
 

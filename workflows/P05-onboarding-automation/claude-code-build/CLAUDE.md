@@ -1,7 +1,7 @@
 # CLAUDE.md
 
 ## MANDATORY: Read n8n_SKILL.md before doing anything else. Do not build until you confirm you have read it.
-## GitHub MCP only. Do not run any local git commands. Do not touch the local machine.
+## This build was done in a web/GitHub-only session: GitHub MCP only, no local git, do not touch the local machine. The general per-agent push rules are in the root `AGENTS.md` → Agent mechanics.
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
@@ -24,7 +24,7 @@ Reference these exact credential names so n8n wires them on import. Full table i
 
 ## Constraints
 
-- GitHub MCP tools only. All file pushes go through `mcp__github__push_files`. Do not run `git` locally or modify files on the local machine.
+- In a web/GitHub-only session, GitHub MCP tools only: all file pushes go through `mcp__github__push_files`, no local `git`. (In a remote-execution or non-Claude session with a real working tree, use local `git` — see root `AGENTS.md` → Agent mechanics.)
 - Target branch: `claude/new-hire-onboarding-workflow-cfqeZ` on `mdunn83/proj5_onboard_claude`.
 - Use placeholder values for all sheet IDs and credential IDs. No live credentials, sheet IDs, or email addresses in the JSON.
 - The workflow JSON must be valid and import into n8n without modification.

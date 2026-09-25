@@ -1,6 +1,6 @@
 # ARQA — Project CLAUDE.md
 
-Applies to the `ARQA` project only. Read the root CLAUDE.md first — this file adds project-specific context.
+Applies to the `ARQA` project only. Read the root `AGENTS.md` (the shared operating manual for every agent; Claude Code also loads `CLAUDE.md`) first — this file adds project-specific context.
 
 ---
 

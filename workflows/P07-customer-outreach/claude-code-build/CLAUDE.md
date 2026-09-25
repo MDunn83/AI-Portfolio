@@ -16,7 +16,7 @@ An n8n workflow JSON file that watches a customer database and sends a personali
 
 ## Constraints
 
-- GitHub MCP tools only. All file pushes go through `mcp__github__push_files`. Do not run `git` locally or modify files on the local machine. Trust the MCP push response rather than reading files back to verify.
+- In a web/GitHub-only session, GitHub MCP tools only: all file pushes go through `mcp__github__push_files`, no local `git`, and trust the MCP push response rather than reading files back to verify. (In a remote-execution or non-Claude session with a real working tree, use local `git` — see root `AGENTS.md` → Agent mechanics.)
 - Target branch: `claude/plan-n8n-outreach-PKA07` on `mdunn83/proj7_outreach_claude`.
 - The workflow JSON must be valid and importable into n8n without modification.
 - Use the placeholder `YOUR_GOOGLE_SHEET_ID` for the sheet ID. Pull the recipient email dynamically from the customer row; never hardcode an address.

@@ -1,6 +1,6 @@
 # Proj7 Outreach: Customer Message Automation
 
-An n8n workflow that monitors a Google Sheet of customers and automatically sends personalized, AI-generated outreach emails when key events occur. Each email is written by an LLM (Groq / Llama 3.3 70B) using the customer's real data, then logged back to the sheet.
+I built this n8n workflow to watch a Google Sheet of customers and send each one a personalized email when something important happens with their account. An LLM (Groq / Llama 3.3 70B) writes each email using that customer's data, and then the workflow logs it back to the sheet.
 
 ---
 
@@ -25,7 +25,7 @@ The updated row is evaluated against four conditions in order. The first match w
 ### AI Email Generation
 Each path passes the customer's data to a **Groq Chat Model** (llama-3.3-70b-versatile) via an LLM Chain node. The prompt is tailored per path:
 
-- **Ticket**: Warm follow-up acknowledging the resolved issue; subtly notes the relationship if renewal is near
+- **Ticket**: Warm follow-up acknowledging the resolved issue, which also mentions the relationship if renewal is near
 - **Inactivity**: Re-engagement email noting how long the customer has been inactive and offering help
 - **Renewal**: Courtesy auto-renewal notice with days-until-renewal and an offer to answer questions
 - **Milestone**: Congratulatory note celebrating the customer's milestone

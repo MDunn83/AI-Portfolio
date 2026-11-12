@@ -1,21 +1,19 @@
 # n8n Meeting Intelligence Pipeline
 
-An AI-powered meeting workflow that automatically transforms a raw meeting transcript into a structured intelligence package. It extracts a summary, action items, decisions, and open questions simultaneously, creates tasks automatically, emails a formatted report to attendees, and logs everything to a persistent record.
-
-Paste a transcript in. Get a complete meeting debrief out. Zero manual note-taking.
+This is the manual n8n build of my meeting pipeline, and it's the one I built by hand first. When a meeting transcript comes in, the workflow pulls out a summary, the action items, the decisions, and the open questions all at the same time. Then it creates a task for each action item, emails a formatted recap to the attendees, and logs the meeting to a Google Sheet, so nobody has to take notes by hand.
 
 ---
 
 ## What It Does
 
-When a new meeting transcript is submitted via Google Form, the workflow triggers automatically and runs four parallel AI analysis passes on the transcript simultaneously:
+When someone submits a transcript through a Google Form, the workflow starts on its own and runs four AI passes on the transcript at the same time:
 
-- **Summary**: 3 to 5 bullets capturing the essence of the meeting, with date and participants extracted at the top
-- **Action Items**: every task identified with owner and due date, formatted owner/due date first for immediate scanning
-- **Decisions**: every final decision, policy change, or agreed-upon outcome (general discussion filtered out)
-- **Open Questions / Blockers / Dependencies (QBD)**: unresolved items that need follow-up
+- **Summary**: 3 to 5 bullets covering the main points of the meeting, with the date and participants pulled out at the top
+- **Action Items**: every task, with its owner and due date listed first so they're easy to scan
+- **Decisions**: every final decision, policy change, or agreed outcome, leaving out general discussion
+- **Open Questions / Blockers / Dependencies (QBD)**: anything still unresolved that needs follow-up
 
-All four outputs are merged, assembled into a structured record, and routed to three simultaneous outputs: a formatted email, a persistent log sheet, and Google Tasks for automatic task creation.
+Once all four are done, the workflow combines them into one record and sends it three places at once: a formatted email, a log sheet that keeps every meeting, and Google Tasks.
 
 ---
 
@@ -45,17 +43,17 @@ Google Form submission (transcript pasted)
 
 ## Parallel Processing Design
 
-The four LLM chains fire simultaneously from the same trigger input. All four receive the full transcript at the same time and process independently. This keeps total runtime low: four analysis passes complete in roughly the same time as one. The Merge node waits for all four to complete before passing the combined output downstream, ensuring no section is missing when the email and log are generated.
+All four LLM chains start from the same trigger and get the full transcript at the same time, and each one works on its own. Because they run in parallel, the four passes take about as long as one would. The Merge node waits for all four to finish before passing anything along, so that no section is missing when the email and the log entry get written.
 
-The action item task creation runs as a separate branch. After aggregation, the action items text is sent through a fifth LLM chain that re-parses the bulleted list into a structured JSON array using a Structured Output Parser. This enables the Split Out node to unpack individual tasks and create one Google Task per action item rather than one task for the entire list.
+Creating the tasks runs on its own branch. After the outputs are combined, I send the action items through a fifth LLM chain that turns the bulleted list into a JSON array, using a Structured Output Parser to hold it to a fixed format. That way the Split Out node can break the list apart and create one Google Task per action item, instead of one task holding the whole list.
 
 ---
 
 ## AI Model
 
-All five LLM chains use **Groq** with the `llama-3.1-8b-instant` model. Groq's inference speed makes the parallel processing particularly effective; four simultaneous calls complete quickly without noticeable latency.
+All five LLM chains run on **Groq** with the `llama-3.1-8b-instant` model. Groq is fast, which helps a lot here, because the four calls running at once finish without any noticeable wait.
 
-Each chain uses a purpose-built system prompt that instructs the model to act as an administrative professional, output clean plain-text bullet lists only, and start immediately without preamble. The structured output chain uses a stricter JSON-only prompt with schema enforcement via the Structured Output Parser node.
+Each chain has its own system prompt that tells the model to act like an administrative assistant, return only plain-text bullet lists, and start right away without an introduction. The chain that builds the task list uses a stricter prompt that only allows JSON, and the Structured Output Parser node checks that the JSON matches the expected format.
 
 ---
 
@@ -110,9 +108,9 @@ Every meeting is appended to a persistent Google Sheet with the following column
 
 ## Data Source
 
-The trigger is a **Google Form** with a single large text field labeled "Meeting Minutes." The form submission appends a row to a connected Google Sheet, which fires the Google Sheets Trigger node. The transcript field maps to the column `Meeting Minutes` in the sheet.
+The trigger is a **Google Form** with one large text field labeled "Meeting Minutes." Each submission adds a row to a connected Google Sheet, and that new row starts the Google Sheets Trigger node. The transcript lands in the sheet's `Meeting Minutes` column.
 
-For testing, synthetic transcripts generated by an AI model work well. The workflow does not require actual meeting recordings or integrations with Zoom, Google Meet, or Teams. Paste or type any text that reads like a meeting transcript and the pipeline will process it.
+For testing, I used made-up transcripts written by an AI model, and they worked well. The workflow doesn't need real meeting recordings or a connection to Zoom, Google Meet, or Teams. Any text that reads like a meeting transcript will work.
 
 ---
 
@@ -130,7 +128,7 @@ Create a Google Form with one long-answer text question labeled "Meeting Minutes
 Create a second Google Sheet for the persistent meeting log with these column headers: `Date | Participants | Summary | Action Items | Decisions | QBD`
 
 ### Step 3: Create a Google Tasks list
-In Google Tasks, create a task list to receive action items. Note the task list ID; you'll need it for the Create a task node.
+In Google Tasks, create a task list for the action items. Write down the task list ID, because you'll need it for the Create a task node.
 
 ### Step 4: Set up credentials in n8n
 Create the following credentials in n8n's credential manager:
@@ -156,9 +154,9 @@ Submit a transcript through your Google Form. Within 30-60 seconds you should re
 
 ## A Note on Meeting Minutes as a Snapshot
 
-This pipeline captures the state of the meeting at the time it occurred, not a definitive record of final truth. Decisions documented here reflect positions held at that moment. If new information changes the direction after a meeting, that context lives in subsequent meetings, not in this record.
+This pipeline records where things stood at the time of the meeting, and it isn't meant to be the final word. The decisions it captures are the positions people held in that meeting. If something changes afterward, that change shows up in the record for a later meeting, not this one.
 
-The QBD section is specifically designed to preserve uncertainty. Open questions and unresolved items are flagged explicitly so the record reflects what was still open, not just what was concluded.
+That's also why the QBD section exists. I wanted the record to show what was still open after the meeting, so open questions and unresolved items are called out on their own instead of only listing what was decided.
 
 ---
 

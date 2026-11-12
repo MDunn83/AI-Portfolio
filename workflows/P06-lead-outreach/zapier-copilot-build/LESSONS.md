@@ -1,8 +1,8 @@
-# P06 Build Lessons — Design Decisions & Tradeoffs
+# P06 Build Lessons: Design Decisions and Tradeoffs
 
 ## Pushback 1: Sequential AI vs Parallel Scoring
 
-**The question:** Should we score companies one at a time (sequential) or batch them and score in parallel?
+**The question:** Should I score companies one at a time (sequential) or batch them and score in parallel?
 
 **The tradeoff:**
 
@@ -10,7 +10,7 @@
   
 - **Parallel:** Batch companies into groups (e.g., 5 at a time) and score via Sub-Zap or a native batch integration. Faster wall-clock time (~15 seconds for 50) but more Zapier tasks, more complex routing.
 
-**Why sequential:** Lead generation isn't time-critical. The Zap runs once daily; 50 seconds vs 15 seconds doesn't matter. Task cost does matter (we're paying per-task). Sequential = simpler to debug if something breaks mid-loop.
+**Why sequential:** Lead generation isn't time-critical. The Zap runs once a day, so 50 seconds vs 15 seconds doesn't matter. Task cost does matter, because Zapier charges per task. Sequential = simpler to debug if something breaks mid-loop.
 
 **If I'd change it:** For >200 companies per run, parallel would become worth the complexity. For now, sequential is the right call.
 
@@ -30,39 +30,39 @@
 
 **Why 7:** On a 1-10 scale, 7 = "clearly fit, worth reaching out to." 6 = "maybe fit, skeptical." The difference matters in cold outreach (lower threshold = lower reply rate but more volume).
 
-**Iteration path:** If reply rate tanks, bump to 8. If we're being too selective, drop to 6.5 (requires phase 2 float support).
+**Iteration path:** If reply rate tanks, bump to 8. If I'm being too selective, drop to 6.5 (requires phase 2 float support).
 
 ---
 
 ## Pushback 3: Personalization Depth
 
-**The question:** How many personalization points should we include in the email?
+**The question:** How many personalization points should I include in the email?
 
 **Options:**
 
 - **Minimal (1 point):** "Hi {{ContactName}}, I noticed you might benefit from workflow automation." Generic, low personalization signal, probably higher spam filter risk.
 
-- **Light (2 points, chosen):** "Hi {{ContactName}}, I noticed {{Company}} and I think {{Role}} roles can benefit from automation." Shows we looked them up, but not deeply.
+- **Light (2 points, chosen):** "Hi {{ContactName}}, I noticed {{Company}} and I think {{Role}} roles can benefit from automation." Shows I looked them up, but not deeply.
 
 - **Deep (4+ points):** "Hi {{ContactName}}, {{Company}} is a {{size}}-person {{industry}} company. I noticed you're hiring {{department}} roles. At {{average_company}}, teams in {{function}} spend {{X}}% time on {{process}}. That's where automation wins." Requires data enrichment (Crunchbase, company filings, etc.). Much higher lift.
 
-**Why light (2 points):** We're looping through 50-100 companies per day. Company name, contact name, and role are in our source data. Pulling 4 more data points per company (industry, size, department hiring, process time) = 3-5× more API calls and complexity. ROI doesn't justify it for Phase 1.
+**Why light (2 points):** I'm looping through 50-100 companies per day, and the company name, contact name, and role are already in my source data. Pulling 4 more data points per company (industry, size, department hiring, process time) = 3-5× more API calls and complexity. ROI doesn't justify it for Phase 1.
 
-**Phase 2 upgrade:** Once we nail reply rate, invest in Crunchbase enrichment. The "I noticed you're hiring for X" angle is *much* stronger than generic ops role mention.
+**Phase 2 upgrade:** Once I get the reply rate where I want it, invest in Crunchbase enrichment. The "I noticed you're hiring for X" angle is *much* stronger than generic ops role mention.
 
 ---
 
 ## Pushback 4: Upsert vs Append
 
-**The question:** Should we upsert (update existing rows) or append (always create new rows)?
+**The question:** Should I upsert (update existing rows) or append (always create new rows)?
 
 **Tradeoff:**
 
-- **Append:** Simpler implementation. Every scoring run creates a new row in Summary sheet. Easy to see history (Company X was scored 3 times, scores were 7, 7, 8). But Summary sheet gets messy — duplicate company names, hard to find "latest" score.
+- **Append:** Simpler implementation. Every scoring run creates a new row in Summary sheet. Easy to see history (Company X was scored 3 times, scores were 7, 7, 8). But the Summary sheet gets messy, with duplicate company names, and it's hard to find the latest score.
 
 - **Upsert (chosen):** Lookup by Company name. If it exists, update (Summary + Score columns). If not, create new row. Summary sheet stays clean, always shows latest score per company. Supports "skip if already contacted" logic in Phase 2.
 
-**Why upsert:** Cleaner data model. Makes Phase 2 deduplication possible. The lookup happens by exact Company name match (case-sensitive), which is a minor risk (we accept in Phase 1, fix in Phase 2 with normalization).
+**Why upsert:** Cleaner data model. Makes Phase 2 deduplication possible. The lookup happens by exact Company name match (case-sensitive), which is a minor risk that I accepted for Phase 1 and plan to fix in Phase 2 by normalizing names.
 
 ---
 
@@ -72,12 +72,12 @@
 
 **Risk:** AI sometimes returns JSON with extra markdown (```json ... ```), or incomplete output if truncated, or plain text fallback.
 
-**Mitigation in Phase 1:** We don't validate. If JSON parse fails in the filter step, the filter silently stops the run (no email sent). The company doesn't get logged to Summary sheet, so we lose track of it. Phase 2 fixes with:
+**Mitigation in Phase 1:** There's no validation yet. If JSON parse fails in the filter step, the filter silently stops the run (no email sent). The company doesn't get logged to the Summary sheet, so I lose track of it. Phase 2 fixes with:
 - JSON validation Code step (try-catch)
 - If invalid, log as ERROR to Summary sheet instead of skipping
 - Optionally retry with a fallback prompt
 
-**Why we accept it:** GPT-4.1 is reliable enough that this failure is rare (<1%). If it happens, the Zap history shows it clearly (filter stops), and we manually review. For Phase 1, acceptable.
+**Why I accepted it:** GPT-4.1 is reliable enough that this failure is rare (<1%). If it happens, the Zap history shows it clearly (filter stops), and I review it by hand. For Phase 1, acceptable.
 
 ---
 
@@ -115,9 +115,9 @@
 
 ## Pushback 8: Email Response Tracking
 
-**The question:** How do we know if a prospect replied?
+**The question:** How do I know if a prospect replied?
 
-**Current:** We don't. Email sends, Zap logs to Summary sheet, but no webhook or integration watches for replies.
+**Current:** I don't. Email sends, Zap logs to Summary sheet, but no webhook or integration watches for replies.
 
 **Phase 2 path:** Zapier's Gmail integration can watch for replies in a specific label. When a reply lands:
 - Filter by sender address (match to prospect email)
@@ -130,19 +130,19 @@
 
 ## Pushback 9: Cold Email Compliance
 
-**The question:** Are we spamming?
+**The question:** Am I spamming people?
 
 **Safeguards in place:**
 
 1. **CAN-SPAM:** Email includes signature (from line is sufficient), and there's an implicit unsubscribe mechanism (prospect can reply "unsubscribe" or just ignore).
-2. **Consent:** These are researched B2B leads, not scraped email lists. We're reaching out about a genuine service (automation consulting).
+2. **Consent:** These are researched B2B leads, not scraped email lists. The emails are about a genuine service (automation consulting).
 3. **Personalization:** Three data points per email signal human research, not blast spam.
 
 **Still risky:** If reply rate is very low (<1%) or bounce rate high (>15%), it signals poor targeting → Gmail may flag as spam.
 
-**Mitigation:** Monitor Gmail spam folder and bounce metrics. If we see a pattern, revise the scoring rubric or email template.
+**Mitigation:** Monitor Gmail spam folder and bounce metrics. If I see a pattern, revise the scoring rubric or email template.
 
-**Not doing:** No double-opt-in, no newsletter signup. Cold outreach is inherently asymmetric; we can't pre-qualify consent.
+**Not doing:** No double-opt-in, no newsletter signup. With cold outreach there's no way to get consent ahead of time.
 
 ---
 
@@ -153,8 +153,8 @@
 **Analysis:**
 
 - **GPT-4.1:** High accuracy on scoring logic, consistent JSON output, available via Zapier native integration. No external API key needed.
-- **GPT-4o:** Faster, cheaper, but marginally less reliable on structured output (JSON) in our testing.
-- **Groq Llama-3.1:** Fast + cheap, but less reliable on JSON parsing; errors increase complexity.
+- **GPT-4o:** Faster, cheaper, but marginally less reliable on structured output (JSON) in my testing.
+- **Groq Llama-3.1:** Fast + cheap, but less reliable on JSON parsing, and those errors add complexity.
 
 **Why GPT-4.1:** Reliability > cost for scoring. A wrong score (say, 6 instead of 7) can suppress a good lead. Better to pay $0.003 more per call and get accurate scores.
 
@@ -174,7 +174,7 @@
 ## What Was Tricky
 
 1. **Parsing raw rows into arrays:** Required understanding Zapier's JSON output format from get_many_rows. Not obvious without documentation.
-2. **Loop variable scope:** Each loop iteration creates a new scope; referencing arrays from outside the loop requires careful step chaining.
+2. **Loop variable scope:** Each loop iteration creates a new scope, so referencing arrays from outside the loop requires careful step chaining.
 3. **Email personalization in a loop:** Template variables must use loop iteration variable names (e.g., `{{Company}}`, not `{{companies[i]}}`). Took iteration to get syntax right.
 
 ---

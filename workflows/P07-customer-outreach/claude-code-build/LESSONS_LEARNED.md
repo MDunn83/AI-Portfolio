@@ -35,7 +35,7 @@ This document captures issues encountered and resolved during the build of the c
 
 ### Use `"operation": "true"` operator for boolean checks
 - Operator object: `{ "type": "boolean", "operation": "true" }`
-- Do not use `"equal to true"`; it causes type mismatch errors.
+- Do not use `"equal to true"`, because it causes type mismatch errors.
 
 ---
 
@@ -67,7 +67,7 @@ This document captures issues encountered and resolved during the build of the c
 
 ### LLM prompt expressions must use `={{ }}` wrapper
 - All prompt `text` fields must be set to expression mode with `={{ ... }}` syntax.
-- Using backtick template literals (`` `${...}` ``) or bare string concatenation without `={{ }}` causes silent failures; the expression is not evaluated.
+- Using backtick template literals (`` `${...}` ``) or bare string concatenation without `={{ }}` causes silent failures, because the expression is not evaluated.
 
 ### Add explicit formatting rules to every LLM prompt
 - Without formatting instructions, Groq models insert hard line breaks mid-sentence and produce fragmented email text.
@@ -102,7 +102,7 @@ This document captures issues encountered and resolved during the build of the c
   $('Category Router').item.json.customerName
   $('Sanitize Text Ticket').item.json.text
   ```
-- Never rely on `$json.fieldName` after a chain node; the field will be undefined.
+- Never rely on `$json.fieldName` after a chain node, because the field will be undefined.
 
 ### Groq sub-node connects via `ai_languageModel`, not `main`
 - The `lmChatGroq` sub-node connects to its parent `chainLlm` node using connection type `ai_languageModel`, not `main`.
@@ -143,7 +143,7 @@ This document captures issues encountered and resolved during the build of the c
 ### All file changes go through `mcp__github__push_files` only
 - Do not run local git commands.
 - Do not write or copy files to the local machine.
-- Do not read local files to verify push results; trust the MCP push response.
+- Do not read local files to verify push results. Trust the MCP push response.
 - All commits go to branch `claude/plan-n8n-outreach-PKA07` on `mdunn83/proj7_outreach_claude`.
 
 ---

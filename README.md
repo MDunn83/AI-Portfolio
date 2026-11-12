@@ -2,56 +2,57 @@
 
 Solving professional problems with personal builds.
 
-These are the tools I built to make my own work better. Adversarial AI for stress-testing decisions, RAG for cutting through technical specifications, n8n automations for the boring parts of a job hunt. Each one started as a real friction point and turned into something I could ship.
+I built these tools to make my own work easier. There's a tool that has several AI models critique each other's answers to stress-test a decision, a tool that checks the requirements in technical specifications, and a set of automations that handle the repetitive parts of tasks like a job search or a meeting recap. Each one started with a problem I actually had.
 
-The code in this repo is auto-synced from my private wiki on every push to main. What you see here is the production cut. Drafts, lessons learned, and writing experiments live upstream.
+This repo copies over automatically from my private wiki every time I update it. It only holds the finished work, and my drafts and work in progress stay in the private wiki.
 
 ---
 
 ## Projects
 
-### AADA — Adversarial AI Decision Analyzer
+### Adversarial AI Decision Analyzer
 [`python-projects/AADA/`](python-projects/AADA/)
 
-A multi-model pipeline that routes a single question through Claude, Gemini, and GPT-4o, has them critique each other, then folds the critiques back into a final answer. On one real-estate pipeline prompt it caught a federal RESPA anti-kickback violation that the single-model answer missed. About 3 cents per run, roughly 95 seconds end to end.
+This pipeline sends one question to Claude, Gemini, and GPT-4o, has the models critique each other's answers, and then works those critiques into a final answer. When I asked it to design a real estate pipeline, the critics caught a referral rewards program that could violate the federal RESPA anti-kickback rules, which the single-model answer had missed. Each run costs about 3 cents and takes about 95 seconds.
 
-Current version is V3.5 with dynamic routing. The second critique pass only fires when the first-pass critics materially disagree, with a hard cap of two passes regardless.
+The current version is V3.5, and it only runs a second round of critiques when the first-round critics meaningfully disagree. It never runs more than two rounds.
 
-### ARQA — Automated Requirements Quality Assistant
+### Automated Requirements Quality Assistant
 [`python-projects/ARQA/`](python-projects/ARQA/)
 
-A LangChain and RAG suite that reads technical specifications, pulls out every SHALL statement, and evaluates each one against a knowledge base of systems engineering standards. Returns page-level citations and a suggested rewrite when a requirement is non-compliant. Built for systems engineers and TPMs who have spent too many afternoons searching PDFs by hand.
+This is a LangChain and RAG tool that reads a technical specification, pulls out every SHALL statement, and checks each one against a knowledge base of systems engineering standards. For each requirement it cites the page in the standard, and if the requirement doesn't meet the standard, it suggests a rewrite. I built it for systems engineers and TPMs, because I've spent too many afternoons searching through PDFs by hand.
 
-v1 was a prototype for natural-language Q&A across a guidebook library; v2 is the shipped tool that automates the full SHALL audit. v3 (verification method generator) is on the roadmap.
+Version 1 was a prototype that answered plain-language questions across a library of guidebooks. Version 2 is the finished tool that checks every SHALL statement in a spec automatically. Version 3, which will suggest how to verify each requirement, is planned.
 
 ### Workflows
 [`workflows/`](workflows/)
 
-Automation builds across two platforms. The headline build is a daily job board monitor that watches Greenhouse and Ashby for a target company list, filters by title and location, deduplicates against a Google Sheets history, and emails a digest every morning whether or not anything new showed up.
+These are automations I've built on n8n, Make, and Zapier. The main one is a job board monitor that checks Greenhouse and Ashby for a list of target companies, filters the postings by title and location, removes any it has already seen using a Google Sheets history, and emails me a summary every morning, even when nothing new came up.
 
-Production workflows live in `standalone-builds/`. The numbered project folders (P01 through P07) trace the learning builds, several with the same pipeline built multiple ways: by hand in n8n, with Claude Code, and on Zapier. `lessons_learned.md` collects the patterns that survived contact with real data.
+The workflows I use day to day are in `standalone-builds/`. The numbered folders, P01 through P07, are the projects I built to learn, and several of them have the same pipeline built more than one way: by hand in n8n, with Claude Code, and on Zapier. The patterns that held up across all of them are collected in `lessons_learned.md`.
 
 ---
 
 ## Reference
 
-The `reference/` folder collects the runtime rules I lean on when building with Claude Code.
+The `reference/` folder has the rules I give Claude Code when I build with it.
 
-- `n8n_SKILL.md`. The pre-build checklist and critical snippets for writing n8n workflow JSON.
+- `n8n_SKILL.md` is the checklist and the key code snippets I use before writing n8n workflow JSON.
+- `claude_code_SKILL.md` covers how I manage Claude Code sessions, branches, and pushes.
 
 ---
 
 ## How These Get Built
 
-I direct the architecture; Claude Code generates most of the code, which I review, debug, and benchmark against manual builds. That division of labor is deliberate and documented per project. Commits here are made by a sync bot mirroring my private wiki, so the commit history shows the publishing pipeline, not the build work. The build work lives in the project docs.
+I design the architecture, and Claude Code writes most of the code. I review it, debug it, and compare it against the builds I did by hand, and each project's docs say how the work was split. The commits in this repo are made by the bot that copies over my private wiki, so the commit history shows the publishing step, not the build work. The build work is written up in each project's docs.
 
 ---
 
 ## About
 
-I'm Mark Dunn, a technical program manager building the tools I wish I had. I run large software and hardware programs by day and build AI pipelines on my own time. This repo is the production half of that work. A private wiki holds the drafts and works-in-progress that are not ready to ship yet.
+I'm Mark Dunn, a technical program manager who runs large software and hardware programs and builds AI pipelines in my personal time. This repo holds the finished half of that work, and the drafts and works in progress stay in my private wiki until they're ready.
 
 - **LinkedIn:** [linkedin.com/in/mdunn83](https://www.linkedin.com/in/mdunn83)
 - **GitHub:** [github.com/MDunn83](https://github.com/MDunn83)
 
-If you're hiring for technical program management in AI or automation, the fastest tour is AADA's README, then the [P01 comparison](workflows/P01-meeting-minutes-automation/): the same pipeline built by hand in n8n, with Claude Code, and with Zapier Copilot, with measured results.
+If you're hiring for technical program management in AI or automation, I'd start with the Adversarial AI Decision Analyzer's README, then the [P01 meeting pipeline](workflows/P01-meeting-minutes-automation/), where I built the same pipeline by hand in n8n, with Claude Code, and with Zapier Copilot and measured the results.

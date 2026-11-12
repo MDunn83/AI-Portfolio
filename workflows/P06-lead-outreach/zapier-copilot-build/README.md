@@ -1,8 +1,8 @@
 # Zapier Copilot Build: Lead Generation & Outreach Automation
 
-A daily lead research, scoring, and outreach workflow that autonomously identifies high-fit companies, researches them with AI, scores them 1-10, and sends personalized cold emails to prospects who score 7+. Built entirely in Zapier with Copilot doing the wiring.
+This is a daily workflow I built in Zapier, with Copilot doing the initial wiring, to research, score, and email sales leads. Each morning it researches a list of companies with AI, scores each one from 1 to 10, and sends a personalized cold email to the ones that score 7 or higher.
 
-This workflow demonstrates scoring gates, conditional routing, and looping patterns at scale — all with minimal code steps.
+It uses a score threshold, conditional routing, and a loop over the company list, and it only needed a few code steps.
 
 ---
 
@@ -39,7 +39,7 @@ Daily Schedule (5 AM)
                       → Upsert to Summary sheet (lookup by Company name)
 ```
 
-**Cost model:** Zapier prices by monthly task tiers. For 5 companies (current sheet size): ~18-20 tasks per daily run, ~600 tasks/month — fits inside the Starter plan. Task count scales linearly with row count; see `REQUIREMENTS.md` for the scaling table.
+**Cost model:** Zapier prices by monthly task tiers. For 5 companies (current sheet size): ~18-20 tasks per daily run, ~600 tasks/month, which fits inside the Starter plan. Task count grows in step with the number of rows, and `REQUIREMENTS.md` has the scaling table.
 
 ---
 
@@ -189,7 +189,7 @@ This Zapier version is the primary implementation. There is no n8n port yet.
 Key Zapier-specific tradeoffs:
 - **Single AI model per loop:** GPT-4.1 does all scoring. An n8n version could parallelize multiple prompts.
 - **Sequential AI calls:** Each company is scored one at a time. Zapier's task cost makes parallel less economical.
-- **Upsert by lookup:** Zapier's lookup + write pattern avoids duplicates naturally; no merge logic needed.
+- **Upsert by lookup:** Zapier's lookup + write pattern avoids duplicates on its own, so no merge logic is needed.
 
 ---
 
@@ -206,7 +206,7 @@ zapier-copilot-build/
 
 ## Built With
 
-- [Zapier](https://zapier.com) — workflow automation, looping, AI steps
-- GPT-4.1 (via Zapier's OpenAI integration) — company scoring
-- Google Sheets — companies and summary data
-- Gmail — outreach email delivery
+- [Zapier](https://zapier.com): workflow automation, looping, AI steps
+- GPT-4.1 (via Zapier's OpenAI integration): company scoring
+- Google Sheets: companies and summary data
+- Gmail: outreach email delivery

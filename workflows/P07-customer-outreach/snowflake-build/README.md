@@ -1,14 +1,14 @@
 # P07 Customer Trigger Messaging Pipeline, Snowflake Build
 
-The P07 pipeline with its data layer rebuilt on Snowflake. Same four behavioral triggers, same 7-day cooldown, same per-category emails. What is different is that the customer master is a dimension table, the activity log is an append-only audit fact, and the suppression window plus the priority cascade run as a SQL view instead of n8n Code nodes.
+This is the P07 pipeline with its data moved to Snowflake. It watches for the same four situations, keeps the same 7-day rule, and sends the same email for each situation. What changed is how the data is stored. The customer list is now its own table, the activity log is a table that only gets added to, and the 7-day rule and the priority order run as a SQL view instead of n8n Code nodes.
 
-> Status: spec plus runnable setup. `REQUIREMENTS.md` and `BUILD_PROCESS.md` define the design; `setup.sql` stands up the tables and the view today. The n8n workflow JSON is the remaining piece, built against a live Snowflake account. This folder syncs publicly on merge to `main`, so every identifier is a placeholder.
+> Status: the spec and a setup script you can run. `REQUIREMENTS.md` and `BUILD_PROCESS.md` lay out the design, and `setup.sql` creates the tables and the view today. The last piece is the n8n workflow JSON, which I'll build against a live Snowflake account. This folder is published to my public portfolio, so every identifier is a placeholder.
 
 ---
 
 ## What you need
 
-- A Snowflake account (the 30-day free trial). If you already set one up for the P02 build, reuse it; just run this folder's `setup.sql` to add the P07 objects.
+- A Snowflake account (the 30-day free trial). If you already set one up for the P02 build, reuse it and just run this folder's `setup.sql` to add the P07 objects.
 - The existing n8n instance from the original P07 build.
 - The n8n Snowflake node (built in).
 

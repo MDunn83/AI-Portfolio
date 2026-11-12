@@ -1,8 +1,8 @@
 # P02: AI Competitive Intelligence Monitor
 
-An n8n workflow that watches 10 AI companies daily, filters and classifies the news, and emails a synthesized executive briefing every morning. Every signal is logged to a persistent Google Sheets record with cross-run deduplication, so the same article never gets reported twice.
+I built this workflow to keep track of 10 AI companies without reading the news myself every day. Each morning it pulls the news for those companies, filters and classifies it, and emails me a short briefing. Every article it looks at gets logged to a Google Sheet, and it checks that log on each run so the same article never gets reported twice.
 
-There are two builds of this monitor, and they made different sourcing choices.
+There are two n8n builds of this monitor, and each one pulls its news from a different source.
 
 **Manual build (Exa.ai + Jina):**
 
@@ -14,7 +14,7 @@ There are two builds of this monitor, and they made different sourcing choices.
 
 ---
 
-## The Two Builds
+## The Two n8n Builds
 
 | | Manual Build | Claude Code Build |
 |---|---|---|
@@ -23,7 +23,7 @@ There are two builds of this monitor, and they made different sourcing choices.
 | Classification | LLM signal typing | Groq `llama-3.1-8b-instant` |
 | Synthesis | LLM daily briefing | Groq `llama-3.3-70b-versatile` |
 
-The manual build came first and proved the concept with paid-tier semantic search. The Claude Code rebuild was constrained to free APIs and solved the same problem with RSS plus heavier filtering: a relevance pre-filter, an 8-category classifier, a $100M funding threshold rule, and a sentinel pattern that guarantees one email per run even when no news survives the funnel.
+I built the manual version first to prove the idea, using Exa's paid semantic search. For the Claude Code rebuild, I limited it to free APIs, so it had to get to the same result with RSS and more filtering. It runs a relevance check first, then sorts each article into one of 8 categories, and it only reports funding news when the round is $100M or more. If nothing makes it through the filters, it still sends an email saying so, so I always get one email per run.
 
 ---
 
@@ -33,6 +33,7 @@ The manual build came first and proved the concept with paid-tier semantic searc
 |---|---|
 | [`n8n-manual-build/`](n8n-manual-build/) | The Exa.ai + Jina workflow JSON |
 | [`claude-code-build/`](claude-code-build/) | The RSS + Groq rebuild, with the full architecture doc in its `CLAUDE.md` |
-| [`snowflake-build/`](snowflake-build/) | The data layer rebuilt on Snowflake: a raw landing zone, a SQL transform that dedups into a modeled fact table, and classification run in-warehouse with Cortex. Spec plus runnable `setup.sql` |
+| [`make-build/`](make-build/) | A third build in Make, using Google Gemini for classification and the briefing, plus a small companion scenario that clears out old log rows |
+| [`snowflake-build/`](snowflake-build/) | The data side rebuilt in Snowflake. Raw news lands in one table, a SQL step removes duplicates into a cleaned table, and Snowflake Cortex does the classification. It includes the spec and a `setup.sql` you can run |
 
-The Claude Code build's [`CLAUDE.md`](claude-code-build/CLAUDE.md) documents the architectural decisions: rate-limit mitigation, cross-run dedup keyed on URL, 7-day log retention, and why intra-run duplicates are intentionally kept.
+The Claude Code build's [`CLAUDE.md`](claude-code-build/CLAUDE.md) explains the design decisions, including how I handled API rate limits, why duplicates are checked by URL across runs, why the log keeps 7 days, and why I kept duplicates within a single run on purpose.

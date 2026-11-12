@@ -1,8 +1,8 @@
 # Zapier Eval Build: Meeting Minutes Pipeline
 
-The eval harness for the Zapier meeting minutes build. Defined as Build 1 in `../../FUTURE_BUILDS.md`. This folder currently holds the test data and the extraction rules; the eval Zap itself comes next.
+This folder is where I'm building a way to test the Zapier meeting minutes build, and it's listed as Build 1 in `../../FUTURE_BUILDS.md`. Right now it holds the test data and the extraction rules, and the Zap that runs the tests comes next.
 
-The eval pattern: take a fixed set of meeting transcripts with known ground truth, run them through the pipeline under test, score each output field with an LLM judge against the extraction rules, log scores over time, flag regressions.
+The plan is to take a fixed set of meeting transcripts where I already know the right answers and run them through the pipeline. Then an LLM judge scores each field of the output against the extraction rules. I'll log the scores over time, so that if a change makes the pipeline worse, the scores will drop and show me.
 
 ---
 
@@ -21,9 +21,9 @@ zapier-eval-build/
 └── T07.md                 # Filter test (side conversation)
 ```
 
-Each T0X file contains the transcript, the ground truth across all five output fields (summary, action items, decisions, open questions, participants), and a reference to which extraction rules it primarily tests.
+Each T0X file has the transcript, the correct answers for all five output fields (summary, action items, decisions, open questions, and participants), and a note on which extraction rules it mainly tests.
 
-`extraction-rules.md` is the single source of truth for what counts as an action item, a decision, an open question, a participant, a side conversation, and a captured due date. Every T0X applies the same rules. When the rules change, the version gets bumped and ground truth gets re-checked.
+`extraction-rules.md` defines what counts as an action item, a decision, an open question, a participant, a side conversation, and a due date. Every T0X file follows the same rules, and when I change the rules, I bump the version number and recheck the correct answers.
 
 ---
 
@@ -44,7 +44,7 @@ Create a sheet with these columns:
 | I | `gt_participants` | Ground truth participants (comma-separated) |
 | J | `gt_filter_check` | Negative ground truth for T07; empty for other rows |
 
-Paste each T0X into one row. Multi-line content in a cell: paste the whole block; Sheets handles newlines via Alt+Enter or pasted line breaks.
+Paste each T0X file into its own row. For cells with several lines, paste the whole block, and Sheets will keep the line breaks.
 
 The eval Zap will add its own runtime columns later (model output per field, judge score per field, run timestamp, rules version in effect).
 
@@ -52,7 +52,7 @@ The eval Zap will add its own runtime columns later (model output per field, jud
 
 ## How the Judge Should Score
 
-The judge isn't matching the model's output to the ground truth labels word-for-word. It's checking whether the model and the labels both follow the same rules. Paste `extraction-rules.md` into the judge's system prompt, then ask the judge to score each output field for:
+The judge doesn't compare the model's output to the correct answers word for word. It checks whether the output follows the same rules the correct answers were written with. I paste `extraction-rules.md` into the judge's system prompt and ask it to score each output field on these:
 
 **Strict criteria (score affects pass/fail):**
 - Recall: is every ground-truth item represented in the model's output?
@@ -86,4 +86,4 @@ If adding the transcript would require a new rule, update `extraction-rules.md` 
 - The pipeline under test (Phase 1): `../zapier-copilot-build/`
 - Build spec: `../../FUTURE_BUILDS.md`
 - Extraction rules: `extraction-rules.md`
-- Test transcripts: `T01.md`–`T07.md` (originally one `synthetic-transcripts.md`, since split; see `git log` for that history)
+- Test transcripts: `T01.md`–`T07.md` (these started as one `synthetic-transcripts.md` file that I later split, and `git log` has that history)

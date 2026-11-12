@@ -12,13 +12,13 @@ A single GPT-4.1 call with a defined output schema returns four fields at once: 
 
 The model returns the manager action items as a numbered list, and the items themselves contain commas ("Schedule a kickoff 1:1, review the plan, and set first-week goals"). My first instinct, splitting on commas, fragmented one action item into three. The Code step splits on the numbered markers ("1.", "2.") with a regex and ignores the commas inside each item. Parse on the structure the model actually produced, not on punctuation you assume separates items.
 
-## 3. Gmail is HTML only, so preserve line breaks deliberately
+## 3. Gmail is HTML only, so preserve line breaks on purpose
 
 The manager email renders the action items inside `<pre>` tags, replacing each newline with a `</pre><pre>` boundary (`Text.replace(..., String.fromCharCode(10), "</pre><pre>")`). Without it, the list collapses onto a single line. Gmail in Zapier sends HTML, not plain text, so any multi-line content needs its line breaks handled on purpose.
 
 ## 4. Let code do the date math, not the model
 
-The 30/60/90 checkpoints and the task due dates are computed in the Code step from the start date with `datetime` and `timedelta`. I don't ask the model to add days to a date. Code doesn't get creative with a calendar; the model sometimes does.
+The 30/60/90 checkpoints and the task due dates are computed in the Code step from the start date with `datetime` and `timedelta`. I don't ask the model to add days to a date. Code doesn't get creative with a calendar, but the model sometimes does.
 
 ## 5. Log the run and stamp the source row
 
@@ -26,7 +26,7 @@ The Zap writes a row to a log sheet (with a timestamp and status columns) and al
 
 ## 6. Loop the parsed items into Google Tasks
 
-The parsed action items become line items, and Zapier Looping turns each one into its own Google Task with a title, note, and due date. The parsing in lesson 2 is what makes this clean; if the split is wrong, the loop creates garbage tasks.
+The parsed action items become line items, and Zapier Looping turns each one into its own Google Task with a title, note, and due date. The parsing in lesson 2 is what makes this clean, because if the split is wrong, the loop creates garbage tasks.
 
 ---
 

@@ -2,7 +2,7 @@
 
 Mark Dunn | June 2026
 
-This document covers what went wrong, what was surprising, and what I'd do differently if I built this in Zapier again. The n8n build is the reference implementation. This Zapier build exists as a comparison piece; same spec, different tool, very different experience.
+This document covers what went wrong, what was surprising, and what I'd do differently if I built this in Zapier again. The n8n build is the reference implementation. I built this Zapier version to compare against it, using the same spec in a different tool, and the experience was very different.
 
 ---
 
@@ -32,7 +32,7 @@ The workaround was PDF.co, a third-party extraction service. That introduced a n
 
 n8n handles binary files natively. You can pass a PDF as binary data between nodes without a third-party service and without any sharing changes to Drive.
 
-**Bottom line:** PDF processing with private cloud storage is harder in Zapier than the documentation suggests. Plan for an extra integration layer and the constraints that come with it.
+Overall, processing PDFs from private cloud storage was harder in Zapier than the documentation suggests. Plan for an extra integration layer and the constraints that come with it.
 
 ### Zapier's Code Step Input Mapping Is Non-Obvious
 
@@ -46,7 +46,7 @@ n8n's expression editor shows you upstream data inline as you type. You can also
 
 The original code used a JavaScript spread operator to output different fields depending on the document category (funder_name for funding docs, vendor/customer for contracts, etc.). Zapier couldn't expose these dynamically-generated fields in the downstream field picker because it caches the output schema from the last test run.
 
-The fix was to replace the dynamic spread with an explicit, static return object that declares every possible field by name with empty string fallbacks. Every category's fields show up every run; most are just blank. It works, but it's less elegant than the n8n approach where you can shape output dynamically.
+The fix was to replace the dynamic spread with an explicit, static return object that declares every possible field by name with empty string fallbacks. Every category's fields show up on every run, and most of them are just blank. It works, but it's less elegant than the n8n approach where you can shape output dynamically.
 
 ### The Test Mode Stale Data Problem
 
@@ -68,7 +68,7 @@ The Inbox folder is set to "Anyone with the link can view" so PDF.co can fetch f
 
 In production, you would replace PDF.co with a self-hosted extraction service running inside your own infrastructure, or use a service account with delegated Drive access so the extraction happens server-side with proper credentials. Neither option is available in Zapier's standard integration model without custom API calls.
 
-The n8n build handles this correctly; file extraction happens inside the n8n environment using Drive credentials already configured for the workflow.
+The n8n build handles this correctly, because the file extraction happens inside the n8n environment using Drive credentials already configured for the workflow.
 
 ---
 

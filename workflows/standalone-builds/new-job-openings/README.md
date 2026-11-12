@@ -1,8 +1,8 @@
 # New Job Openings: Automated Job Board Monitor
 
-Checks Greenhouse and Ashby job boards for a configurable list of companies every morning. Filters for roles matching your criteria, deduplicates against a history sheet, and emails you a summary, whether or not new listings were found.
+I built this n8n workflow so I wouldn't have to check job boards by hand every day. Each morning it checks the Greenhouse and Ashby job boards for a list of companies I set, keeps the roles that match my filters, and skips any it has already found before. Then it emails me a summary, and it sends one even when there's nothing new, so I know it ran.
 
-Built in n8n. No LLM required. No code to run locally.
+It doesn't use an LLM, and there's no code to run on your own computer.
 
 ---
 

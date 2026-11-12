@@ -26,11 +26,11 @@ I went with one email per flagged query instead of a batched digest, after looki
 
 ## 6. Count tasks for everything, not just the actions
 
-A scheduler-plus-table approach would have cost 96+ tasks a day just to check for new rows, even on a day with zero queries. The action steps aren't the only thing that burns tasks; monitoring and scheduling have their own hidden cost. I stuck with the webhook and per-query emails to avoid paying for checks that mostly find nothing.
+A scheduler-plus-table approach would have cost 96+ tasks a day just to check for new rows, even on a day with zero queries. The action steps aren't the only thing that uses up tasks, because monitoring and scheduling have their own hidden cost. I stuck with the webhook and per-query emails to avoid paying for checks that mostly find nothing.
 
 ## 7. Check which AI models your plan actually includes
 
-I wanted to test Claude models, but they didn't have free credits on my plan. GPT-4.1 nano was included, so that's what I used. Don't assume every model is free; verify what your plan covers before you wire it in.
+I wanted to test Claude models, but they didn't have free credits on my plan. GPT-4.1 nano was included, so that's what I used. I learned not to assume every model is free, and to check what my plan covers before wiring one in.
 
 ## 8. Control output format in the prompt first
 
@@ -38,7 +38,7 @@ Instead of adding a Formatter step to strip markdown out of the answer, I just t
 
 ## 9. OR logic in Zapier Paths needs different group IDs
 
-The review Path uses four filter rules: query class is SENSITIVE, query class is UNCERTAIN, response class is SENSITIVE, response class is UNCERTAIN. To make those an OR instead of an AND, each rule goes in its own group. Same group ID is AND; different group IDs is OR. That one tripped me up until I sorted out the grouping.
+The review Path uses four filter rules: query class is SENSITIVE, query class is UNCERTAIN, response class is SENSITIVE, response class is UNCERTAIN. To make those an OR instead of an AND, each rule goes in its own group. Rules with the same group ID are combined with AND, and rules with different group IDs are combined with OR. That one tripped me up until I sorted out the grouping.
 
 ## 10. Plain-text email timestamps need the inline formula syntax
 
@@ -50,12 +50,12 @@ The review Path uses four filter rules: query class is SENSITIVE, query class is
 
 What's solid right now:
 
-- Fail-closed classification; invalid classes default to SENSITIVE.
-- Complete audit log; nothing gets skipped.
+- Fail-closed classification, so invalid classes default to SENSITIVE.
+- Complete audit log, with nothing skipped.
 - Question and answer classified independently.
 - Real-time reviewer notification by email and sheet.
 - Webhook trigger, so single entries cost almost nothing.
-- Known batch limitation; rapid pastes need a couple of seconds of spacing.
+- Known batch limitation, where rapid pastes need a couple of seconds of spacing.
 - Handles medium volume, roughly 30 to 100 queries a day.
 
 When to revisit: if flagged items pass 100 a day, it's worth reconsidering a time-based digest or a polling trigger with batching.

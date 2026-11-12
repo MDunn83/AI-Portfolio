@@ -1,10 +1,10 @@
 # P02 Competitive Intelligence Monitor, Snowflake Build
 
-The P02 monitor with its data layer rebuilt on Snowflake instead of Google Sheets. Same daily briefing, same 10 companies, same 8 signal types. What is different is the data engineering underneath: a raw landing zone (the lake), a SQL transform that dedups and types the data (the ELT step), a modeled fact table (the warehouse), and classification run in-warehouse with Snowflake Cortex.
+This is the P02 monitor with its data moved from Google Sheets to Snowflake. It sends the same daily briefing about the same 10 companies and sorts the news into the same 8 categories. What changed is how the data is stored and processed. Raw news first lands in one table as it comes in (the lake). A SQL step then removes duplicates and puts each field in the right format (the ELT step), and the result goes into a cleaned table (the warehouse). The classification also runs inside Snowflake, using Snowflake Cortex.
 
-This is the canonical Snowflake setup folder. The P07 Snowflake build points back here for the one-time account and credential steps.
+This folder has the main Snowflake setup steps, and the P07 Snowflake build points back here for the one-time account and credential setup.
 
-> Status: spec plus runnable setup. `REQUIREMENTS.md` and `BUILD_PROCESS.md` define the design; `setup.sql` stands up the Snowflake objects today. The n8n workflow JSON is the remaining piece, built against a live Snowflake account. This folder is portfolio build-in-public material and syncs publicly on merge to `main`, so every identifier below is a placeholder.
+> Status: the spec and a setup script you can run. `REQUIREMENTS.md` and `BUILD_PROCESS.md` lay out the design, and `setup.sql` creates the Snowflake objects today. The last piece is the n8n workflow JSON, which I'll build against a live Snowflake account. This folder is published to my public portfolio, so every identifier below is a placeholder.
 
 ---
 
@@ -12,15 +12,15 @@ This is the canonical Snowflake setup folder. The P07 Snowflake build points bac
 
 - A Snowflake account. The 30-day free trial gives you $400 in credits, which is far more than this build uses. No credit card to start.
 - The existing n8n instance from the original P02 build.
-- The n8n Snowflake node (built in; no community install needed).
+- The n8n Snowflake node, which is built in, so there's nothing extra to install.
 
 ---
 
 ## One-time Snowflake setup
 
-1. **Start a trial.** Sign up at signup.snowflake.com. Pick any cloud and region, but note the region; Cortex model availability depends on it (step 4). Standard edition is fine.
+1. **Start a trial.** Sign up at signup.snowflake.com. Pick any cloud and region, but write down the region, because which Cortex models you can use depends on it (step 4). Standard edition is fine.
 
-2. **Grab your account identifier.** In the Snowflake UI, it is under your account menu, in the form `ORGNAME-ACCOUNTNAME`. The n8n credential wants this as the account locator. Keep it out of any committed file; it is `YOUR_SNOWFLAKE_ACCOUNT` everywhere in this repo.
+2. **Grab your account identifier.** In the Snowflake UI, it is under your account menu, in the form `ORGNAME-ACCOUNTNAME`. The n8n credential wants this as the account locator. Keep it out of any committed file. Everywhere in this repo it's written as `YOUR_SNOWFLAKE_ACCOUNT`.
 
 3. **Run the setup script.** Open a SQL worksheet and run `setup.sql` from this folder. It creates the warehouse (`CI_WH`, extra-small, auto-suspend 60s), the database (`CI_DB`), the `RAW` and `CORE` schemas, both tables, and the optional retention Task. It is idempotent (`CREATE ... IF NOT EXISTS`), so re-running it is safe. Fill in any placeholder names you changed before running.
 
@@ -30,7 +30,7 @@ This is the canonical Snowflake setup folder. The P07 Snowflake build points bac
    ```
    If it returns text, Cortex is live and you can use the in-warehouse classification path. If it errors with a model or region message, either switch the model name to one your region lists, or take the Groq fallback path documented in `BUILD_PROCESS.md` (keep the original Groq classifier in n8n, write results back to `CORE.SIGNAL`).
 
-5. **Create a scoped role and user for n8n (recommended).** Do not wire n8n in as `ACCOUNTADMIN`. Create a role with usage on `CI_WH`, `CI_DB`, both schemas, and read/write on the two tables, then a user that carries that role. The setup script includes a commented block for this; uncomment and set a password or, better, a key pair.
+5. **Create a scoped role and user for n8n (recommended).** Do not wire n8n in as `ACCOUNTADMIN`. Create a role with usage on `CI_WH`, `CI_DB`, both schemas, and read/write on the two tables, then a user that carries that role. The setup script has a commented-out block for this. Uncomment it and set a password, or better yet, a key pair.
 
 ---
 
@@ -51,7 +51,7 @@ This is the canonical Snowflake setup folder. The P07 Snowflake build points bac
    - `RAW.SIGNAL_LANDING` gets rows after the fetch (the landing write worked).
    - `CORE.SIGNAL` gets new rows after the transform, with no duplicate URLs (`SELECT SIGNAL_URL, COUNT(*) FROM CORE.SIGNAL GROUP BY 1 HAVING COUNT(*) > 1` returns nothing).
    - Classified rows have a `SIGNAL_TYPE`, `SUMMARY`, and `FUNDING_MUSD` (the Cortex pass worked).
-   - The briefing query returns the included signals and the email sends; an empty result still sends the no-news note.
+   - The briefing query returns the included signals and the email sends. If the result is empty, the no-news email still goes out.
 
 ---
 
@@ -70,7 +70,7 @@ This is the canonical Snowflake setup folder. The P07 Snowflake build points bac
 
 ## Verifying the data engineering claims
 
-After a run or two, these queries are the proof the pattern is real, and they are the things to screenshot for a build-in-public post:
+After a run or two, these queries show that each layer is working, and they're the ones I'd screenshot for a LinkedIn post about the build:
 
 ```sql
 -- The lake holds everything raw and semi-structured.

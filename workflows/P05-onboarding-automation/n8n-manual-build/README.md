@@ -6,7 +6,7 @@
 
 ## What This Does
 
-An n8n workflow that automates the full employee onboarding sequence from a single trigger. When a new hire record is added to a Google Sheet, the workflow fires and orchestrates the following without any manual intervention:
+I built this n8n workflow to run a new hire's full onboarding sequence from one trigger. When a new hire is added to a Google Sheet, the workflow starts and does all of the following without anyone stepping in:
 
 - Generates a personalized welcome email for the new hire
 - Generates a 30-60-90 day onboarding plan tailored to their role and department
@@ -151,12 +151,12 @@ Google Sheets Trigger (new hire row added)
 
 Create a Google Sheet with two tabs:
 
-- **NewHires** -- input sheet with the columns listed above
-- **Status** -- output sheet with the log columns listed above
+- **NewHires**: input sheet with the columns listed above
+- **Status**: output sheet with the log columns listed above
 
 ### 3. Google Tasks Setup
 
-Create a task list in Google Tasks to receive onboarding action items. Note the Task List ID -- you will need it to configure the Create a task node.
+Create a task list in Google Tasks to receive onboarding action items. Write down the Task List ID, because you will need it to configure the Create a task node.
 
 ### 4. Import the Workflow
 
@@ -205,7 +205,7 @@ After importing, verify the following before running:
 
 This workflow was built manually in n8n with Claude as the architecture and debugging partner, then benchmarked against a Claude Code rebuild. This is the third project in a portfolio of automation and AI orchestration builds.
 
-**Build time:** Manual build -- approximately 6 hours including debugging
+**Build time:** Manual build, approximately 6 hours including debugging
 
 **Documented patterns from this build:**
 - Limit node as a cleaner alternative to Aggregate for reducing multi-item branches to a single synchronization item

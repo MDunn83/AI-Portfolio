@@ -1,10 +1,10 @@
 # Zapier Copilot Build: Meeting Intelligence Pipeline
 
-A second build of the meeting minutes workflow, this time on Zapier, with Zapier Copilot (Zapier's built-in AI builder) doing the wiring. Same goal as the n8n version: paste a transcript in, get a summary email, a logged row, and Google Tasks out. Different platform, different shortcuts, different tradeoffs.
+This is my second build of the meeting minutes workflow, this time in Zapier, with Zapier Copilot (Zapier's built-in AI builder) doing the initial wiring. The goal is the same as the n8n version: a transcript goes in, and a summary email, a row in the log, and Google Tasks come out. Because Zapier works differently, I had to take different shortcuts and make different tradeoffs.
 
-The n8n manual build is the reference. This folder is a side-by-side comparison.
+The n8n manual build is the reference, and this folder is for comparing the two side by side.
 
-This is the v4 build, which covers both Phase 1 (MVP) and Phase 2 (functional equivalence with three-layer failure isolation). See `REQUIREMENTS.md` for what each phase delivers and `LESSONS.md` for the design notes.
+This is the v4 build. It covers Phase 1, the minimum working version, and Phase 2, which matches what the n8n build does and adds three layers of failure handling. `REQUIREMENTS.md` lists what each phase delivers, and `LESSONS.md` has my design notes.
 
 ---
 
@@ -42,19 +42,19 @@ Google Sheets trigger (new row from form)
 
 ## How Parallel Branches Work in Zapier
 
-Zapier doesn't have an n8n-style parallel-then-merge node. The pattern Copilot used in v1 was a Path branch with `field iexist` filters, which gives the effect of a fan-out from one upstream step to multiple independent destinations.
+As far as I could tell, Zapier doesn't have a node like n8n's that runs steps in parallel and then merges them. In v1, Copilot used a Path branch with `field iexist` filters instead, which sends the output of one step to several separate destinations.
 
-The v4 build extends that pattern to four branches: three productive (email, log, tasks) and one defensive (degradation alert). Path filters now distinguish between "always fire when transcript exists" (Paths B and C) and "fire conditionally on degradation state" (Paths A and D).
+In v4 I expanded that to four branches. Three of them do the actual work (email, log, and tasks), and the fourth sends an alert when something goes wrong. The Path filters now separate the branches that always run when there's a transcript (Paths B and C) from the ones that depend on whether any AI field came back empty (Paths A and D).
 
-Cost note: each path step and each action step counts as a Zapier task. A v4 run consumes roughly 9-11 tasks on a clean run, slightly more if Path C iterates multiple action items. The n8n version is flat-rate per run.
+On cost, every path step and every action step counts as a Zapier task. A clean v4 run uses roughly 9 to 11 tasks, and a few more if Path C has several action items to loop through. The n8n version costs the same flat rate no matter what happens in the run.
 
 ---
 
 ## AI Model and Prompt
 
-GPT-4o-mini via Zapier's native AI integration. No external API key required.
+The model is GPT-4o-mini, through Zapier's built-in AI integration, so there's no separate API key to set up.
 
-A single AI step does all the extraction work. The prompt encodes the extraction rules defined in `../zapier-eval-build/extraction-rules.md`:
+One AI step does all of the extraction, and the prompt follows the extraction rules in `../zapier-eval-build/extraction-rules.md`:
 
 - **R1 action items** formatted as `- Owner: Task description (due date if stated)`.
 - **R4 participants** preserved with exact spelling, including diacritics.
@@ -62,19 +62,19 @@ A single AI step does all the extraction work. The prompt encodes the extraction
 - **R6 due dates** preserved verbatim ("Friday after next" stays as written, not normalized to ISO).
 - **"None"** returned as the literal string when a section is legitimately empty, so the downstream degradation detection doesn't false-positive.
 
-This is a deliberate simplification from the n8n build, which runs four separate LLM chains in parallel. See `REQUIREMENTS.md` "Platform-Native Tradeoffs" for why.
+I chose to simplify this from the n8n build, which runs four separate LLM chains in parallel. The reasons are in the "Platform-Native Tradeoffs" section of `REQUIREMENTS.md`.
 
 ---
 
 ## Failure Isolation (Three Layers)
 
-The v4 build adds defensive layers around the AI step. See `LESSONS.md` "Pushback 2" for the full story.
+In v4 I added three layers of protection around the AI step. The full story of why is under "Pushback 2" in `LESSONS.md`.
 
-**Layer 1: Validate-and-Substitute.** A Code step after the AI checks all five fields. Empty or whitespace-only fields are replaced with `"unavailable"` and a `has_degradation` flag is set true.
+**Layer 1: Validate-and-Substitute.** A Code step after the AI checks all five fields. If a field is empty or only whitespace, it gets replaced with `"unavailable"`, and the `has_degradation` flag is set to true.
 
-**Layer 2: Loop guard.** A filter before the Google Tasks loop requires `action_items` to contain `\n- `. Malformed responses skip Path C silently without erroring.
+**Layer 2: Loop guard.** A filter before the Google Tasks loop only lets the run through if `action_items` contains `\n- `. If the AI's response is malformed, Path C gets skipped quietly instead of throwing an error.
 
-**Layer 3: Degradation notification.** Path D fires when `has_degradation == true`. Sends a Gmail alert with the full transcript and all five validated fields. The recap email (Path A) is suppressed on the same run so the recipient never sees a half-broken summary.
+**Layer 3: Degradation notification.** Path D runs when `has_degradation == true` and sends a Gmail alert with the full transcript and all five checked fields. On that same run, the recap email (Path A) doesn't go out, so the recipient never gets a half-broken summary.
 
 ---
 
@@ -135,15 +135,15 @@ One row per meeting, appended to a separate Google Sheet:
 | F | Open Questions |
 | G | `has_degradation` flag (true / false) |
 
-Column G lets you filter the sheet for degraded runs without scanning Gmail.
+Column G makes it easy to filter the sheet for runs where a field came back empty, without digging through Gmail.
 
 ---
 
 ## Data Source
 
-Same as the n8n build: a Google Form with a single long-answer field labeled "Meeting Minutes" feeds a Google Sheet. The trigger watches that sheet for new rows.
+This works the same way as the n8n build. A Google Form with one long-answer field labeled "Meeting Minutes" feeds a Google Sheet, and the trigger watches that sheet for new rows.
 
-For testing, synthetic transcripts work fine. Test transcripts T01-T07 live in `../zapier-eval-build/` and exercise specific extraction rules.
+For testing, made-up transcripts work fine. Test transcripts T01 through T07 are in `../zapier-eval-build/`, and each one tests specific extraction rules.
 
 ---
 
@@ -160,7 +160,7 @@ For testing, synthetic transcripts work fine. Test transcripts T01-T07 live in `
 | Parallel execution | True parallel via 4 chains + Merge | Sequential AI, then 4-way Paths fan-out |
 | Cost model | Flat per-run | ~9-11 Zapier tasks per run |
 
-See `REQUIREMENTS.md` "Platform-Native Tradeoffs" for why each Zapier-side divergence is a deliberate choice rather than a parity gap.
+Each place where the Zapier build differs was a choice I made on purpose, not something I couldn't match. The reasoning is in the "Platform-Native Tradeoffs" section of `REQUIREMENTS.md`.
 
 ---
 

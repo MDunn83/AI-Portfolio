@@ -2,7 +2,7 @@
 
 AI governance gets a lot of airtime. I wanted to actually understand it, so I built a working pipeline to find out what it takes.
 
-It's a 10-step Zap that answers a question, classifies the question and the answer separately for sensitivity, logs everything, and routes anything risky to a human review queue. Built in Zapier with Copilot doing the wiring.
+It's a 10-step Zap that answers a question, classifies the question and the answer separately for sensitivity, logs everything, and routes anything risky to a human review queue. I built it in Zapier, with Copilot doing the initial wiring.
 
 See `LESSONS.md` for the design decisions and where I overrode the obvious choice, and `P04-ai-governance-zapier-copilot.json` for the scrubbed export.
 
@@ -23,7 +23,7 @@ A new row lands in the "Questions" sheet and the Zap fires:
 9. **Notify the reviewer.** Gmail sends a formatted email to the reviewer inbox with the question, the answer, and both classifications.
 10. **Done.** Everything is audited, nothing is skipped, and the reviewer sees flagged items in real time.
 
-The result: every question gets answered, the question and answer are classified independently (a clean question can still produce a sensitive answer), the classification fails closed, the whole thing is logged for good, and anything risky lands in a review queue with an instant email.
+So every question gets answered, and the question and the answer are classified separately, because a harmless question can still produce a sensitive answer. If a classification comes back invalid, it's treated as sensitive. Everything is logged permanently, and anything risky goes to a review queue with an email sent right away.
 
 ---
 
@@ -41,4 +41,4 @@ Google Sheets trigger (new row in Questions)
                       -> Gmail alert to reviewer
 ```
 
-Cost note: each step is a Zapier task. The webhook trigger keeps single-entry runs cheap, which is the main reason it's built this way instead of on a scheduler. See `LESSONS.md` for the task-budget math.
+Cost note: each step is a Zapier task. The webhook trigger keeps runs with a single new question cheap, and that's the main reason I built it this way instead of on a schedule. See `LESSONS.md` for the task-budget math.

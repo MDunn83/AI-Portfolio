@@ -18,7 +18,7 @@ All the logic lives in that one Code step, which outputs a single `category` str
 
 ## 4. Log every customer every run, including the silent ones
 
-Both the `Suppressed` path and the `No Action` path still write a log row. So does every message path. That means I can always answer "why didn't this customer get a message today," not just "who did." Auditing the silence matters as much as auditing the sends; without it, a suppression bug looks identical to everything working.
+Both the `Suppressed` path and the `No Action` path still write a log row. So does every message path. That means I can always answer "why didn't this customer get a message today," not just "who did." Logging the messages that didn't go out matters as much as logging the ones that did, because without it, a suppression bug looks identical to everything working.
 
 ## 5. Close the loop: stamp last-contacted after sending
 
